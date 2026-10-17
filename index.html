@@ -131,6 +131,11 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 .role-overlay{position:fixed;inset:0;z-index:80;background:rgba(23,35,59,.45);backdrop-filter:blur(2px);padding:16px}
 /* 登机牌式卡片 */
 .flight{border-top:4px solid var(--brand)}
+/* 批量删除选择模式 */
+.batch-check{display:inline-flex;align-items:center;margin-right:8px;vertical-align:3px;cursor:pointer}
+.batch-check input{width:22px;height:22px;accent-color:var(--brand);cursor:pointer}
+.flight.batch-selected{border-color:var(--brand);box-shadow:0 0 0 2px rgba(37,99,235,.35);background:#eef4ff}
+.batch-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .bp-route{display:flex;align-items:center;gap:10px;margin:10px 0 6px}
 .bp-end{flex:0 0 auto;text-align:left;min-height:74px}
 .bp-end.right{text-align:right}
@@ -313,6 +318,18 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
   </div>
 
   <div id="listMsg"></div>
+
+  <div class="row" style="margin-top:10px">
+    <button id="btnBatchMode" class="ghost grow" type="button">🗑️ 批量删除</button>
+  </div>
+  <div id="batchBar" class="card hidden" style="margin-top:10px">
+    <div class="row batch-bar">
+      <span class="grow">已选 <b id="batchCount">0</b> 张</span>
+      <button id="btnBatchAll" class="ghost small" type="button">全选</button>
+      <button id="btnBatchCancel" class="ghost small" type="button">取消</button>
+      <button id="btnBatchDel" class="danger small" type="button" disabled>删除所选 (0)</button>
+    </div>
+  </div>
 
   <div class="card section" id="secPilot">
     <div class="sec-head">
@@ -725,6 +742,9 @@ function renderFlights(){
   document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.edit)));
   document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>delFlight(b.dataset.del)));
   document.querySelectorAll('[data-add-first]').forEach(b=>b.addEventListener('click',()=>{ scrollToForm(); }));
+  document.querySelectorAll('[data-batch-check]').forEach(cb=>cb.addEventListener('change',()=>toggleBatch(cb.dataset.batchCheck)));
+  document.querySelectorAll('.flight').forEach(card=>card.addEventListener('click',e=>{ if(!batchMode) return; if(e.target.closest('button, input, label, a')) return; const cb=card.querySelector('[data-batch-check]'); if(cb) toggleBatch(cb.dataset.batchCheck); }));
+  if(batchMode) updateBatchBar();
   applySectionColors();
   renderCalendar();
 }
@@ -756,14 +776,14 @@ function flightCard(f){
   const dur=flightDuration(f);
   const isNew=ownerOf(f)!==myRole&&f.created_at&&new Date(f.created_at).getTime()>lastSeenMine;
   const roleColor=(typeof sectionColors!=='undefined'&&sectionColors[ownerOf(f)])||DEFAULT_COLORS[ownerOf(f)]||'#2563eb';
-  return '<div class="flight" id="flight-'+esc(f.id)+'" style="border-top-color:'+esc(roleColor)+'">'
-    +'<div><span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+st.key+'">'+st.label+'</span>'+overlapBadge(f)+(isNew?'<span class="badge new">新</span>':'')+'</div>'
+  return '<div class="flight'+(batchMode&&batchSelected.has(f.id)?' batch-selected':'')+'" id="flight-'+esc(f.id)+'" style="border-top-color:'+esc(roleColor)+'">'
+    +'<div>'+(batchMode?'<label class="batch-check"><input type="checkbox" data-batch-check="'+esc(f.id)+'"'+(batchSelected.has(f.id)?' checked':'')+' aria-label="选中这张航班卡"></label>':'')+'<span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+st.key+'">'+st.label+'</span>'+overlapBadge(f)+(isNew?'<span class="badge new">新</span>':'')+'</div>'
     +'<div class="muted">'+esc(f.flight_date)+' · '+esc(flightCountdown(f))+(f.aircraft?' · '+esc(f.aircraft):'')+(dur?' · 飞行时长 '+dur:'')+' · 添加人 '+(ownerOf(f)==='attendant'?'👩🏻‍🦱 乘务员':'👨🏿‍✈️ 飞行员')+'</div>'
     +'<div class="bp-route">'+bpEnd(depCode,depCity,dep.t,dep.tag,false)
     +'<div class="bp-dash"><span>✈️</span></div>'
     +bpEnd(arrCode,arrCity,arr.t,arr.tag,true)+'</div>'
     +(f.note?'<div class="muted" style="margin-top:4px">备注：'+esc(f.note)+'</div>':'')
-    +'<div class="ops"><button class="ghost small" data-edit="'+esc(f.id)+'">编辑</button><button class="danger small" data-del="'+esc(f.id)+'">删除</button></div>'
+    +'<div class="ops"><button class="ghost small" data-edit="'+esc(f.id)+'">编辑</button>'+(batchMode?'':'<button class="danger small" data-del="'+esc(f.id)+'">删除</button>')+'</div>'
     +'</div>';
 }
 function scrollToForm(){
@@ -777,6 +797,66 @@ function scrollToForm(){
     el.__flashTimer=setTimeout(()=>el.classList.remove('form-flash'),1600);
   }
 }
+
+/* ===== 航班卡片批量删除（选择模式只存 JS 变量，同步后自动退出） ===== */
+let batchMode=false;
+const batchSelected=new Set();
+let batchDeleting=false;
+function enterBatchMode(){
+  batchMode=true; batchSelected.clear();
+  $('batchBar').classList.remove('hidden');
+  $('btnBatchMode').textContent='退出批量删除';
+  renderFlights();
+}
+function exitBatchMode(render=true){
+  batchMode=false; batchSelected.clear();
+  $('batchBar').classList.add('hidden');
+  $('btnBatchMode').textContent='🗑️ 批量删除';
+  if(render) renderFlights();
+}
+function updateBatchBar(){
+  $('batchCount').textContent=batchSelected.size;
+  const del=$('btnBatchDel');
+  del.textContent='删除所选 ('+batchSelected.size+')';
+  del.disabled=batchSelected.size===0||batchDeleting;
+  $('btnBatchAll').textContent=(flights.length>0&&batchSelected.size===flights.length)?'取消全选':'全选';
+}
+function toggleBatch(id){
+  if(batchSelected.has(id)) batchSelected.delete(id); else batchSelected.add(id);
+  const card=document.getElementById('flight-'+id);
+  if(card){
+    card.classList.toggle('batch-selected',batchSelected.has(id));
+    const cb=card.querySelector('[data-batch-check]');
+    if(cb) cb.checked=batchSelected.has(id);
+  }
+  updateBatchBar();
+}
+function toggleBatchAll(){
+  if(flights.length>0&&batchSelected.size===flights.length) batchSelected.clear();
+  else flights.forEach(f=>batchSelected.add(f.id));
+  renderFlights();
+  updateBatchBar();
+}
+async function delBatch(){
+  if(batchDeleting||!batchSelected.size) return;
+  const n=batchSelected.size;
+  if(!confirm('确定删除选中的 '+n+' 张航班卡吗？删除后无法恢复。')) return;
+  batchDeleting=true; updateBatchBar();
+  const ids=[...batchSelected];
+  let ok=0, fail=0;
+  for(const id of ids){
+    const {error}=await primary('our_flights').delete().eq('id',id);
+    if(error) fail++; else { ok++; if(editingId===id) resetForm(); }
+  }
+  batchDeleting=false;
+  exitBatchMode(false);
+  await loadFlights();
+  msg($('listMsg'),'已删除 '+ok+' 张'+(fail?'，'+fail+' 张删除失败，请重试':'')+'。',!fail);
+}
+$('btnBatchMode').addEventListener('click',()=>{ batchMode?exitBatchMode():enterBatchMode(); });
+$('btnBatchAll').addEventListener('click',toggleBatchAll);
+$('btnBatchCancel').addEventListener('click',()=>exitBatchMode());
+$('btnBatchDel').addEventListener('click',delBatch);
 
 /* ===== 当月日历（按周一起始，月份状态只存 JS 变量，不刷新页面） ===== */
 let calYear=0, calMonth=0;
@@ -1696,7 +1776,7 @@ async function refreshWeather(force){
 }
 
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-17-13-avatars';
+const APP_VERSION='2026-10-17-14-batch-delete';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
@@ -1751,6 +1831,7 @@ $('btnDisconnect').addEventListener('click',async()=>{
   dropClients(); show('viewLogin'); msg($('loginMsg'),'已断开连接。',true);
 });
 async function syncFlights(){
+  if(batchMode) exitBatchMode(false);
   const btn=$('btnSync');
   if(btn&&btn.classList.contains('spinning')) return;
   if(btn) btn.classList.add('spinning');
