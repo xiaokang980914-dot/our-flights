@@ -104,6 +104,17 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 .ptr{height:0;overflow:hidden;text-align:center;color:var(--sub);font-size:13px;transition:height .15s ease}
 /* 点右下角 + 后表单高亮闪一下，让人一眼看到滑到哪里了 */
 .form-flash{box-shadow:0 0 0 3px rgba(37,99,235,.55), 0 1px 3px rgba(20,40,80,.05)!important;transition:box-shadow .3s ease}
+/* 截图识别候选 */
+.ocr-item{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;background:#fbfcfe;cursor:pointer}
+.ocr-item:active{background:#eef2fb}
+/* 当月日历 */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.cal-weekday{text-align:center;font-size:12px;color:var(--sub);padding:4px 0}
+.cal-cell{border:1px solid var(--line);border-radius:8px;min-height:58px;padding:4px;font-size:12px;cursor:pointer;background:#fff}
+.cal-cell.today{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand) inset}
+.cal-cell.out{opacity:.35}
+.cal-num{font-weight:700;font-size:13px}
+.cal-bar{font-size:11px;line-height:1.3;padding:2px 4px;border-radius:4px;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;border-left:3px solid var(--brand)}
 .ptr span{display:block;padding:8px 0 2px}
 </style>
 <!-- ===== 加载视图（默认先显示，避免组件没拉到时白屏） ===== -->
@@ -201,6 +212,18 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
       </div>
     </div>
   </div>
+
+  <div class="card" id="calCard">
+    <div class="row">
+      <b class="grow">本月日历</b>
+      <button id="btnCalPrev" class="ghost small">上月</button>
+      <button id="btnCalToday" class="ghost small">回到本月</button>
+      <button id="btnCalNext" class="ghost small">下月</button>
+    </div>
+    <div class="muted" style="margin-top:6px" id="calTitle">-</div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="muted" style="margin-top:6px">点日期格填到添加表单；点航班小条跳到对应航班。</div>
+  </div>
   <div class="card" id="formCard">
     <b id="formTitle">添加航班</b>
     <label for="fNo">航班号</label>
@@ -209,6 +232,12 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
     <input id="fDate" type="date">
     <button id="btnLookup" style="width:100%;margin-top:12px">查询并自动填充</button>
     <div id="lookupMsg"></div>
+    <div class="row" style="margin-top:10px">
+      <button id="btnOcr" type="button" class="ghost grow">📷 截图识别</button>
+      <input id="ocrFile" type="file" accept="image/*" class="hidden">
+    </div>
+    <div id="ocrMsg"></div>
+    <div id="ocrCandidates"></div>
     <div class="grid2">
       <div><label for="fDep">出发三字码</label><input id="fDep" type="text" maxlength="4" style="text-transform:uppercase" placeholder="CAN"></div>
       <div><label for="fArr">到达三字码</label><input id="fArr" type="text" maxlength="4" style="text-transform:uppercase" placeholder="SFO"></div>
@@ -283,8 +312,8 @@ function loadConfig(repair=true){
 function saveConfig(url,key){ localStorage.setItem(CFG_URL,url); localStorage.setItem(CFG_KEY,key); }
 
 /* 常用机场当地时区（无映射时回退北京时间并标注） */
-const AIRPORT_TZ={CAN:'Asia/Shanghai',PEK:'Asia/Shanghai',PKX:'Asia/Shanghai',SZX:'Asia/Shanghai',PVG:'Asia/Shanghai',SHA:'Asia/Shanghai',CTU:'Asia/Shanghai',TFU:'Asia/Shanghai',HGH:'Asia/Shanghai',XIY:'Asia/Shanghai',KMG:'Asia/Shanghai',XMN:'Asia/Shanghai',NKG:'Asia/Shanghai',TSN:'Asia/Shanghai',URC:'Asia/Shanghai',CKG:'Asia/Shanghai',WUH:'Asia/Shanghai',CSX:'Asia/Shanghai',SHE:'Asia/Shanghai',DLC:'Asia/Shanghai',TAO:'Asia/Shanghai',HFE:'Asia/Shanghai',KWE:'Asia/Shanghai',NNG:'Asia/Shanghai',HAK:'Asia/Shanghai',SYX:'Asia/Shanghai',LAX:'America/Los_Angeles',SFO:'America/Los_Angeles',JFK:'America/New_York',ORD:'America/Chicago',ANC:'America/Anchorage',SEA:'America/Los_Angeles',SYD:'Australia/Sydney',MEL:'Australia/Melbourne',AKL:'Pacific/Auckland',LHR:'Europe/London',CDG:'Europe/Paris',FRA:'Europe/Paris',AMS:'Europe/Amsterdam',ICN:'Asia/Seoul',NRT:'Asia/Tokyo',HND:'Asia/Tokyo',SIN:'Asia/Singapore',BKK:'Asia/Bangkok',KUL:'Asia/Kuala_Lumpur',DXB:'Asia/Dubai',HKG:'Asia/Hong_Kong',TPE:'Asia/Taipei'};
-const AIRPORT_CITY={CAN:'广州',PEK:'北京',PKX:'北京',SZX:'深圳',PVG:'上海',SHA:'上海',CTU:'成都',TFU:'成都',HGH:'杭州',XIY:'西安',KMG:'昆明',XMN:'厦门',NKG:'南京',TSN:'天津',URC:'乌鲁木齐',CKG:'重庆',WUH:'武汉',CSX:'长沙',SHE:'沈阳',DLC:'大连',TAO:'青岛',HFE:'合肥',KWE:'贵阳',NNG:'南宁',HAK:'海口',SYX:'三亚',LAX:'洛杉矶',SFO:'旧金山',JFK:'纽约',ORD:'芝加哥',ANC:'安克雷奇',SEA:'西雅图',SYD:'悉尼',MEL:'墨尔本',AKL:'奥克兰',LHR:'伦敦',CDG:'巴黎',FRA:'法兰克福',AMS:'阿姆斯特丹',ICN:'首尔',NRT:'东京',HND:'东京',SIN:'新加坡',BKK:'曼谷',KUL:'吉隆坡',DXB:'迪拜',HKG:'香港',TPE:'台北',ADD:'亚的斯亚贝巴',KHG:'喀什'};
+const AIRPORT_TZ={CAN:'Asia/Shanghai',PEK:'Asia/Shanghai',PKX:'Asia/Shanghai',SZX:'Asia/Shanghai',PVG:'Asia/Shanghai',SHA:'Asia/Shanghai',CTU:'Asia/Shanghai',TFU:'Asia/Shanghai',HGH:'Asia/Shanghai',XIY:'Asia/Shanghai',KMG:'Asia/Shanghai',XMN:'Asia/Shanghai',NKG:'Asia/Shanghai',TSN:'Asia/Shanghai',URC:'Asia/Shanghai',CKG:'Asia/Shanghai',WUH:'Asia/Shanghai',CSX:'Asia/Shanghai',SHE:'Asia/Shanghai',DLC:'Asia/Shanghai',TAO:'Asia/Shanghai',HFE:'Asia/Shanghai',KWE:'Asia/Shanghai',NNG:'Asia/Shanghai',HAK:'Asia/Shanghai',SYX:'Asia/Shanghai',LAX:'America/Los_Angeles',SFO:'America/Los_Angeles',JFK:'America/New_York',ORD:'America/Chicago',ANC:'America/Anchorage',SEA:'America/Los_Angeles',SYD:'Australia/Sydney',MEL:'Australia/Melbourne',AKL:'Pacific/Auckland',LHR:'Europe/London',CDG:'Europe/Paris',FRA:'Europe/Berlin',AMS:'Europe/Amsterdam',ICN:'Asia/Seoul',PUS:'Asia/Seoul',NRT:'Asia/Tokyo',HND:'Asia/Tokyo',SIN:'Asia/Singapore',BKK:'Asia/Bangkok',KUL:'Asia/Kuala_Lumpur',DXB:'Asia/Dubai',DOH:'Asia/Qatar',HKG:'Asia/Hong_Kong',MFM:'Asia/Macau',TPE:'Asia/Taipei',KHH:'Asia/Taipei',MNL:'Asia/Manila',SGN:'Asia/Ho_Chi_Minh',HAN:'Asia/Ho_Chi_Minh',DPS:'Asia/Makassar',YVR:'America/Vancouver',YYZ:'America/Toronto'};
+const AIRPORT_CITY={CAN:'广州',PEK:'北京',PKX:'北京',SZX:'深圳',PVG:'上海',SHA:'上海',CTU:'成都',TFU:'成都',HGH:'杭州',XIY:'西安',KMG:'昆明',XMN:'厦门',NKG:'南京',TSN:'天津',URC:'乌鲁木齐',CKG:'重庆',WUH:'武汉',CSX:'长沙',SHE:'沈阳',DLC:'大连',TAO:'青岛',HFE:'合肥',KWE:'贵阳',NNG:'南宁',HAK:'海口',SYX:'三亚',LAX:'洛杉矶',SFO:'旧金山',JFK:'纽约',ORD:'芝加哥',ANC:'安克雷奇',SEA:'西雅图',SYD:'悉尼',MEL:'墨尔本',AKL:'奥克兰',LHR:'伦敦',CDG:'巴黎',FRA:'法兰克福',AMS:'阿姆斯特丹',ICN:'首尔',PUS:'釜山',NRT:'东京',HND:'东京',SIN:'新加坡',BKK:'曼谷',KUL:'吉隆坡',DXB:'迪拜',DOH:'多哈',HKG:'香港',MFM:'澳门',TPE:'台北',KHH:'高雄',MNL:'马尼拉',SGN:'胡志明市',HAN:'河内',DPS:'巴厘岛',YVR:'温哥华',YYZ:'多伦多',ADD:'亚的斯亚贝巴',KHG:'喀什'};
 function cityOf(code){ return AIRPORT_CITY[String(code||'').toUpperCase()]||''; }
 const TZ_CHOICES=['Asia/Shanghai','Asia/Tokyo','Asia/Seoul','Asia/Singapore','Asia/Bangkok','Asia/Dubai','Europe/London','Europe/Paris','America/New_York','America/Chicago','America/Los_Angeles','America/Anchorage','Australia/Sydney','Pacific/Auckland'];
 
@@ -456,7 +485,7 @@ function displayTime(iso,airportCode){
     if(tz) return {t:fmtInTz(iso,tz,true), tag:'当地'};
     return {t:fmtInTz(iso,'Asia/Shanghai',true), tag:'当地（回退北京）'};
   }
-  return {t:fmtInTz(iso,'Asia/Shanghai',true), tag:'北京'};
+  return {t:fmtInTz(iso,'Asia/Shanghai',true), tag:''};
 }
 /* datetime-local（按北京时间填）<-> ISO */
 function bjInputToIso(v){ if(!v) return null; const d=new Date(v+':00+08:00'); return isNaN(d)?null:d.toISOString(); }
@@ -540,13 +569,14 @@ function renderFlights(){
   document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>delFlight(b.dataset.del)));
   document.querySelectorAll('[data-add-first]').forEach(b=>b.addEventListener('click',()=>{ scrollToForm(); }));
   applySectionColors();
+  renderCalendar();
 }
 function renderRoleList(list){
   if(!list.length) return '<div class="empty-state"><div class="big">✈️</div><div>还没有航班</div><button class="ghost small" data-add-first style="margin-top:8px">添加第一班</button></div>';
   const sorted=list.slice().sort((a,b)=>(a.flight_date||'').localeCompare(b.flight_date||'')||String(a.dep_time||'').localeCompare(String(b.dep_time||'')));
   let html='', cur='';
   for(const f of sorted){
-    if(f.flight_date!==cur){ cur=f.flight_date; html+='<div class="date-head">'+esc(fmtDateHead(cur))+'</div>'; }
+    if(f.flight_date!==cur){ cur=f.flight_date; html+='<div class="date-head" id="date-'+esc(cur)+'">'+esc(fmtDateHead(cur))+'</div>'; }
     html+=flightCard(f);
   }
   return html;
@@ -558,7 +588,7 @@ function flightCard(f){
   const dur=flightDuration(f);
   const isNew=ownerOf(f)!==myRole&&f.created_at&&new Date(f.created_at).getTime()>lastSeenMine;
   const roleColor=(typeof sectionColors!=='undefined'&&sectionColors[ownerOf(f)])||DEFAULT_COLORS[ownerOf(f)]||'#2563eb';
-  return '<div class="flight" style="border-top-color:'+esc(roleColor)+'">'
+  return '<div class="flight" id="flight-'+esc(f.id)+'" style="border-top-color:'+esc(roleColor)+'">'
     +'<div><span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+st.key+'">'+st.label+'</span>'+overlapBadge(f)+(isNew?'<span class="badge new">新</span>':'')+'</div>'
     +'<div class="muted">'+esc(f.flight_date)+' · '+esc(flightCountdown(f))+(f.aircraft?' · '+esc(f.aircraft):'')+(dur?' · 飞行时长 '+dur:'')+' · 添加人 '+(ownerOf(f)==='attendant'?'🤵🏻‍♀️ 乘务员':'🧑‍✈️ 飞行员')+'</div>'
     +'<div class="bp-route"><div class="bp-end"><div class="bp-code">'+esc(f.dep_code||'---')+'</div><div class="bp-city">'+esc(depCity||'')+'</div><div class="bp-time">'+esc(dep.t)+'</div><div class="bp-city">'+esc(dep.tag)+'</div></div>'
@@ -578,6 +608,51 @@ function scrollToForm(){
     clearTimeout(el.__flashTimer);
     el.__flashTimer=setTimeout(()=>el.classList.remove('form-flash'),1600);
   }
+}
+
+/* ===== 当月日历（按周一起始，月份状态只存 JS 变量，不刷新页面） ===== */
+let calYear=0, calMonth=0;
+(function initCalMonth(){ const t=todayBj().split('-'); calYear=+t[0]; calMonth=+t[1]-1; })();
+function pad2(n){ return String(n).padStart(2,'0'); }
+function addDaysISO(iso,days){
+  const d=new Date(iso+'T12:00:00+08:00'); d.setDate(d.getDate()+days);
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+}
+function renderCalendar(){
+  const grid=$('calGrid'), title=$('calTitle'); if(!grid||!title) return;
+  title.textContent=calYear+'年'+(calMonth+1)+'月';
+  const today=todayBj();
+  let html=['一','二','三','四','五','六','日'].map(w=>'<div class="cal-weekday">'+w+'</div>').join('');
+  const first=new Date(calYear,calMonth,1);
+  const offset=(first.getDay()+6)%7;
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  for(let i=0;i<offset;i++) html+='<div class="cal-cell out"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=calYear+'-'+pad2(calMonth+1)+'-'+pad2(d);
+    const dayFlights=flights.filter(f=>f.flight_date===dateStr).slice().sort((a,b)=>String(a.dep_time||'').localeCompare(String(b.dep_time||'')));
+    const bars=dayFlights.map(f=>{
+      const c=(typeof sectionColors!=='undefined'&&sectionColors[ownerOf(f)])||DEFAULT_COLORS[ownerOf(f)]||'#2563eb';
+      return '<div class="cal-bar" data-flight-id="'+esc(f.id)+'" style="border-left-color:'+esc(c)+';background:'+esc(c)+'22">'+esc(f.flight_no)+'</div>';
+    }).join('');
+    html+='<div class="cal-cell'+(dateStr===today?' today':'')+'" data-cal-date="'+esc(dateStr)+'"><div class="cal-num">'+d+'</div>'+bars+'</div>';
+  }
+  grid.innerHTML=html;
+  grid.querySelectorAll('[data-flight-id]').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();
+    const target=document.getElementById('flight-'+b.dataset.flightId);
+    if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+    else { const f=flights.find(x=>String(x.id)===b.dataset.flightId); if(f){ const dh=document.getElementById('date-'+f.flight_date); if(dh) dh.scrollIntoView({behavior:'smooth',block:'start'}); } }
+  }));
+  grid.querySelectorAll('[data-cal-date]').forEach(cell=>cell.addEventListener('click',()=>{
+    $('fDate').value=cell.dataset.calDate;
+    scrollToForm();
+  }));
+}
+function calGo(delta){
+  calMonth+=delta;
+  if(calMonth<0){ calMonth=11; calYear--; }
+  if(calMonth>11){ calMonth=0; calYear++; }
+  renderCalendar();
 }
 
 /* db 门面：primary(表) 做增删改查，rpc 调 Postgres 函数 */
@@ -633,6 +708,161 @@ async function lookupFlight(){
     msg($('lookupMsg'),'已自动填充，可再手动修改后保存。',true);
   }catch(e){ msg($('lookupMsg'), friendlyErr(e,'查航班')); }
   finally{ $('btnLookup').disabled=false; }
+}
+
+/* ===== 截图识别航班（OCR，纯前端；只提取航班字段，不处理姓名证件类内容） ===== */
+const OCR_CITY_LIST=[['上海虹桥','SHA'],['上海浦东','PVG'],['成都天府','TFU'],['成都双流','CTU'],['北京首都','PEK'],['北京大兴','PKX'],['广州','CAN'],['马尼拉','MNL'],['深圳','SZX'],['上海','SHA'],['杭州','HGH'],['北京','PEK'],['成都','CTU'],['昆明','KMG'],['厦门','XMN'],['南京','NKG'],['西安','XIY'],['重庆','CKG'],['武汉','WUH'],['长沙','CSX'],['海口','HAK'],['三亚','SYX'],['香港','HKG'],['台北','TPE'],['曼谷','BKK'],['新加坡','SIN']];
+const OCR_AIRCRAFT_MAP={'7M8':'Boeing 737 MAX 8','773':'Boeing 777-300ER','77W':'Boeing 777-300ER','738':'Boeing 737-800','73G':'Boeing 737-800','789':'Boeing 787-9','359':'Airbus A350-900','333':'Airbus A330-300','32N':'Airbus A320neo'};
+let ocrCandidates=[];
+let _tesseractPromise=null;
+function loadTesseract(){
+  if(window.Tesseract) return Promise.resolve();
+  if(_tesseractPromise) return _tesseractPromise;
+  const urls=['https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js','https://unpkg.com/tesseract.js@5/dist/tesseract.min.js'];
+  _tesseractPromise=(async()=>{
+    let lastErr=null;
+    for(const u of urls){
+      try{
+        await new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=u; s.onload=res; s.onerror=()=>rej(new Error('OCR 组件加载失败')); document.head.appendChild(s); });
+        if(window.Tesseract) return;
+      }catch(e){ lastErr=e; }
+    }
+    throw lastErr||new Error('OCR 组件加载失败');
+  })();
+  return _tesseractPromise;
+}
+function ocrNormDigits(s){ return String(s||'').replace(/[Oo]/g,'0'); }
+function ocrNormTime(h,m){ return pad2(ocrNormDigits(h))+':'+pad2(ocrNormDigits(m)); }
+function ocrFindCities(windowText){
+  const found=[];
+  let pos=0;
+  const sorted=OCR_CITY_LIST.slice().sort((a,b)=>b[0].length-a[0].length);
+  while(pos<windowText.length){
+    let matched=null;
+    for(const [name,code] of sorted){ if(windowText.startsWith(name,pos)){ matched={name,code}; break; } }
+    if(matched){ found.push(matched); pos+=matched.name.length; } else pos++;
+  }
+  return found;
+}
+function parseOcrFlights(text){
+  const year=+todayBj().slice(0,4);
+  const lines=String(text||'').split(/\n/).map(l=>l.trim()).filter(Boolean);
+  let currentDate=null;
+  const out=[];
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    let m=line.match(/(\d{1,2})月(\d{1,2})日/)||line.match(/(?:^|\s)(\d{1,2})[.\-](\d{1,2})(?![\d:])/);
+    if(m) currentDate=year+'-'+pad2(m[1])+'-'+pad2(m[2]);
+    const flightMatches=line.match(/CZ\s*[O0-9]{3,4}/gi)||[];
+    if(!flightMatches.length) continue;
+    if(!currentDate) continue;
+    const windowText=[line,lines[i+1]||'',lines[i+2]||''].join(' ');
+    let aircraft='';
+    const am=windowText.match(/(7M8|773|77W|738|73G|789|359|333|32N)\b/);
+    if(am) aircraft=OCR_AIRCRAFT_MAP[am[1]]||'';
+    let depTime='', arrTime='';
+    const range=windowText.match(/([0-2]?\d):([0-5]\d)\s*[–—\-~至]\s*([0-2]?\d):([0-5]\d)/);
+    if(range){ depTime=ocrNormTime(range[1],range[2]); arrTime=ocrNormTime(range[3],range[4]); }
+    else{
+      const all=[...windowText.matchAll(/([0-2]?\d):([0-5]\d)/g)];
+      if(all.length>=2){ depTime=ocrNormTime(all[0][1],all[0][2]); arrTime=ocrNormTime(all[1][1],all[1][2]); }
+    }
+    const cities=ocrFindCities(windowText);
+    const depCode=cities[0]?cities[0].code:'';
+    const arrCode=cities[1]?cities[1].code:'';
+    for(const fm of flightMatches){
+      const digits=ocrNormDigits(fm.replace(/CZ\s*/i,''));
+      const flightNo='CZ'+String(parseInt(digits,10));
+      if(!flightNo||flightNo==='CZNaN') continue;
+      if(!depCode&&!arrCode&&!depTime&&!arrTime) continue;
+      const existing=out.find(c=>c.flight_no===flightNo&&c.flight_date===currentDate);
+      if(existing){
+        if(!existing.dep_code) existing.dep_code=depCode;
+        if(!existing.arr_code) existing.arr_code=arrCode;
+        if(!existing.dep_time) existing.dep_time=depTime;
+        if(!existing.arr_time) existing.arr_time=arrTime;
+        if(!existing.aircraft) existing.aircraft=aircraft;
+        continue;
+      }
+      out.push({flight_no:flightNo,flight_date:currentDate,dep_code:depCode,arr_code:arrCode,dep_time:depTime,arr_time:arrTime,aircraft:aircraft});
+    }
+  }
+  return out;
+}
+function ocrCandidateLabel(c){
+  const depCity=cityOf(c.dep_code)||c.dep_code||'?', arrCity=cityOf(c.arr_code)||c.arr_code||'?';
+  const times=(c.dep_time||c.arr_time)?(c.dep_time||'--')+'-'+(c.arr_time||'--'):'时间未识别';
+  return esc(c.flight_date)+' '+esc(c.flight_no)+' '+esc(depCity)+'→'+esc(arrCity)+' '+esc(times)+(c.aircraft?' '+esc(c.aircraft):'');
+}
+function renderOcrCandidates(){
+  const box=$('ocrCandidates'); if(!box) return;
+  if(!ocrCandidates.length){ box.innerHTML=''; return; }
+  box.innerHTML=ocrCandidates.map((c,idx)=>'<div class="ocr-item" data-ocr-idx="'+idx+'">'+ocrCandidateLabel(c)+'<div class="muted">点此填入表单</div></div>').join('')
+    +'<button id="btnOcrSaveAll" type="button" class="ghost" style="width:100%;margin-top:10px">全部保存（去重）</button>';
+  box.querySelectorAll('[data-ocr-idx]').forEach(el=>el.addEventListener('click',()=>{
+    fillFormFromCandidate(ocrCandidates[+el.dataset.ocrIdx]);
+    msg($('ocrMsg'),'已填入表单，请核对后保存。',true);
+  }));
+  const saveAll=$('btnOcrSaveAll'); if(saveAll) saveAll.addEventListener('click',saveAllOcr);
+}
+function fillFormFromCandidate(c){
+  if(!c) return;
+  editingId=null;
+  $('formTitle').textContent='添加航班';
+  $('btnSaveFlight').textContent='保存航班';
+  $('btnCancelEdit').classList.add('hidden');
+  $('fNo').value=c.flight_no||''; $('fDate').value=c.flight_date||'';
+  $('fDep').value=c.dep_code||''; $('fArr').value=c.arr_code||'';
+  $('fDepT').value=c.dep_time?(c.flight_date+'T'+c.dep_time):'';
+  if(c.arr_time){
+    const arrDate=(c.dep_time&&c.arr_time<c.dep_time)?addDaysISO(c.flight_date,1):c.flight_date;
+    $('fArrT').value=arrDate+'T'+c.arr_time;
+  } else $('fArrT').value='';
+  $('fAc').value=c.aircraft||'';
+}
+async function saveAllOcr(){
+  if(!ocrCandidates.length) return;
+  msg($('ocrMsg'),'保存中…',true);
+  let saved=0, skipped=0;
+  const seen=new Set(flights.map(f=>f.flight_no+'|'+f.flight_date));
+  for(const c of ocrCandidates){
+    const k=c.flight_no+'|'+c.flight_date;
+    if(seen.has(k)){ skipped++; continue; }
+    seen.add(k);
+    const row={
+      flight_no:c.flight_no, flight_date:c.flight_date,
+      dep_code:c.dep_code||null, arr_code:c.arr_code||null,
+      dep_time:c.dep_time?bjInputToIso(c.flight_date+'T'+c.dep_time):null,
+      arr_time:c.arr_time?bjInputToIso(((c.dep_time&&c.arr_time<c.dep_time)?addDaysISO(c.flight_date,1):c.flight_date)+'T'+c.arr_time):null,
+      aircraft:c.aircraft||null, note:null, added_by:myRole
+    };
+    const {error}=await primary('our_flights').insert(row);
+    if(error){ skipped++; continue; }
+    saved++;
+  }
+  ocrCandidates=[]; renderOcrCandidates();
+  msg($('ocrMsg'),'已保存 '+saved+' 条，跳过重复/失败 '+skipped+' 条。',true);
+  await loadFlights();
+}
+async function handleOcrFile(file){
+  if(!file) return;
+  const btn=$('btnOcr'); if(btn){ btn.disabled=true; btn.textContent='识别中…'; }
+  msg($('ocrMsg'),'正在识别截图…',true);
+  try{
+    await loadTesseract();
+    const res=await window.Tesseract.recognize(file,'chi_sim+eng');
+    const text=(res&&res.data&&res.data.text)||(res&&res.text)||'';
+    ocrCandidates=parseOcrFlights(text);
+    if(!ocrCandidates.length){ msg($('ocrMsg'),'没识别出航班，请换一张更清晰的截图再试'); renderOcrCandidates(); return; }
+    msg($('ocrMsg'),'识别出 '+ocrCandidates.length+' 条航班，点一条填入表单，或点“全部保存”。',true);
+    renderOcrCandidates();
+  }catch(e){
+    ocrCandidates=[]; renderOcrCandidates();
+    msg($('ocrMsg'),'截图识别失败：'+(e&&e.message?e.message:String(e))+'，请换一张更清晰的截图再试。');
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='📷 截图识别'; }
+    const inp=$('ocrFile'); if(inp) inp.value='';
+  }
 }
 
 /* ===== 保存（新增 / 更新） ===== */
@@ -718,7 +948,7 @@ async function loadSectionColors(){
 }
 async function saveMyColor(color){
   if(!myRole) return;
-  sectionColors[myRole]=color; applySectionColors();
+  sectionColors[myRole]=color; applySectionColors(); renderCalendar();
   localStorage.setItem('ourflights.color.'+myRole,color);
   try{ await primary('section_colors').upsert({identity:myRole,color},{onConflict:'identity'}); }catch(e){ /* 离线/表不存在时本地已生效 */ }
 }
@@ -739,7 +969,7 @@ $('tmBj').addEventListener('click',()=>{ timeMode='bj'; localStorage.setItem('ou
 $('tmLocal').addEventListener('click',()=>{ timeMode='local'; localStorage.setItem('ourflights.timeMode','local'); applyTimeMode(); renderFlights(); });
 
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-17-06-getuser-timeout';
+const APP_VERSION='2026-10-17-07-ocr-calendar';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
@@ -836,6 +1066,11 @@ $('btnFab').addEventListener('click',scrollToForm);
   },{passive:true});
 })();
 $('btnLookup').addEventListener('click',lookupFlight);
+$('btnOcr').addEventListener('click',()=>$('ocrFile').click());
+$('ocrFile').addEventListener('change',e=>handleOcrFile(e.target.files&&e.target.files[0]));
+$('btnCalPrev').addEventListener('click',()=>calGo(-1));
+$('btnCalNext').addEventListener('click',()=>calGo(1));
+$('btnCalToday').addEventListener('click',()=>{ const t=todayBj().split('-'); calYear=+t[0]; calMonth=+t[1]-1; renderCalendar(); });
 $('btnSaveFlight').addEventListener('click',saveFlight);
 $('btnCancelEdit').addEventListener('click',resetForm);
 
