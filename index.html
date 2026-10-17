@@ -106,6 +106,11 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 .form-flash{box-shadow:0 0 0 3px rgba(37,99,235,.55), 0 1px 3px rgba(20,40,80,.05)!important;transition:box-shadow .3s ease}
 .ptr span{display:block;padding:8px 0 2px}
 </style>
+<!-- ===== 加载视图（默认先显示，避免组件没拉到时白屏） ===== -->
+<div id="viewLoading">
+  <div class="card" style="text-align:center;padding:24px">正在加载…<div class="muted" style="margin-top:8px">如果一直停在这里，说明网络在拉取登录组件。点下面重载一次，或切一下 WiFi / 流量再试。</div><button id="btnReloadPage" class="ghost" style="margin-top:12px">重新加载</button></div>
+</div>
+
 <!-- ===== 设置视图 ===== -->
 <div id="viewSetup" class="hidden">
   <h2 class="view-title">连接设置</h2>
@@ -297,15 +302,25 @@ const AUTH_STORAGE_KEY='family-manager-app-device-auth-token-v1';
 
 /* ===== 视图切换 ===== */
 function show(name){
-  for(const v of ['viewSetup','viewLogin','viewMain']) $(v).classList.toggle('hidden', v!==name);
+  for(const v of ['viewLoading','viewSetup','viewLogin','viewMain']) $(v).classList.toggle('hidden', v!==name);
   if(name==='viewLogin') syncRoleButtons();
   if(name==='viewMain') maybeShowRoleOverlay();
   window.scrollTo(0,0);
 }
 
-/* ===== 建立客户端（esm.sh 动态导入，no-store 防旧缓存） ===== */
+/* ===== 建立客户端（动态导入，no-store 防旧缓存；esm.sh 失败/超时自动换 jsdelivr） ===== */
+async function importWithTimeout(url, ms){
+  return await Promise.race([
+    import(url),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('组件加载超时')), ms))
+  ]);
+}
 async function buildClients(cfg){
-  const mod=await import('https://esm.sh/@supabase/supabase-js@2');
+  let mod=null, lastErr=null;
+  for(const u of ['https://esm.sh/@supabase/supabase-js@2','https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm']){
+    try{ mod=await importWithTimeout(u, 10000); break; }catch(e){ lastErr=e; }
+  }
+  if(!mod) throw lastErr||new Error('登录组件加载失败');
   const createClient=mod.createClient;
   sbClient=createClient(cfg.url, cfg.key, {
     auth:{ multiTab:false, autoRefreshToken:true, persistSession:true, storageKey:AUTH_STORAGE_KEY, detectSessionInUrl:false },
@@ -724,7 +739,7 @@ $('tmBj').addEventListener('click',()=>{ timeMode='bj'; localStorage.setItem('ou
 $('tmLocal').addEventListener('click',()=>{ timeMode='local'; localStorage.setItem('ourflights.timeMode','local'); applyTimeMode(); renderFlights(); });
 
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-17-04-check-update';
+const APP_VERSION='2026-10-17-05-loading-fallback';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
@@ -787,6 +802,7 @@ async function syncFlights(){
   }
 }
 $('btnRefresh').addEventListener('click',syncFlights);
+{ const rb=$('btnReloadPage'); if(rb) rb.addEventListener('click',()=>location.reload()); }
 $('btnSync').addEventListener('click',syncFlights);
 $('btnCheckUpdate').addEventListener('click',checkForUpdate);
 
@@ -837,17 +853,18 @@ function initWcForm(){
   });
 }
 
-/* ===== 启动：先修配置，再决定进哪个视图 ===== */
+/* ===== 启动：先修配置，再决定进哪个视图（建客户端最多等 12 秒，超时也先出登录页，不白屏） ===== */
 async function boot(){
   tickClock(); initWcForm(); initColors(); applyTimeMode();
   $('fDate').value=todayBj();
+  show('viewLoading');
   const cfg=loadConfig(true); // 读取时自动修复已存的坏值
   if(!cfg){ $('cfgUrl').value=''; $('cfgKey').value=''; show('viewSetup'); return; }
   try{
-    await buildClients(cfg);
+    await Promise.race([buildClients(cfg), new Promise((_,rej)=>setTimeout(()=>rej(new Error('启动超时')), 12000))]);
     const user=await currentUser();
     if(user){ me=user; show('viewMain'); resetForm(); await loadFlights(); return; }
-  }catch(e){ /* 客户端建不起来就落到登录页，登录时再报具体错误 */ }
+  }catch(e){ /* 客户端建不起来就落到登录页，登录时再重试建客户端 */ }
   show('viewLogin');
 }
 boot();
