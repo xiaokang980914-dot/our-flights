@@ -70,6 +70,11 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 .sync-btn.spinning svg{animation:syncspin .8s linear infinite}
 .sync-btn.done{box-shadow:0 0 0 5px rgba(34,197,94,.22), 0 6px 16px rgba(37,99,235,.35)}
 @keyframes syncspin{to{transform:rotate(360deg)}}
+/* 角色选择按钮 */
+.role-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;background:#eef2fb;color:var(--ink);font-size:15px}
+.role-btn .role-emoji{font-size:34px;line-height:1}
+.role-btn.on{background:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.35)}
+.role-overlay{position:fixed;inset:0;z-index:80;background:rgba(23,35,59,.45);backdrop-filter:blur(2px);padding:16px}
 </style>
 <!-- ===== 设置视图 ===== -->
 <div id="viewSetup" class="hidden">
@@ -91,8 +96,13 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 <!-- ===== 登录视图 ===== -->
 <div id="viewLogin" class="hidden">
   <h2 class="view-title">登录</h2>
-  <p class="muted">用两人共用的账号登录，登录后双方的航班会互相可见。</p>
+  <p class="muted">先选你的角色，再用两人共用的账号登录。登录后双方的航班会互相可见。</p>
   <div class="card">
+    <label>你是谁</label>
+    <div class="row" style="gap:10px">
+      <button id="rolePilot" class="role-btn grow" type="button"><span class="role-emoji">🧑‍✈️</span><span>飞行员</span></button>
+      <button id="roleAttendant" class="role-btn grow" type="button"><span class="role-emoji">🤵🏻‍♀️</span><span>乘务员</span></button>
+    </div>
     <label for="loginEmail">邮箱</label>
     <input id="loginEmail" type="email" autocomplete="username" placeholder="邮箱">
     <label for="loginPwd">密码</label>
@@ -116,14 +126,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
         <div class="clock-date" id="bjDate"></div>
       </div>
     </div>
-    <div class="muted" style="margin-top:4px">当前身份：<span id="meEmail">-</span></div>
-    <div class="row" style="margin-top:8px">
-      <b class="grow">这台手机是</b>
-      <div class="seg-toggle">
-        <button id="idMe" class="on">我</button>
-        <button id="idPartner">对方</button>
-      </div>
-    </div>
+    <div class="muted" style="margin-top:4px">当前身份：<span id="meRole">-</span></div>
     <div class="toolbar">
       <button id="btnRefresh" class="ghost small">刷新</button>
       <button id="btnDisconnect" class="ghost small">断开连接</button>
@@ -184,21 +187,31 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 
   <div id="listMsg"></div>
 
-  <div class="card section" id="secMine">
+  <div class="card section" id="secPilot">
     <div class="sec-head">
-      <h2>我的航班</h2>
-      <span class="muted" id="mineWho"></span>
-      <span class="sec-color">颜色 <input type="color" id="colorMine" value="#2563eb"></span>
+      <h2>🧑‍✈️的航班</h2>
+      <span class="sec-color">颜色 <input type="color" id="colorPilot" value="#2563eb"></span>
     </div>
-    <div id="listMine"></div>
+    <div id="listPilot"></div>
   </div>
 
-  <div class="card section" id="secPartner">
+  <div class="card section" id="secAttendant">
     <div class="sec-head">
-      <h2>对方的航班</h2>
-      <span class="muted" id="partnerWho"></span>
+      <h2>🤵🏻‍♀️的航班</h2>
+      <span class="sec-color">颜色 <input type="color" id="colorAttendant" value="#db2777"></span>
     </div>
-    <div id="listPartner"></div>
+    <div id="listAttendant"></div>
+  </div>
+
+  <div id="roleOverlay" class="role-overlay hidden">
+    <div class="card" style="max-width:360px;margin:20vh auto">
+      <h2 style="text-align:center">你是谁？</h2>
+      <p class="muted" style="text-align:center">选一次，以后这台手机就记住了。</p>
+      <div class="row" style="gap:10px;margin-top:12px">
+        <button id="roleOverlayPilot" class="role-btn grow" type="button"><span class="role-emoji">🧑‍✈️</span><span>飞行员</span></button>
+        <button id="roleOverlayAttendant" class="role-btn grow" type="button"><span class="role-emoji">🤵🏻‍♀️</span><span>乘务员</span></button>
+      </div>
+    </div>
   </div>
 </div>
 </div><!-- /wrap -->
@@ -239,14 +252,20 @@ const TZ_CHOICES=['Asia/Shanghai','Asia/Tokyo','Asia/Seoul','Asia/Singapore','As
 /* ===== 全局状态 ===== */
 let sbAuth=null, sbDb=null, sbClient=null, me=null, flights=[], editingId=null;
 let timeMode=localStorage.getItem('ourflights.timeMode')||'bj'; // bj=北京时间 local=当地时间
-let myIdentity=localStorage.getItem('ourflights.identity')||'me'; // 这台手机是谁：me=我 partner=对方（按设备存，两台手机各设一次）
-function ownerOf(f){ return f&&f.added_by==='partner'?'partner':'me'; } // 旧记录 added_by 是邮箱，归为“我”
-function setIdentity(v){ myIdentity=v; localStorage.setItem('ourflights.identity',v); renderFlights(); }
+let myRole=localStorage.getItem('ourflights.role')||''; // pilot=飞行员 attendant=乘务员（按设备存，两台手机各选一次）
+if(!myRole){ const old=localStorage.getItem('ourflights.identity'); if(old==='partner') myRole='attendant'; else if(old==='me') myRole='pilot'; if(myRole) localStorage.setItem('ourflights.role',myRole); } // 迁移旧版我/对方
+function ownerOf(f){ const a=f&&f.added_by; if(a==='attendant'||a==='partner') return 'attendant'; return 'pilot'; } // 旧记录 added_by 是邮箱，归为飞行员
+const ROLE_LABEL={pilot:'🧑‍✈️ 飞行员', attendant:'🤵🏻‍♀️ 乘务员'};
+function setRole(v){ myRole=v; localStorage.setItem('ourflights.role',v); $('roleOverlay').classList.add('hidden'); syncRoleButtons(); renderFlights(); }
+function syncRoleButtons(){ const rp=$('rolePilot'), ra=$('roleAttendant'); if(rp) rp.classList.toggle('on',myRole==='pilot'); if(ra) ra.classList.toggle('on',myRole==='attendant'); }
+function maybeShowRoleOverlay(){ $('roleOverlay').classList.toggle('hidden', !!myRole); }
 const AUTH_STORAGE_KEY='family-manager-app-device-auth-token-v1';
 
 /* ===== 视图切换 ===== */
 function show(name){
   for(const v of ['viewSetup','viewLogin','viewMain']) $(v).classList.toggle('hidden', v!==name);
+  if(name==='viewLogin') syncRoleButtons();
+  if(name==='viewMain') maybeShowRoleOverlay();
   window.scrollTo(0,0);
 }
 
@@ -410,21 +429,15 @@ async function loadFlights(){
 }
 function emailPrefix(email){ return email?String(email).split('@')[0]:''; }
 function renderFlights(){
-  const myEmail=me?me.email:'';
-  $('meEmail').textContent=myEmail||'-';
-  $('idMe').classList.toggle('on',myIdentity==='me');
-  $('idPartner').classList.toggle('on',myIdentity==='partner');
-  $('mineWho').textContent='';
-  $('partnerWho').textContent='';
-  const mine=flights.filter(f=>ownerOf(f)===myIdentity);
-  const others=flights.filter(f=>ownerOf(f)!==myIdentity);
-  $('listMine').innerHTML=mine.length?mine.map(flightCard).join(''):'<p class="muted">你还没有添加航班</p>';
-  $('listPartner').innerHTML=others.length?others.map(flightCard).join(''):'<p class="muted">对方还没有添加航班</p>';
+  $('meRole').textContent=ROLE_LABEL[myRole]||'-';
+  const pilot=flights.filter(f=>ownerOf(f)==='pilot');
+  const attendant=flights.filter(f=>ownerOf(f)==='attendant');
+  $('listPilot').innerHTML=pilot.length?pilot.map(flightCard).join(''):'<p class="muted">还没有航班</p>';
+  $('listAttendant').innerHTML=attendant.length?attendant.map(flightCard).join(''):'<p class="muted">还没有航班</p>';
   document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.edit)));
   document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>delFlight(b.dataset.del)));
+  applySectionColors();
 }
-$('idMe').onclick=()=>setIdentity('me');
-$('idPartner').onclick=()=>setIdentity('partner');
 function flightCard(f){
   const today=todayBj();
   const past=f.flight_date<today;
@@ -434,7 +447,7 @@ function flightCard(f){
   const arrLabel=cityOf(f.arr_code)?cityOf(f.arr_code)+' '+f.arr_code:(f.arr_code||'---');
   return '<div class="flight">'
     +'<div><span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+(past?'past':'')+'">'+label+'</span></div>'
-    +'<div class="muted">'+esc(f.flight_date)+(f.aircraft?' · '+esc(f.aircraft):'')+' · 添加人 '+(ownerOf(f)==='partner'?'对方':'我')+'</div>'
+    +'<div class="muted">'+esc(f.flight_date)+(f.aircraft?' · '+esc(f.aircraft):'')+' · 添加人 '+(ownerOf(f)==='attendant'?'🤵🏻‍♀️ 乘务员':'🧑‍✈️ 飞行员')+'</div>'
     +'<div class="route"><span class="code">'+esc(depLabel)+'</span><span class="arrow">→</span><span class="code">'+esc(arrLabel)+'</span></div>'
     +'<div class="times"><span>起飞 <b>'+esc(dep.t)+'</b> <span class="muted">'+esc(dep.tag)+'</span></span><span>到达 <b>'+esc(arr.t)+'</b> <span class="muted">'+esc(arr.tag)+'</span></span></div>'
     +(f.note?'<div class="muted" style="margin-top:4px">备注：'+esc(f.note)+'</div>':'')
@@ -522,7 +535,7 @@ async function saveFlight(){
       if(error) throw error;
       msg($('saveMsg'),'已更新。',true);
     }else{
-      row.added_by=myIdentity;
+      row.added_by=myRole;
       const {error}=await primary('our_flights').insert(row);
       if(error) throw error;
       msg($('saveMsg'),'已保存。',true);
@@ -560,33 +573,36 @@ async function delFlight(id){
   await loadFlights();
 }
 
-/* ===== 分区颜色（按身份存在共享库，各自只能改自己的） ===== */
-const DEFAULT_COLORS={me:'#2563eb', partner:'#db2777'};
+/* ===== 分区颜色（按角色存在共享库，各自只能改自己的） ===== */
+const DEFAULT_COLORS={pilot:'#2563eb', attendant:'#db2777'};
 let sectionColors={...DEFAULT_COLORS};
 function applyColor(secEl,color){ secEl.style.borderTopColor=color; }
 function applySectionColors(){
-  applyColor($('secMine'), sectionColors[myIdentity]||DEFAULT_COLORS[myIdentity]);
-  const other=myIdentity==='me'?'partner':'me';
-  applyColor($('secPartner'), sectionColors[other]||DEFAULT_COLORS[other]);
-  const mineInput=$('colorMine'); if(mineInput) mineInput.value=sectionColors[myIdentity]||DEFAULT_COLORS[myIdentity];
+  applyColor($('secPilot'), sectionColors['pilot']||DEFAULT_COLORS['pilot']);
+  applyColor($('secAttendant'), sectionColors['attendant']||DEFAULT_COLORS['attendant']);
+  const cp=$('colorPilot'), ca=$('colorAttendant');
+  if(cp){ cp.value=sectionColors['pilot']||DEFAULT_COLORS['pilot']; const w=cp.closest('.sec-color'); if(w) w.style.display=(myRole==='pilot'?'':'none'); }
+  if(ca){ ca.value=sectionColors['attendant']||DEFAULT_COLORS['attendant']; const w=ca.closest('.sec-color'); if(w) w.style.display=(myRole==='attendant'?'':'none'); }
 }
 async function loadSectionColors(){
   try{
     const {data,error}=await primary('section_colors').select('identity,color');
-    if(!error&&data){ for(const r of data){ if(r.identity==='me'||r.identity==='partner') sectionColors[r.identity]=r.color; } }
+    if(!error&&data){ for(const r of data){ if(r.identity==='pilot'||r.identity==='attendant') sectionColors[r.identity]=r.color; } }
   }catch(e){ /* 表不存在时用默认色，不报错 */ }
   applySectionColors();
 }
 async function saveMyColor(color){
-  sectionColors[myIdentity]=color; applySectionColors();
-  localStorage.setItem('ourflights.color.'+myIdentity,color);
-  try{ await primary('section_colors').upsert({identity:myIdentity,color},{onConflict:'identity'}); }catch(e){ /* 离线/表不存在时本地已生效 */ }
+  if(!myRole) return;
+  sectionColors[myRole]=color; applySectionColors();
+  localStorage.setItem('ourflights.color.'+myRole,color);
+  try{ await primary('section_colors').upsert({identity:myRole,color},{onConflict:'identity'}); }catch(e){ /* 离线/表不存在时本地已生效 */ }
 }
 function initColors(){
-  const mine=localStorage.getItem('ourflights.color.'+myIdentity)||(myIdentity==='me'?localStorage.getItem('ourflights.color.mine'):null);
-  if(mine) sectionColors[myIdentity]=mine;
+  const mine=localStorage.getItem('ourflights.color.'+myRole)||(myRole==='pilot'?localStorage.getItem('ourflights.color.mine'):localStorage.getItem('ourflights.color.partner'));
+  if(mine&&myRole) sectionColors[myRole]=mine;
   applySectionColors();
-  $('colorMine').addEventListener('input',e=>saveMyColor(e.target.value));
+  $('colorPilot').addEventListener('input',e=>saveMyColor(e.target.value));
+  $('colorAttendant').addEventListener('input',e=>saveMyColor(e.target.value));
 }
 
 /* ===== 时间显示切换（本地持久化） ===== */
@@ -632,6 +648,7 @@ $('btnLogin').addEventListener('click',async()=>{
   const email=$('loginEmail').value.trim(), password=$('loginPwd').value;
   msg($('loginMsg'),'');
   if(!email||!password) return msg($('loginMsg'),'邮箱和密码都要填。');
+  if(!myRole) return msg($('loginMsg'),'先点上面的角色：你是飞行员还是乘务员？');
   $('btnLogin').disabled=true; msg($('loginMsg'),'登录中…',true);
   try{
     if(!sbAuth){ const cfg=loadConfig(false); if(!cfg){ show('viewSetup'); return; } await buildClients(cfg); }
@@ -643,6 +660,10 @@ $('btnLogin').addEventListener('click',async()=>{
   }catch(e){ msg($('loginMsg'), friendlyErr(e,'登录')); }
   finally{ $('btnLogin').disabled=false; }
 });
+$('rolePilot').addEventListener('click',()=>{ myRole='pilot'; localStorage.setItem('ourflights.role','pilot'); syncRoleButtons(); });
+$('roleAttendant').addEventListener('click',()=>{ myRole='attendant'; localStorage.setItem('ourflights.role','attendant'); syncRoleButtons(); });
+$('roleOverlayPilot').addEventListener('click',()=>setRole('pilot'));
+$('roleOverlayAttendant').addEventListener('click',()=>setRole('attendant'));
 $('btnGotoSetup').addEventListener('click',()=>{ const cfg=loadConfig(false); if(cfg){ $('cfgUrl').value=cfg.url; $('cfgKey').value=cfg.key; } show('viewSetup'); });
 $('btnSetup2').addEventListener('click',()=>{ const cfg=loadConfig(false); if(cfg){ $('cfgUrl').value=cfg.url; $('cfgKey').value=cfg.key; } show('viewSetup'); });
 $('btnClearCache').addEventListener('click',doClearCache);
