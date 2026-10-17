@@ -62,6 +62,14 @@ button:disabled{opacity:.55}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .grid2>div{min-width:0}
 h2.view-title{font-size:22px;margin:6px 0 2px}
+/* 右上角同步按钮 */
+.sync-btn{position:fixed;top:14px;right:14px;z-index:60;width:48px;height:48px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 6px 16px rgba(37,99,235,.35), inset 0 1px 0 rgba(255,255,255,.25);transition:transform .15s ease, box-shadow .3s ease}
+.sync-btn:active{transform:scale(.9)}
+.sync-btn svg{width:24px;height:24px;stroke:#fff}
+.sync-btn.spinning{pointer-events:none}
+.sync-btn.spinning svg{animation:syncspin .8s linear infinite}
+.sync-btn.done{box-shadow:0 0 0 5px rgba(34,197,94,.22), 0 6px 16px rgba(37,99,235,.35)}
+@keyframes syncspin{to{transform:rotate(360deg)}}
 </style>
 <!-- ===== 设置视图 ===== -->
 <div id="viewSetup" class="hidden">
@@ -99,6 +107,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 </div>
 <!-- ===== 主视图 ===== -->
 <div id="viewMain" class="hidden">
+  <button id="btnSync" class="sync-btn" title="刷新同步" aria-label="刷新同步"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
   <div class="topbar">
     <div class="row">
       <div class="grow">
@@ -108,6 +117,13 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
       </div>
     </div>
     <div class="muted" style="margin-top:4px">当前身份：<span id="meEmail">-</span></div>
+    <div class="row" style="margin-top:8px">
+      <b class="grow">这台手机是</b>
+      <div class="seg-toggle">
+        <button id="idMe" class="on">我</button>
+        <button id="idPartner">对方</button>
+      </div>
+    </div>
     <div class="toolbar">
       <button id="btnRefresh" class="ghost small">刷新</button>
       <button id="btnDisconnect" class="ghost small">断开连接</button>
@@ -224,6 +240,9 @@ const TZ_CHOICES=['Asia/Shanghai','Asia/Tokyo','Asia/Seoul','Asia/Singapore','As
 /* ===== 全局状态 ===== */
 let sbAuth=null, sbDb=null, sbClient=null, me=null, flights=[], editingId=null;
 let timeMode=localStorage.getItem('ourflights.timeMode')||'bj'; // bj=北京时间 local=当地时间
+let myIdentity=localStorage.getItem('ourflights.identity')||'me'; // 这台手机是谁：me=我 partner=对方（按设备存，两台手机各设一次）
+function ownerOf(f){ return f&&f.added_by==='partner'?'partner':'me'; } // 旧记录 added_by 是邮箱，归为“我”
+function setIdentity(v){ myIdentity=v; localStorage.setItem('ourflights.identity',v); renderFlights(); }
 const AUTH_STORAGE_KEY='family-manager-app-device-auth-token-v1';
 
 /* ===== 视图切换 ===== */
@@ -393,16 +412,19 @@ function emailPrefix(email){ return email?String(email).split('@')[0]:''; }
 function renderFlights(){
   const myEmail=me?me.email:'';
   $('meEmail').textContent=myEmail||'-';
-  $('mineWho').textContent=myEmail?('· 我（'+emailPrefix(myEmail)+'）'):'';
-  const mine=flights.filter(f=>f.added_by===myEmail);
-  const others=flights.filter(f=>f.added_by!==myEmail);
-  const partnerEmails=[...new Set(others.map(f=>f.added_by).filter(Boolean))];
-  $('partnerWho').textContent=partnerEmails.length?('· '+partnerEmails.map(emailPrefix).join('、')):'';
+  $('idMe').classList.toggle('on',myIdentity==='me');
+  $('idPartner').classList.toggle('on',myIdentity==='partner');
+  $('mineWho').textContent='';
+  $('partnerWho').textContent='';
+  const mine=flights.filter(f=>ownerOf(f)===myIdentity);
+  const others=flights.filter(f=>ownerOf(f)!==myIdentity);
   $('listMine').innerHTML=mine.length?mine.map(flightCard).join(''):'<p class="muted">你还没有添加航班</p>';
   $('listPartner').innerHTML=others.length?others.map(flightCard).join(''):'<p class="muted">对方还没有添加航班</p>';
   document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.edit)));
   document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>delFlight(b.dataset.del)));
 }
+$('idMe').onclick=()=>setIdentity('me');
+$('idPartner').onclick=()=>setIdentity('partner');
 function flightCard(f){
   const today=todayBj();
   const past=f.flight_date<today;
@@ -412,7 +434,7 @@ function flightCard(f){
   const arrLabel=cityOf(f.arr_code)?cityOf(f.arr_code)+' '+f.arr_code:(f.arr_code||'---');
   return '<div class="flight">'
     +'<div><span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+(past?'past':'')+'">'+label+'</span></div>'
-    +'<div class="muted">'+esc(f.flight_date)+(f.aircraft?' · '+esc(f.aircraft):'')+' · 添加人 '+esc(emailPrefix(f.added_by)||'-')+'</div>'
+    +'<div class="muted">'+esc(f.flight_date)+(f.aircraft?' · '+esc(f.aircraft):'')+' · 添加人 '+(ownerOf(f)==='partner'?'对方':'我')+'</div>'
     +'<div class="route"><span class="code">'+esc(depLabel)+'</span><span class="arrow">→</span><span class="code">'+esc(arrLabel)+'</span></div>'
     +'<div class="times"><span>起飞 <b>'+esc(dep.t)+'</b> <span class="muted">'+esc(dep.tag)+'</span></span><span>到达 <b>'+esc(arr.t)+'</b> <span class="muted">'+esc(arr.tag)+'</span></span></div>'
     +(f.note?'<div class="muted" style="margin-top:4px">备注：'+esc(f.note)+'</div>':'')
@@ -500,7 +522,7 @@ async function saveFlight(){
       if(error) throw error;
       msg($('saveMsg'),'已更新。',true);
     }else{
-      row.added_by=me?me.email:null;
+      row.added_by=myIdentity;
       const {error}=await primary('our_flights').insert(row);
       if(error) throw error;
       msg($('saveMsg'),'已保存。',true);
@@ -611,7 +633,16 @@ $('btnDisconnect').addEventListener('click',async()=>{
   try{ if(sbAuth) await sbAuth.signOut(); }catch(e){}
   dropClients(); show('viewLogin'); msg($('loginMsg'),'已断开连接。',true);
 });
-$('btnRefresh').addEventListener('click',()=>{ if(sbDb) loadFlights(); });
+async function syncFlights(){
+  const btn=$('btnSync');
+  if(btn&&btn.classList.contains('spinning')) return;
+  if(btn) btn.classList.add('spinning');
+  try{ if(sbDb) await loadFlights(); }finally{
+    if(btn){ btn.classList.remove('spinning'); btn.classList.add('done'); setTimeout(()=>btn.classList.remove('done'),900); }
+  }
+}
+$('btnRefresh').addEventListener('click',syncFlights);
+$('btnSync').addEventListener('click',syncFlights);
 $('btnLookup').addEventListener('click',lookupFlight);
 $('btnSaveFlight').addEventListener('click',saveFlight);
 $('btnCancelEdit').addEventListener('click',resetForm);
