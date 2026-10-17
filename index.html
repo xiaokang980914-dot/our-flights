@@ -75,6 +75,34 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 .role-btn .role-emoji{font-size:34px;line-height:1}
 .role-btn.on{background:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.35)}
 .role-overlay{position:fixed;inset:0;z-index:80;background:rgba(23,35,59,.45);backdrop-filter:blur(2px);padding:16px}
+/* 登机牌式卡片 */
+.flight{border-top:4px solid var(--brand)}
+.bp-route{display:flex;align-items:center;gap:10px;margin:10px 0 6px}
+.bp-end{flex:0 0 auto;text-align:left}
+.bp-end.right{text-align:right}
+.bp-code{font-size:26px;font-weight:700;letter-spacing:.5px;line-height:1.1}
+.bp-city{font-size:12px;color:var(--sub)}
+.bp-time{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.bp-dash{flex:1;position:relative;border-top:2px dashed #c3cbdd;height:0}
+.bp-dash span{position:absolute;left:50%;top:-13px;transform:translateX(-50%);background:#fbfcfe;padding:0 4px;font-size:16px}
+.bp-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--sub);margin-top:6px}
+.bp-meta b{color:var(--ink)}
+.badge.same{background:#ede9fe;color:#6d28d9}
+.badge.sameday{background:#fef3c7;color:#92400e}
+.badge.new{background:#fee2e2;color:#b91c1c}
+.badge.flying{background:#dbeafe;color:#1d4ed8}
+.badge.soon{background:#e6f6ee;color:var(--ok)}
+/* 日期分组标题 */
+.date-head{font-size:14px;font-weight:700;color:var(--ink);margin:14px 0 2px;padding-left:2px}
+.date-head:first-child{margin-top:6px}
+.empty-state{text-align:center;padding:18px 6px;color:var(--sub)}
+.empty-state .big{font-size:30px}
+/* 悬浮 + 按钮 */
+.fab{position:fixed;right:16px;bottom:20px;z-index:60;width:56px;height:56px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 8px 20px rgba(37,99,235,.4), inset 0 1px 0 rgba(255,255,255,.25);font-size:28px;line-height:1}
+.fab:active{transform:scale(.92)}
+/* 下拉刷新指示 */
+.ptr{height:0;overflow:hidden;text-align:center;color:var(--sub);font-size:13px;transition:height .15s ease}
+.ptr span{display:block;padding:8px 0 2px}
 </style>
 <!-- ===== 设置视图 ===== -->
 <div id="viewSetup" class="hidden">
@@ -96,7 +124,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 <!-- ===== 登录视图 ===== -->
 <div id="viewLogin" class="hidden">
   <h2 class="view-title">登录</h2>
-  <p class="muted">先选你的角色，再用两人共用的账号登录。登录后双方的航班会互相可见。</p>
+  <p class="muted">先选你的角色，再输共用邮箱、收验证码登录。验证码会发到这个邮箱。登录后双方的航班会互相可见。</p>
   <div class="card">
     <label>你是谁</label>
     <div class="row" style="gap:10px">
@@ -105,8 +133,13 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
     </div>
     <label for="loginEmail">邮箱</label>
     <input id="loginEmail" type="email" autocomplete="username" placeholder="邮箱">
-    <label for="loginPwd">密码</label>
-    <input id="loginPwd" type="password" autocomplete="current-password" placeholder="密码">
+    <div class="row" style="gap:8px;align-items:flex-end">
+      <div class="grow">
+        <label for="loginCode">邮箱验证码</label>
+        <input id="loginCode" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="6 位数字" maxlength="6">
+      </div>
+      <button id="btnSendOtp" type="button" class="ghost" style="white-space:nowrap">发送验证码</button>
+    </div>
     <button id="btnLogin" style="width:100%;margin-top:14px">登录</button>
     <div id="loginMsg"></div>
     <div class="row" style="margin-top:12px">
@@ -117,7 +150,9 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 </div>
 <!-- ===== 主视图 ===== -->
 <div id="viewMain" class="hidden">
+  <div class="ptr" id="ptr"><span id="ptrText">↓ 下拉刷新</span></div>
   <button id="btnSync" class="sync-btn" title="刷新同步" aria-label="刷新同步"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
+  <button id="btnFab" class="fab" title="添加航班" aria-label="添加航班">＋</button>
   <div class="topbar">
     <div class="row">
       <div class="grow">
@@ -162,7 +197,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
       </div>
     </div>
   </div>
-  <div class="card">
+  <div class="card" id="formCard">
     <b id="formTitle">添加航班</b>
     <label for="fNo">航班号</label>
     <input id="fNo" type="text" autocomplete="off" placeholder="如 CZ659" style="text-transform:uppercase">
@@ -274,7 +309,7 @@ async function buildClients(cfg){
   const mod=await import('https://esm.sh/@supabase/supabase-js@2');
   const createClient=mod.createClient;
   sbClient=createClient(cfg.url, cfg.key, {
-    auth:{ multiTab:false, autoRefreshToken:false, persistSession:true, storageKey:AUTH_STORAGE_KEY, detectSessionInUrl:false },
+    auth:{ multiTab:false, autoRefreshToken:true, persistSession:true, storageKey:AUTH_STORAGE_KEY, detectSessionInUrl:false },
     global:{ fetch:(...a)=>fetch(a[0],{...(a[1]||{}), cache:'no-store'}) }
   });
   sbAuth=sbClient.auth;
@@ -298,39 +333,53 @@ function friendlyErr(e, scene){
   if(st===401 || /jwt|unauthorized|invalid api key/i.test(m))
     return '服务器返回 401：登录状态或 key 不被接受，请重新登录；仍不行就到「连接设置」核对 Project URL 与 anon key 是否属于同一个项目。原始信息：'+m;
   if(/invalid login credentials/i.test(m)) return '邮箱或密码不正确，请核对后重试。';
+  if(/otp|token has expired|token is invalid/i.test(m)) return '验证码不对或已过期，请重新发送验证码再试。';
   if(/email not confirmed/i.test(m)) return '账号邮箱尚未确认，无法登录。';
   if(/relation .*our_flights|does not exist|schema cache/i.test(m))
     return '数据库里还没有 our_flights 表（或当前 key 无权访问）。原始信息：'+m;
   return (scene?scene+'失败：':'')+m;
 }
 
-/* ===== 登录：客户端方法优先，失败回退裸 fetch ===== */
-async function signIn(email,password){
-  // 主路径：supabase.auth 的 sign_in_with_password（signInWithPassword，grant_type=password 语义）
+/* ===== 邮箱验证码登录（替换密码） ===== */
+let otpCooldownTimer=null;
+async function ensureClients(){
+  if(sbAuth) return;
+  const cfg=loadConfig(false); if(!cfg){ show('viewSetup'); throw new Error('请先在连接设置里填 Project URL 和 anon key。'); }
+  await buildClients(cfg);
+}
+async function sendOtp(){
+  const email=$('loginEmail').value.trim();
+  msg($('loginMsg'),'');
+  if(!myRole) return msg($('loginMsg'),'先点上面的角色：你是飞行员还是乘务员？');
+  if(!email||!email.includes('@')) return msg($('loginMsg'),'请先填邮箱。');
+  const btn=$('btnSendOtp'); if(btn.disabled) return;
   try{
-    const {data,error}=await sbAuth.signInWithPassword({email,password});
+    await ensureClients();
+    const {error}=await sbAuth.signInWithOtp({email});
     if(error) throw error;
-    return data.user;
-  }catch(firstErr){
-    // 回退：直接 POST /auth/v1/token?grant_type=password，scope 固定为 device
-    const cfg=loadConfig(false);
-    let res;
-    try{
-      res=await fetch(cfg.url+'/auth/v1/token?grant_type=password',{
-        method:'POST', cache:'no-store',
-        headers:{ 'apikey':cfg.key, 'Authorization':'Bearer '+cfg.key, 'Content-Type':'application/json' },
-        body: JSON.stringify({ email, password, gotrue_meta_security:{}, grant_type:'password', scope:'device' })
-      });
-    }catch(netErr){ throw firstErr; }
-    const body=await res.json().catch(()=>null);
-    if(!res.ok) throw Object.assign(new Error((body&&(body.msg||body.error_description||body.error))||('HTTP '+res.status)), {status:res.status});
-    if(body&&body.access_token){
-      const {data,error}=await sbAuth.setSession({access_token:body.access_token, refresh_token:body.refresh_token});
-      if(error) throw error;
-      return data.user;
-    }
-    throw firstErr;
-  }
+    msg($('loginMsg'),'验证码已发到邮箱，请去邮箱里找 6 位数字。',true);
+    let left=60; btn.disabled=true; btn.textContent=left+'秒后重发';
+    clearInterval(otpCooldownTimer);
+    otpCooldownTimer=setInterval(()=>{ left--; if(left<=0){ clearInterval(otpCooldownTimer); btn.disabled=false; btn.textContent='发送验证码'; } else btn.textContent=left+'秒后重发'; },1000);
+  }catch(e){ msg($('loginMsg'), friendlyErr(e,'发送验证码')); }
+}
+async function verifyOtpLogin(){
+  const email=$('loginEmail').value.trim(), code=clean($('loginCode').value);
+  msg($('loginMsg'),'');
+  if(!email||!email.includes('@')) return msg($('loginMsg'),'请先填邮箱。');
+  if(!code) return msg($('loginMsg'),'请填邮箱里的 6 位验证码。');
+  if(!myRole) return msg($('loginMsg'),'先点上面的角色：你是飞行员还是乘务员？');
+  $('btnLogin').disabled=true; msg($('loginMsg'),'验证中…',true);
+  try{
+    await ensureClients();
+    const {data,error}=await sbAuth.verifyOtp({email, token:code, type:'email'});
+    if(error) throw error;
+    me=(data&&data.session&&data.session.user)||data.user||await currentUser();
+    if(!me) throw new Error('登录没有返回用户信息。');
+    msg($('loginMsg'),'');
+    show('viewMain'); resetForm(); await loadFlights();
+  }catch(e){ msg($('loginMsg'), friendlyErr(e,'登录')); }
+  finally{ $('btnLogin').disabled=false; }
 }
 
 /* ===== 连接自检：三级定位拦截方 ===== */
@@ -428,31 +477,91 @@ async function loadFlights(){
   renderFlights();
 }
 function emailPrefix(email){ return email?String(email).split('@')[0]:''; }
+/* ===== 航班列表：按日期分组 + 状态/倒计时/时长 + 同一班徽章 + 新角标 ===== */
+function fmtDateHead(iso){
+  const d=new Date(iso+'T12:00:00+08:00');
+  const wd=['日','一','二','三','四','五','六'][d.getDay()];
+  return (+iso.slice(5,7))+'月'+(+iso.slice(8,10))+'日 周'+wd;
+}
+function flightStatus(f){
+  const now=new Date();
+  const dep=f.dep_time?new Date(f.dep_time):null, arr=f.arr_time?new Date(f.arr_time):null;
+  if(dep&&arr&&!isNaN(dep)&&!isNaN(arr)){
+    if(now<dep) return {key:'soon', label:'即将起飞'};
+    if(now<arr) return {key:'flying', label:'飞行中'};
+    return {key:'past', label:'已到达'};
+  }
+  return f.flight_date<todayBj()?{key:'past',label:'已完成'}:{key:'soon',label:'未来'};
+}
+function flightCountdown(f){
+  const today=todayBj();
+  if(f.flight_date===today) return '今天飞';
+  const a=new Date(today+'T12:00:00+08:00'), b=new Date(f.flight_date+'T12:00:00+08:00');
+  const diff=Math.round((b-a)/86400000);
+  if(diff===1) return '明天飞';
+  if(diff>1) return '还有 '+diff+' 天';
+  return '已过去';
+}
+function flightDuration(f){
+  const dep=f.dep_time?new Date(f.dep_time):null, arr=f.arr_time?new Date(f.arr_time):null;
+  if(!dep||!arr||isNaN(dep)||isNaN(arr)) return '';
+  const mins=Math.round((arr-dep)/60000);
+  if(mins<=0) return '';
+  const h=Math.floor(mins/60), m=mins%60;
+  return h?h+'小时'+(m?m+'分':''):m+'分';
+}
+function overlapBadge(f){
+  const others=flights.filter(x=>x.id!==f.id&&ownerOf(x)!==ownerOf(f)&&x.flight_date===f.flight_date);
+  if(!others.length) return '';
+  const same=others.some(x=>String(x.flight_no||'').toUpperCase()===String(f.flight_no||'').toUpperCase());
+  return same?'<span class="badge same">同一班 · 一起飞</span>':'<span class="badge sameday">同一天都在飞</span>';
+}
+let lastSeenMine=0;
 function renderFlights(){
   $('meRole').textContent=ROLE_LABEL[myRole]||'-';
-  const pilot=flights.filter(f=>ownerOf(f)==='pilot');
-  const attendant=flights.filter(f=>ownerOf(f)==='attendant');
-  $('listPilot').innerHTML=pilot.length?pilot.map(flightCard).join(''):'<p class="muted">还没有航班</p>';
-  $('listAttendant').innerHTML=attendant.length?attendant.map(flightCard).join(''):'<p class="muted">还没有航班</p>';
+  // “新”角标：只标对方在你上次查看之后新增的航班；第一次打开不标（先把基准记下来）
+  const seenKey='ourflights.lastSeen.'+myRole;
+  lastSeenMine=+(localStorage.getItem(seenKey)||0);
+  if(!lastSeenMine){ lastSeenMine=Date.now(); localStorage.setItem(seenKey,String(lastSeenMine)); }
+  $('listPilot').innerHTML=renderRoleList(flights.filter(f=>ownerOf(f)==='pilot'));
+  $('listAttendant').innerHTML=renderRoleList(flights.filter(f=>ownerOf(f)==='attendant'));
+  // 看过即记：这次渲染完，对方再新增的才算“新”
+  localStorage.setItem(seenKey,String(Date.now()));
   document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.edit)));
   document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>delFlight(b.dataset.del)));
+  document.querySelectorAll('[data-add-first]').forEach(b=>b.addEventListener('click',()=>{ scrollToForm(); }));
   applySectionColors();
 }
+function renderRoleList(list){
+  if(!list.length) return '<div class="empty-state"><div class="big">✈️</div><div>还没有航班</div><button class="ghost small" data-add-first style="margin-top:8px">添加第一班</button></div>';
+  const sorted=list.slice().sort((a,b)=>(a.flight_date||'').localeCompare(b.flight_date||'')||String(a.dep_time||'').localeCompare(String(b.dep_time||'')));
+  let html='', cur='';
+  for(const f of sorted){
+    if(f.flight_date!==cur){ cur=f.flight_date; html+='<div class="date-head">'+esc(fmtDateHead(cur))+'</div>'; }
+    html+=flightCard(f);
+  }
+  return html;
+}
 function flightCard(f){
-  const today=todayBj();
-  const past=f.flight_date<today;
-  const label=past?'已完成':'未来';
+  const st=flightStatus(f);
   const dep=displayTime(f.dep_time,f.dep_code), arr=displayTime(f.arr_time,f.arr_code);
-  const depLabel=cityOf(f.dep_code)?cityOf(f.dep_code)+' '+f.dep_code:(f.dep_code||'---');
-  const arrLabel=cityOf(f.arr_code)?cityOf(f.arr_code)+' '+f.arr_code:(f.arr_code||'---');
-  return '<div class="flight">'
-    +'<div><span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+(past?'past':'')+'">'+label+'</span></div>'
-    +'<div class="muted">'+esc(f.flight_date)+(f.aircraft?' · '+esc(f.aircraft):'')+' · 添加人 '+(ownerOf(f)==='attendant'?'🤵🏻‍♀️ 乘务员':'🧑‍✈️ 飞行员')+'</div>'
-    +'<div class="route"><span class="code">'+esc(depLabel)+'</span><span class="arrow">→</span><span class="code">'+esc(arrLabel)+'</span></div>'
-    +'<div class="times"><span>起飞 <b>'+esc(dep.t)+'</b> <span class="muted">'+esc(dep.tag)+'</span></span><span>到达 <b>'+esc(arr.t)+'</b> <span class="muted">'+esc(arr.tag)+'</span></span></div>'
+  const depCity=cityOf(f.dep_code), arrCity=cityOf(f.arr_code);
+  const dur=flightDuration(f);
+  const isNew=ownerOf(f)!==myRole&&f.created_at&&new Date(f.created_at).getTime()>lastSeenMine;
+  const roleColor=(typeof sectionColors!=='undefined'&&sectionColors[ownerOf(f)])||DEFAULT_COLORS[ownerOf(f)]||'#2563eb';
+  return '<div class="flight" style="border-top-color:'+esc(roleColor)+'">'
+    +'<div><span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+st.key+'">'+st.label+'</span>'+overlapBadge(f)+(isNew?'<span class="badge new">新</span>':'')+'</div>'
+    +'<div class="muted">'+esc(f.flight_date)+' · '+esc(flightCountdown(f))+(f.aircraft?' · '+esc(f.aircraft):'')+(dur?' · 飞行时长 '+dur:'')+' · 添加人 '+(ownerOf(f)==='attendant'?'🤵🏻‍♀️ 乘务员':'🧑‍✈️ 飞行员')+'</div>'
+    +'<div class="bp-route"><div class="bp-end"><div class="bp-code">'+esc(f.dep_code||'---')+'</div><div class="bp-city">'+esc(depCity||'')+'</div><div class="bp-time">'+esc(dep.t)+'</div><div class="bp-city">'+esc(dep.tag)+'</div></div>'
+    +'<div class="bp-dash"><span>✈️</span></div>'
+    +'<div class="bp-end right"><div class="bp-code">'+esc(f.arr_code||'---')+'</div><div class="bp-city">'+esc(arrCity||'')+'</div><div class="bp-time">'+esc(arr.t)+'</div><div class="bp-city">'+esc(arr.tag)+'</div></div></div>'
     +(f.note?'<div class="muted" style="margin-top:4px">备注：'+esc(f.note)+'</div>':'')
     +'<div class="ops"><button class="ghost small" data-edit="'+esc(f.id)+'">编辑</button><button class="danger small" data-del="'+esc(f.id)+'">删除</button></div>'
     +'</div>';
+}
+function scrollToForm(){
+  const el=$('formCard'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  const inp=$('fNo'); if(inp) setTimeout(()=>inp.focus(),400);
 }
 
 /* db 门面：primary(表) 做增删改查，rpc 调 Postgres 函数 */
@@ -644,22 +753,8 @@ $('btnSelfCheck').addEventListener('click',async()=>{
   await selfCheck(url,key,out);
   if(window.__cspViolationLog.length) out.innerHTML+='<br>⚠️ 检测到页面安全策略拦截：'+window.__cspViolationLog.map(esc).join('；');
 });
-$('btnLogin').addEventListener('click',async()=>{
-  const email=$('loginEmail').value.trim(), password=$('loginPwd').value;
-  msg($('loginMsg'),'');
-  if(!email||!password) return msg($('loginMsg'),'邮箱和密码都要填。');
-  if(!myRole) return msg($('loginMsg'),'先点上面的角色：你是飞行员还是乘务员？');
-  $('btnLogin').disabled=true; msg($('loginMsg'),'登录中…',true);
-  try{
-    if(!sbAuth){ const cfg=loadConfig(false); if(!cfg){ show('viewSetup'); return; } await buildClients(cfg); }
-    const user=await signIn(email,password);
-    me=user||await currentUser();
-    if(!me) throw new Error('登录没有返回用户信息。');
-    msg($('loginMsg'),'');
-    show('viewMain'); resetForm(); await loadFlights();
-  }catch(e){ msg($('loginMsg'), friendlyErr(e,'登录')); }
-  finally{ $('btnLogin').disabled=false; }
-});
+$('btnLogin').addEventListener('click',verifyOtpLogin);
+$('btnSendOtp').addEventListener('click',sendOtp);
 $('rolePilot').addEventListener('click',()=>{ myRole='pilot'; localStorage.setItem('ourflights.role','pilot'); syncRoleButtons(); });
 $('roleAttendant').addEventListener('click',()=>{ myRole='attendant'; localStorage.setItem('ourflights.role','attendant'); syncRoleButtons(); });
 $('roleOverlayPilot').addEventListener('click',()=>setRole('pilot'));
@@ -682,6 +777,36 @@ async function syncFlights(){
 }
 $('btnRefresh').addEventListener('click',syncFlights);
 $('btnSync').addEventListener('click',syncFlights);
+
+/* ===== 下拉刷新 + 悬浮 + 按钮 ===== */
+$('btnFab').addEventListener('click',scrollToForm);
+(function initPullToRefresh(){
+  const ptr=$('ptr'), ptrText=$('ptrText');
+  let startY=null, pulling=false;
+  const isMain=()=>!$('viewMain').classList.contains('hidden');
+  document.addEventListener('touchstart',e=>{
+    if(!isMain()||window.scrollY>0||!e.touches.length) return;
+    startY=e.touches[0].clientY; pulling=false;
+  },{passive:true});
+  document.addEventListener('touchmove',e=>{
+    if(startY==null||!e.touches.length) return;
+    const dy=e.touches[0].clientY-startY;
+    if(dy>0&&window.scrollY===0){
+      pulling=true;
+      const h=Math.min(dy*0.6,64);
+      ptr.style.height=h+'px';
+      ptrText.textContent=h>=56?'↻ 松开刷新':'↓ 下拉刷新';
+      if(dy>10) e.preventDefault();
+    }
+  },{passive:false});
+  document.addEventListener('touchend',()=>{
+    if(startY==null) return;
+    const h=parseFloat(ptr.style.height||'0');
+    ptr.style.height='0px';
+    if(pulling&&h>=56&&isMain()) syncFlights();
+    startY=null; pulling=false;
+  },{passive:true});
+})();
 $('btnLookup').addEventListener('click',lookupFlight);
 $('btnSaveFlight').addEventListener('click',saveFlight);
 $('btnCancelEdit').addEventListener('click',resetForm);
