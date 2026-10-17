@@ -141,7 +141,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
     <div id="loginMsg"></div>
     <div class="row" style="margin-top:12px">
       <button id="btnGotoSetup" class="ghost small">连接设置</button>
-      <button id="btnClearCache2" class="ghost small">清除缓存并重新授权</button>
+      <button id="btnClearCache2" class="ghost small">清除登录</button>
     </div>
   </div>
 </div>
@@ -160,11 +160,13 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
     </div>
     <div class="muted" style="margin-top:4px">当前身份：<span id="meRole">-</span></div>
     <div class="toolbar">
+      <button id="btnCheckUpdate" class="ghost small">↻ 检查新版</button>
       <button id="btnRefresh" class="ghost small">刷新</button>
       <button id="btnDisconnect" class="ghost small">断开连接</button>
-      <button id="btnClearCache" class="ghost small">清除缓存并重新授权</button>
+      <button id="btnClearCache" class="ghost small">退出登录并清除</button>
       <button id="btnSetup2" class="ghost small">连接设置</button>
     </div>
+    <div class="muted" style="margin-top:4px">版本 <span id="appVersion">-</span> · 点“检查新版”获取最新版，不用重登</div>
   </div>
 
   <div class="card">
@@ -721,7 +723,17 @@ function applyTimeMode(){
 $('tmBj').addEventListener('click',()=>{ timeMode='bj'; localStorage.setItem('ourflights.timeMode','bj'); applyTimeMode(); renderFlights(); });
 $('tmLocal').addEventListener('click',()=>{ timeMode='local'; localStorage.setItem('ourflights.timeMode','local'); applyTimeMode(); renderFlights(); });
 
-/* ===== 清除缓存并重新授权 ===== */
+/* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
+const APP_VERSION='2026-10-17-04-check-update';
+(function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
+function checkForUpdate(){
+  const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
+  // 同源跳转换一个全新的 ?v，浏览器必定重新拉最新页面；
+  // 登录状态存在同源 localStorage 里，换 ?v 不会丢，不用重登。
+  location.href=location.pathname+'?v='+Date.now();
+}
+
+/* ===== 退出登录并清除（会要求重登，误点前先确认） ===== */
 function clearAuthCache(){
   const kill=[];
   for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i);
@@ -730,9 +742,10 @@ function clearAuthCache(){
   sessionStorage.clear();
 }
 async function doClearCache(){
+  if(!confirm('这会退出登录，下次要重新输邮箱和密码。只是想刷新到新版的话，点“检查新版”就行，不用点这个。确定要退出吗？')) return;
   try{ if(sbAuth) await sbAuth.signOut(); }catch(e){}
   clearAuthCache(); dropClients();
-  show('viewLogin'); msg($('loginMsg'),'缓存已清除，请重新登录。',true);
+  show('viewLogin'); msg($('loginMsg'),'已退出登录，请重新登录。',true);
 }
 
 /* ===== 事件绑定 ===== */
@@ -775,6 +788,7 @@ async function syncFlights(){
 }
 $('btnRefresh').addEventListener('click',syncFlights);
 $('btnSync').addEventListener('click',syncFlights);
+$('btnCheckUpdate').addEventListener('click',checkForUpdate);
 
 /* ===== 下拉刷新 + 悬浮 + 按钮 ===== */
 $('btnFab').addEventListener('click',scrollToForm);
