@@ -102,6 +102,8 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 .fab:active{transform:scale(.92)}
 /* 下拉刷新指示 */
 .ptr{height:0;overflow:hidden;text-align:center;color:var(--sub);font-size:13px;transition:height .15s ease}
+/* 点右下角 + 后表单高亮闪一下，让人一眼看到滑到哪里了 */
+.form-flash{box-shadow:0 0 0 3px rgba(37,99,235,.55), 0 1px 3px rgba(20,40,80,.05)!important;transition:box-shadow .3s ease}
 .ptr span{display:block;padding:8px 0 2px}
 </style>
 <!-- ===== 设置视图 ===== -->
@@ -550,8 +552,15 @@ function flightCard(f){
     +'</div>';
 }
 function scrollToForm(){
-  const el=$('formCard'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
-  const inp=$('fNo'); if(inp) setTimeout(()=>inp.focus(),400);
+  const el=$('formCard');
+  // 先在同一次点按里直接聚焦（iOS 只有同手势里的 focus 才会弹键盘，setTimeout 里的 focus 弹不出），再滑动
+  const inp=$('fNo'); if(inp) inp.focus({preventScroll:true});
+  if(el){
+    el.scrollIntoView({behavior:'smooth',block:'start'});
+    el.classList.add('form-flash');
+    clearTimeout(el.__flashTimer);
+    el.__flashTimer=setTimeout(()=>el.classList.remove('form-flash'),1600);
+  }
 }
 
 /* db 门面：primary(表) 做增删改查，rpc 调 Postgres 函数 */
