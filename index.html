@@ -197,7 +197,6 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
     <div class="sec-head">
       <h2>对方的航班</h2>
       <span class="muted" id="partnerWho"></span>
-      <span class="sec-color">颜色 <input type="color" id="colorPartner" value="#db2777"></span>
     </div>
     <div id="listPartner"></div>
   </div>
@@ -406,6 +405,7 @@ async function loadFlights(){
     return;
   }
   flights=data||[]; msg($('listMsg'),'');
+  await loadSectionColors();
   renderFlights();
 }
 function emailPrefix(email){ return email?String(email).split('@')[0]:''; }
@@ -560,15 +560,33 @@ async function delFlight(id){
   await loadFlights();
 }
 
-/* ===== 分区颜色（本地持久化） ===== */
+/* ===== 分区颜色（按身份存在共享库，各自只能改自己的） ===== */
+const DEFAULT_COLORS={me:'#2563eb', partner:'#db2777'};
+let sectionColors={...DEFAULT_COLORS};
 function applyColor(secEl,color){ secEl.style.borderTopColor=color; }
+function applySectionColors(){
+  applyColor($('secMine'), sectionColors[myIdentity]||DEFAULT_COLORS[myIdentity]);
+  const other=myIdentity==='me'?'partner':'me';
+  applyColor($('secPartner'), sectionColors[other]||DEFAULT_COLORS[other]);
+  const mineInput=$('colorMine'); if(mineInput) mineInput.value=sectionColors[myIdentity]||DEFAULT_COLORS[myIdentity];
+}
+async function loadSectionColors(){
+  try{
+    const {data,error}=await primary('section_colors').select('identity,color');
+    if(!error&&data){ for(const r of data){ if(r.identity==='me'||r.identity==='partner') sectionColors[r.identity]=r.color; } }
+  }catch(e){ /* 表不存在时用默认色，不报错 */ }
+  applySectionColors();
+}
+async function saveMyColor(color){
+  sectionColors[myIdentity]=color; applySectionColors();
+  localStorage.setItem('ourflights.color.'+myIdentity,color);
+  try{ await primary('section_colors').upsert({identity:myIdentity,color},{onConflict:'identity'}); }catch(e){ /* 离线/表不存在时本地已生效 */ }
+}
 function initColors(){
-  const cm=localStorage.getItem('ourflights.color.mine')||'#2563eb';
-  const cp=localStorage.getItem('ourflights.color.partner')||'#db2777';
-  $('colorMine').value=cm; $('colorPartner').value=cp;
-  applyColor($('secMine'),cm); applyColor($('secPartner'),cp);
-  $('colorMine').addEventListener('input',e=>{ localStorage.setItem('ourflights.color.mine',e.target.value); applyColor($('secMine'),e.target.value); });
-  $('colorPartner').addEventListener('input',e=>{ localStorage.setItem('ourflights.color.partner',e.target.value); applyColor($('secPartner'),e.target.value); });
+  const mine=localStorage.getItem('ourflights.color.'+myIdentity)||(myIdentity==='me'?localStorage.getItem('ourflights.color.mine'):null);
+  if(mine) sectionColors[myIdentity]=mine;
+  applySectionColors();
+  $('colorMine').addEventListener('input',e=>saveMyColor(e.target.value));
 }
 
 /* ===== 时间显示切换（本地持久化） ===== */
