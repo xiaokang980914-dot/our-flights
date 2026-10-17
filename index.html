@@ -739,7 +739,7 @@ $('tmBj').addEventListener('click',()=>{ timeMode='bj'; localStorage.setItem('ou
 $('tmLocal').addEventListener('click',()=>{ timeMode='local'; localStorage.setItem('ourflights.timeMode','local'); applyTimeMode(); renderFlights(); });
 
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-17-05-loading-fallback';
+const APP_VERSION='2026-10-17-06-getuser-timeout';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
@@ -862,7 +862,8 @@ async function boot(){
   if(!cfg){ $('cfgUrl').value=''; $('cfgKey').value=''; show('viewSetup'); return; }
   try{
     await Promise.race([buildClients(cfg), new Promise((_,rej)=>setTimeout(()=>rej(new Error('启动超时')), 12000))]);
-    const user=await currentUser();
+    // 查登录状态也加 8 秒超时：她那边网络拦 Supabase 时 getUser 会一直挂起，超时就先出登录页，不卡在“正在加载”
+    const user=await Promise.race([currentUser(), new Promise(res=>setTimeout(()=>res(null), 8000))]);
     if(user){ me=user; show('viewMain'); resetForm(); await loadFlights(); return; }
   }catch(e){ /* 客户端建不起来就落到登录页，登录时再重试建客户端 */ }
   show('viewLogin');
