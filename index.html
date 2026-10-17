@@ -124,7 +124,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 <!-- ===== 登录视图 ===== -->
 <div id="viewLogin" class="hidden">
   <h2 class="view-title">登录</h2>
-  <p class="muted">先选你的角色，再输共用邮箱、收验证码登录。验证码会发到这个邮箱。登录后双方的航班会互相可见。</p>
+  <p class="muted">先选你的角色，再输共用邮箱和密码登录。登录后双方的航班会互相可见。</p>
   <div class="card">
     <label>你是谁</label>
     <div class="row" style="gap:10px">
@@ -133,13 +133,8 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
     </div>
     <label for="loginEmail">邮箱</label>
     <input id="loginEmail" type="email" autocomplete="username" placeholder="邮箱">
-    <div class="row" style="gap:8px;align-items:flex-end">
-      <div class="grow">
-        <label for="loginCode">邮箱验证码</label>
-        <input id="loginCode" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="6 位数字" maxlength="6">
-      </div>
-      <button id="btnSendOtp" type="button" class="ghost" style="white-space:nowrap">发送验证码</button>
-    </div>
+    <label for="loginPwd">密码</label>
+    <input id="loginPwd" type="password" autocomplete="current-password" placeholder="共用账号密码">
     <button id="btnLogin" style="width:100%;margin-top:14px">登录</button>
     <div id="loginMsg"></div>
     <div class="row" style="margin-top:12px">
@@ -333,48 +328,43 @@ function friendlyErr(e, scene){
   if(st===401 || /jwt|unauthorized|invalid api key/i.test(m))
     return '服务器返回 401：登录状态或 key 不被接受，请重新登录；仍不行就到「连接设置」核对 Project URL 与 anon key 是否属于同一个项目。原始信息：'+m;
   if(/invalid login credentials/i.test(m)) return '邮箱或密码不正确，请核对后重试。';
-  if(/otp|token has expired|token is invalid/i.test(m)) return '验证码不对或已过期，请重新发送验证码再试。';
   if(/email not confirmed/i.test(m)) return '账号邮箱尚未确认，无法登录。';
   if(/relation .*our_flights|does not exist|schema cache/i.test(m))
     return '数据库里还没有 our_flights 表（或当前 key 无权访问）。原始信息：'+m;
   return (scene?scene+'失败：':'')+m;
 }
 
-/* ===== 邮箱验证码登录（替换密码） ===== */
-let otpCooldownTimer=null;
+/* ===== 密码登录（共用账号，客户端失败时回退裸 fetch） ===== */
 async function ensureClients(){
   if(sbAuth) return;
   const cfg=loadConfig(false); if(!cfg){ show('viewSetup'); throw new Error('请先在连接设置里填 Project URL 和 anon key。'); }
   await buildClients(cfg);
 }
-async function sendOtp(){
-  const email=$('loginEmail').value.trim();
+async function doPasswordLogin(){
+  const email=$('loginEmail').value.trim(), pwd=$('loginPwd').value;
   msg($('loginMsg'),'');
   if(!myRole) return msg($('loginMsg'),'先点上面的角色：你是飞行员还是乘务员？');
   if(!email||!email.includes('@')) return msg($('loginMsg'),'请先填邮箱。');
-  const btn=$('btnSendOtp'); if(btn.disabled) return;
+  if(!pwd) return msg($('loginMsg'),'请填密码。');
+  $('btnLogin').disabled=true; msg($('loginMsg'),'登录中…',true);
   try{
     await ensureClients();
-    const {error}=await sbAuth.signInWithOtp({email});
-    if(error) throw error;
-    msg($('loginMsg'),'验证码已发到邮箱，请去邮箱里找 6 位数字。',true);
-    let left=60; btn.disabled=true; btn.textContent=left+'秒后重发';
-    clearInterval(otpCooldownTimer);
-    otpCooldownTimer=setInterval(()=>{ left--; if(left<=0){ clearInterval(otpCooldownTimer); btn.disabled=false; btn.textContent='发送验证码'; } else btn.textContent=left+'秒后重发'; },1000);
-  }catch(e){ msg($('loginMsg'), friendlyErr(e,'发送验证码')); }
-}
-async function verifyOtpLogin(){
-  const email=$('loginEmail').value.trim(), code=clean($('loginCode').value);
-  msg($('loginMsg'),'');
-  if(!email||!email.includes('@')) return msg($('loginMsg'),'请先填邮箱。');
-  if(!code) return msg($('loginMsg'),'请填邮箱里的 6 位验证码。');
-  if(!myRole) return msg($('loginMsg'),'先点上面的角色：你是飞行员还是乘务员？');
-  $('btnLogin').disabled=true; msg($('loginMsg'),'验证中…',true);
-  try{
-    await ensureClients();
-    const {data,error}=await sbAuth.verifyOtp({email, token:code, type:'email'});
-    if(error) throw error;
-    me=(data&&data.session&&data.session.user)||data.user||await currentUser();
+    try{
+      const {data,error}=await sbAuth.signInWithPassword({email,password:pwd});
+      if(error) throw error;
+      me=(data&&data.session&&data.session.user)||data.user||await currentUser();
+    }catch(firstErr){
+      // supabase-js 客户端调用失败时，回退裸 fetch 直打 token 端点
+      const cfg=loadConfig(false);
+      const r=await fetch(cfg.url+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':cfg.key,'Authorization':'Bearer '+cfg.key,'Content-Type':'application/json'},body:JSON.stringify({email,password:pwd})});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(j.error_description||j.msg||('HTTP '+r.status));
+      if(j.access_token&&j.refresh_token){
+        const {error:setErr}=await sbAuth.setSession({access_token:j.access_token,refresh_token:j.refresh_token});
+        if(setErr) throw setErr;
+      }
+      me=await currentUser();
+    }
     if(!me) throw new Error('登录没有返回用户信息。');
     msg($('loginMsg'),'');
     show('viewMain'); resetForm(); await loadFlights();
@@ -753,8 +743,7 @@ $('btnSelfCheck').addEventListener('click',async()=>{
   await selfCheck(url,key,out);
   if(window.__cspViolationLog.length) out.innerHTML+='<br>⚠️ 检测到页面安全策略拦截：'+window.__cspViolationLog.map(esc).join('；');
 });
-$('btnLogin').addEventListener('click',verifyOtpLogin);
-$('btnSendOtp').addEventListener('click',sendOtp);
+$('btnLogin').addEventListener('click',doPasswordLogin);
 $('rolePilot').addEventListener('click',()=>{ myRole='pilot'; localStorage.setItem('ourflights.role','pilot'); syncRoleButtons(); });
 $('roleAttendant').addEventListener('click',()=>{ myRole='attendant'; localStorage.setItem('ourflights.role','attendant'); syncRoleButtons(); });
 $('roleOverlayPilot').addEventListener('click',()=>setRole('pilot'));
