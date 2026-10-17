@@ -27,14 +27,17 @@ button:disabled{opacity:.55}
 .err{background:#fdecec;color:#8c1d1d;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:10px;white-space:pre-wrap;word-break:break-word}
 .okmsg{background:#e6f6ee;color:var(--ok);border-radius:10px;padding:10px 12px;font-size:14px;margin-top:10px;white-space:pre-wrap}
 .hidden{display:none!important}
-/* ===== 生活页翻转 ===== */
-.flip-stage{perspective:1400px}
-.flip-inner{position:relative;transform-style:preserve-3d;transition:transform .7s ease}
-.flip-inner.flipped{transform:rotateY(180deg)}
-.flip-face{backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.flip-face.back{position:absolute;inset:0;transform:rotateY(180deg);overflow-y:visible;pointer-events:none}
-.flip-inner.flipped .flip-face.front{pointer-events:none}
-.flip-inner.flipped .flip-face.back{pointer-events:auto}
+/* ===== 生活页切换（页面切换，不是物理翻转；绝不镜像） ===== */
+.page-view{display:block}
+.page-view.switch-out{animation:pageOut .18s ease both}
+.page-view.switch-in{animation:pageIn .3s ease both}
+.page-view.switch-in-rev{animation:pageInRev .3s ease both}
+@keyframes pageOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-16px)}}
+@keyframes pageIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pageInRev{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
+/* 生活/航班切换大药丸按钮：金粉渐变，顶栏右上角主按钮 */
+.life-switch-btn{flex:0 0 auto;padding:12px 20px;border-radius:999px;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,#f6c453,#f472b6 55%,#a78bfa);box-shadow:0 8px 20px rgba(244,114,182,.35), inset 0 1px 0 rgba(255,255,255,.45), inset 0 0 0 1px rgba(255,255,255,.35);border:none;cursor:pointer;transition:transform .15s ease, box-shadow .15s ease}
+.life-switch-btn:active{transform:scale(.97)}
 #viewMain.on-life #btnFab{display:none}
 .life-head{text-align:center;padding:8px 0 4px}
 .life-avatars{display:flex;gap:10px;align-items:center;justify-content:center;font-size:44px;margin:6px 0}
@@ -190,8 +193,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 <!-- ===== 主视图 ===== -->
 <div id="viewMain" class="hidden">
   <button id="btnFab" class="fab" title="添加航班" aria-label="添加航班">＋</button>
-  <div class="flip-stage" id="flipStage"><div class="flip-inner" id="flipInner">
-  <div class="flip-face front" id="flipFront">
+  <div class="page-view" id="viewFlights">
   <div class="ptr" id="ptr"><span id="ptrText">↓ 下拉刷新</span></div>
   <div class="topbar">
     <div class="row">
@@ -202,6 +204,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
       </div>
       <div class="top-icons">
         <button id="wxChip" class="wx-chip" type="button">📍 点我获取天气</button>
+        <button id="btnLife" class="life-switch-btn" type="button">💛 生活</button>
         <button id="btnCheckUpdate" class="icon-btn update-btn" title="检查新版" aria-label="检查新版">⬆️</button>
         <button id="btnSync" class="sync-btn" title="刷新同步" aria-label="刷新同步"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
       </div>
@@ -211,7 +214,6 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
       <button id="btnDisconnect" class="ghost small">断开连接</button>
       <button id="btnClearCache" class="ghost small">退出登录并清除</button>
       <button id="btnSetup2" class="ghost small">连接设置</button>
-      <button id="btnLife" class="ghost small" type="button">💛 生活</button>
     </div>
     <div class="muted" style="margin-top:4px">版本 <span id="appVersion">-</span> · 点右上角 ⬆️ 获取最新版，不用重登</div>
   </div>
@@ -303,13 +305,13 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
     <div id="listAttendant"></div>
   </div>
 
-  </div><!-- /flipFront -->
-  <div class="flip-face back" id="flipBack">
+  </div><!-- /viewFlights -->
+  <div class="page-view hidden" id="viewLife">
 <div class="life-head">
+  <div class="row" style="justify-content:flex-end"><button id="btnBackFlights" class="life-switch-btn" type="button">✈️ 航班</button></div>
   <div class="life-avatars"><span>🧑‍✈️</span><span>💛</span><span>🤵🏻‍♀️</span></div>
   <h2 style="margin:4px 0">我们的生活</h2>
   <p class="muted" style="margin:0 0 10px">航班之外，是日常、美食与远方。</p>
-  <button id="btnBackFlights" class="grow" type="button">✈️ 回航班</button>
 </div>
 <div class="card">
   <div class="row"><b class="grow">💛 纪念日倒计时</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
@@ -360,8 +362,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
   </div>
 </div>
 
-  </div><!-- /flipBack -->
-  </div></div><!-- /flip -->
+  </div><!-- /viewLife -->
   <div id="roleOverlay" class="role-overlay hidden">
     <div class="card" style="max-width:360px;margin:20vh auto">
       <h2 style="text-align:center">你是谁？</h2>
@@ -1068,12 +1069,14 @@ function renderOcrCandidates(){
   if(!ocrCandidates.length){ box.innerHTML=''; return; }
   box.innerHTML=ocrCandidates.map((c,idx)=>'<div class="ocr-item" data-ocr-idx="'+idx+'">'+ocrCandidateLabel(c)
     +(c.missing&&c.missing.length?'<div class="muted" style="color:#b45309">缺：'+esc(c.missing.join('、'))+'，点此填入表单补全</div>':'<div class="muted">点此填入表单</div>')+'</div>').join('')
-    +'<button id="btnOcrSaveAll" type="button" class="ghost" style="width:100%;margin-top:10px">全部保存（仅保存信息完整的）</button>';
+    +'<button id="btnOcrSaveAll" type="button" class="ghost" style="width:100%;margin-top:10px">全部保存（仅保存信息完整的）</button>'
+    +'<button id="btnOcrRetry" type="button" class="ghost small" style="width:100%;margin-top:6px">↻ 重新识别（强制重跑一次）</button>';
   box.querySelectorAll('[data-ocr-idx]').forEach(el=>el.addEventListener('click',()=>{
     fillFormFromCandidate(ocrCandidates[+el.dataset.ocrIdx]);
     msg($('ocrMsg'),'已填入表单，请核对后保存。',true);
   }));
   const saveAll=$('btnOcrSaveAll'); if(saveAll) saveAll.addEventListener('click',saveAllOcr);
+  const retry=$('btnOcrRetry'); if(retry) retry.addEventListener('click',()=>{ ocrLastSig=''; msg($('ocrMsg'),'已清除识别记录，请重新选图。',true); $('ocrFile').click(); });
 }
 function fillFormFromCandidate(c){
   if(!c) return;
@@ -1091,8 +1094,13 @@ function fillFormFromCandidate(c){
   } else $('fArrT').value='';
   $('fAc').value=c.aircraft||'';
 }
+let ocrBusy=false, ocrLastSig='', ocrSavingAll=false;
 async function saveAllOcr(){
+  if(ocrSavingAll) return; // 全部保存防双击：保存进行中点按无效
   if(!ocrCandidates.length) return;
+  ocrSavingAll=true;
+  const _saveBtn=$('btnOcrSaveAll'); if(_saveBtn) _saveBtn.disabled=true;
+  try{
   msg($('ocrMsg'),'保存中…',true);
   let saved=0, dup=0, incomplete=0, failed=0;
   const seen=new Set(flights.map(f=>f.flight_no+'|'+f.flight_date));
@@ -1121,9 +1129,18 @@ async function saveAllOcr(){
   if(incomplete) parts.push(incomplete+' 条信息不全已跳过，请点开单独补全');
   msg($('ocrMsg'), parts.join('，')+'。', true);
   await loadFlights();
+  }finally{ ocrSavingAll=false; }
 }
 async function handleOcrFile(file){
   if(!file) return;
+  if(ocrBusy){ msg($('ocrMsg'),'正在识别中，请稍等…',true); return; }
+  const sig=[file.name,file.size,file.lastModified].join('|');
+  if(sig===ocrLastSig&&ocrCandidates.length){
+    msg($('ocrMsg'),'这张图已识别过，无需重复上传。',true);
+    renderOcrCandidates();
+    return;
+  }
+  ocrBusy=true;
   const btn=$('btnOcr'); if(btn){ btn.disabled=true; btn.textContent='识别中…'; }
   msg($('ocrMsg'),'正在识别截图…',true);
   try{
@@ -1131,6 +1148,7 @@ async function handleOcrFile(file){
     const res=await window.Tesseract.recognize(file,'chi_sim+eng');
     const text=(res&&res.data&&res.data.text)||(res&&res.text)||'';
     ocrCandidates=parseOcrFlights(text);
+    if(ocrCandidates.length) ocrLastSig=sig;
     const rawEl=$('ocrRawText'), rawBox=$('ocrRawBox'); if(rawEl&&rawBox){ rawEl.textContent=ocrFilterRaw(text); rawBox.classList.remove('hidden'); }
     if(!ocrCandidates.length){ msg($('ocrMsg'),'没识别出航班，请换一张更清晰的截图再试'); renderOcrCandidates(); return; }
     msg($('ocrMsg'),'识别出 '+ocrCandidates.length+' 条航班，点一条填入表单，或点“全部保存”。',true);
@@ -1139,6 +1157,7 @@ async function handleOcrFile(file){
     ocrCandidates=[]; renderOcrCandidates();
     msg($('ocrMsg'),'截图识别失败：'+(e&&e.message?e.message:String(e))+'，请换一张更清晰的截图再试。');
   }finally{
+    ocrBusy=false;
     if(btn){ btn.disabled=false; btn.textContent='📷 截图识别'; }
     const inp=$('ocrFile'); if(inp) inp.value='';
   }
@@ -1148,7 +1167,25 @@ async function handleOcrFile(file){
 let lifeMapTried=false, lifeMap=null;
 function lifeSoon(){ msg($('lifeMsg'),'生活页框架先行，上传/保存功能随后开放。',true); }
 function setLife(on){
-  $('flipInner').classList.toggle('flipped', !!on);
+  const f=$('viewFlights'), l=$('viewLife');
+  if(!f||!l) return;
+  if(on){
+    if(!l.classList.contains('hidden')) return;
+    f.classList.add('switch-out');
+    setTimeout(()=>{
+      f.classList.add('hidden'); f.classList.remove('switch-out');
+      l.classList.remove('hidden'); l.classList.remove('switch-in-rev'); l.classList.add('switch-in');
+      setTimeout(()=>l.classList.remove('switch-in'),320);
+    },180);
+  }else{
+    if(!f.classList.contains('hidden')) return;
+    l.classList.add('switch-out');
+    setTimeout(()=>{
+      l.classList.add('hidden'); l.classList.remove('switch-out');
+      f.classList.remove('hidden'); f.classList.remove('switch-in'); f.classList.add('switch-in-rev');
+      setTimeout(()=>f.classList.remove('switch-in-rev'),320);
+    },180);
+  }
   $('viewMain').classList.toggle('on-life', !!on);
   window.scrollTo(0,0);
 }
@@ -1362,7 +1399,7 @@ async function refreshWeather(force){
 }
 
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-17-10-ocr-flip-life';
+const APP_VERSION='2026-10-17-11-ocr-once-page-switch';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
