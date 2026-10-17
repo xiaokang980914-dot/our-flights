@@ -27,6 +27,26 @@ button:disabled{opacity:.55}
 .err{background:#fdecec;color:#8c1d1d;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:10px;white-space:pre-wrap;word-break:break-word}
 .okmsg{background:#e6f6ee;color:var(--ok);border-radius:10px;padding:10px 12px;font-size:14px;margin-top:10px;white-space:pre-wrap}
 .hidden{display:none!important}
+/* ===== 生活页翻转 ===== */
+.flip-stage{perspective:1400px}
+.flip-inner{position:relative;transform-style:preserve-3d;transition:transform .7s ease}
+.flip-inner.flipped{transform:rotateY(180deg)}
+.flip-face{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.flip-face.back{position:absolute;inset:0;transform:rotateY(180deg);overflow-y:visible;pointer-events:none}
+.flip-inner.flipped .flip-face.front{pointer-events:none}
+.flip-inner.flipped .flip-face.back{pointer-events:auto}
+#viewMain.on-life #btnFab{display:none}
+.life-head{text-align:center;padding:8px 0 4px}
+.life-avatars{display:flex;gap:10px;align-items:center;justify-content:center;font-size:44px;margin:6px 0}
+.life-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.life-tab{flex:1 1 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 4px;font-size:13px;cursor:pointer}
+.life-tab.on{background:#1e3a8a;color:#fff;border-color:#1e3a8a}
+.life-empty{color:#64748b;font-size:13px;margin:10px 0}
+.skel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.skel{height:84px;border-radius:10px;background:linear-gradient(100deg,#eef2f7,#e2e8f0,#eef2f7);background-size:200% 100%;animation:skel 1.4s infinite}
+@keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-line{height:14px;border-radius:7px;background:#eef2f7;margin:8px 0}
+.life-map{height:320px;border-radius:12px;background:#e8eef5;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:13px}
 </style>
 </head>
 <body>
@@ -169,8 +189,10 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 </div>
 <!-- ===== 主视图 ===== -->
 <div id="viewMain" class="hidden">
-  <div class="ptr" id="ptr"><span id="ptrText">↓ 下拉刷新</span></div>
   <button id="btnFab" class="fab" title="添加航班" aria-label="添加航班">＋</button>
+  <div class="flip-stage" id="flipStage"><div class="flip-inner" id="flipInner">
+  <div class="flip-face front" id="flipFront">
+  <div class="ptr" id="ptr"><span id="ptrText">↓ 下拉刷新</span></div>
   <div class="topbar">
     <div class="row">
       <div class="grow">
@@ -189,6 +211,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
       <button id="btnDisconnect" class="ghost small">断开连接</button>
       <button id="btnClearCache" class="ghost small">退出登录并清除</button>
       <button id="btnSetup2" class="ghost small">连接设置</button>
+      <button id="btnLife" class="ghost small" type="button">💛 生活</button>
     </div>
     <div class="muted" style="margin-top:4px">版本 <span id="appVersion">-</span> · 点右上角 ⬆️ 获取最新版，不用重登</div>
   </div>
@@ -246,6 +269,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
     </div>
     <div id="ocrMsg"></div>
     <div id="ocrCandidates"></div>
+    <details id="ocrRawBox" class="hidden" style="margin-top:10px"><summary>识别原文（对照用，已去掉证件/签到等行）</summary><pre id="ocrRawText" style="white-space:pre-wrap;font-size:12px;color:#475569"></pre></details>
     <div class="grid2">
       <div><label for="fDep">出发三字码</label><input id="fDep" type="text" maxlength="4" style="text-transform:uppercase" placeholder="CAN"></div>
       <div><label for="fArr">到达三字码</label><input id="fArr" type="text" maxlength="4" style="text-transform:uppercase" placeholder="SFO"></div>
@@ -279,6 +303,65 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
     <div id="listAttendant"></div>
   </div>
 
+  </div><!-- /flipFront -->
+  <div class="flip-face back" id="flipBack">
+<div class="life-head">
+  <div class="life-avatars"><span>🧑‍✈️</span><span>💛</span><span>🤵🏻‍♀️</span></div>
+  <h2 style="margin:4px 0">我们的生活</h2>
+  <p class="muted" style="margin:0 0 10px">航班之外，是日常、美食与远方。</p>
+  <button id="btnBackFlights" class="grow" type="button">✈️ 回航班</button>
+</div>
+<div class="card">
+  <div class="row"><b class="grow">💛 纪念日倒计时</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
+  <div class="life-empty">还没有纪念日，点 + 添加第一个纪念日</div>
+</div>
+<div class="life-tabs" role="tablist">
+  <button class="life-tab on" type="button" data-life-tab="album">日常相册</button>
+  <button class="life-tab" type="button" data-life-tab="food">美食</button>
+  <button class="life-tab" type="button" data-life-tab="travel">旅行足迹</button>
+  <button class="life-tab" type="button" data-life-tab="timeline">时光轴</button>
+  <button class="life-tab" type="button" data-life-tab="wishlist">愿望单</button>
+</div>
+<div id="lifeMsg"></div>
+<div class="life-panel" data-life-panel="album">
+  <div class="card">
+    <div class="row"><b class="grow">📸 日常相册</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
+    <div class="life-empty">还没有照片，点 + 添加第一条</div>
+    <div class="skel-grid"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+  </div>
+</div>
+<div class="life-panel hidden" data-life-panel="food">
+  <div class="card">
+    <div class="row"><b class="grow">🍜 美食</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
+    <div class="life-empty">还没有美食打卡，点 + 添加第一条</div>
+    <div class="skel-line" style="width:80%"></div><div class="skel-line" style="width:60%"></div>
+  </div>
+</div>
+<div class="life-panel hidden" data-life-panel="travel">
+  <div class="card">
+    <div class="row"><b class="grow">🗺️ 旅行足迹</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
+    <div class="life-empty">还没有足迹，点地图添加第一条</div>
+    <div id="lifeMap" class="life-map">地图加载中…</div>
+    <div class="muted" style="margin-top:6px">点地图添加足迹（后续开放）</div>
+  </div>
+</div>
+<div class="life-panel hidden" data-life-panel="timeline">
+  <div class="card">
+    <div class="row"><b class="grow">🕰️ 时光轴</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
+    <div class="life-empty">还没有时光记录，点 + 添加第一条</div>
+    <div class="skel-line" style="width:90%"></div><div class="skel-line" style="width:70%"></div><div class="skel-line" style="width:80%"></div>
+  </div>
+</div>
+<div class="life-panel hidden" data-life-panel="wishlist">
+  <div class="card">
+    <div class="row"><b class="grow">📝 愿望单</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
+    <div class="life-empty">还没有愿望，点 + 添加第一个愿望</div>
+    <div class="skel-line" style="width:75%"></div><div class="skel-line" style="width:55%"></div>
+  </div>
+</div>
+
+  </div><!-- /flipBack -->
+  </div></div><!-- /flip -->
   <div id="roleOverlay" class="role-overlay hidden">
     <div class="card" style="max-width:360px;margin:20vh auto">
       <h2 style="text-align:center">你是谁？</h2>
@@ -814,31 +897,14 @@ function loadTesseract(){
 }
 function ocrNormDigits(s){ return String(s||'').replace(/[Oo]/g,'0'); }
 function ocrNormTime(h,m){ return pad2(ocrNormDigits(h))+':'+pad2(ocrNormDigits(m)); }
-function ocrFindCities(windowText){
-  const found=[];
-  let pos=0;
-  const sorted=OCR_CITY_LIST.slice().sort((a,b)=>b[0].length-a[0].length);
-  while(pos<windowText.length){
-    let matched=null;
-    for(const [name,code] of sorted){ if(windowText.startsWith(name,pos)){ matched={name,code}; break; } }
-    if(matched){ found.push(matched); pos+=matched.name.length; } else pos++;
-  }
-  return found;
-}
 /* OCR 文本归一化：全角转半角、中文之间空格去掉（“马 尼 拉”→“马尼拉”）、时间里的空格去掉 */
 function ocrNormalizeText(s){
   let t=String(s||'');
-  t=t.replace(/[\uFF01-\uFF5E]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0)).replace(/\u3000/g,' ');
+  t=t.replace(/[！-～]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0)).replace(/\u3000/g,' ');
   let prev='';
   while(prev!==t){ prev=t; t=t.replace(/([\u4E00-\u9FA5])\s+([\u4E00-\u9FA5])/g,'$1$2'); }
   t=t.replace(/(\d)\s*:\s*(\d)/g,'$1:$2');
   return t;
-}
-/* 直接提取三字码（只认 AIRPORT_CITY / 动态库里存在的码，MAX 这类非机场词自动过滤） */
-function ocrFindCodes(text){
-  const found=[]; const re=/\b([A-Za-z]{3})\b/g; let m;
-  while((m=re.exec(text))){ const c=m[1].toUpperCase(); if(AIRPORT_CITY[c]||dynAirport(c)){ if(!found.includes(c)) found.push(c); } }
-  return found;
 }
 /* 候选完整性校验：必须同时有航班号+日期+出发+到达+起飞时间+到达时间 */
 function ocrAnnotate(c){
@@ -850,54 +916,138 @@ function ocrAnnotate(c){
   c.missing=missing; c.complete=missing.length===0;
   return c;
 }
+/* 全部已知城市（嵌入大表 + OCR 常用简称），用于城市解析：名→码，长名优先 */
+const OCR_ALL_CITIES=(()=>{ const m=new Map(); try{ for(const [code,name] of Object.entries(AIRPORT_CITY||{})){ if(name&&!m.has(name)) m.set(name,code); } }catch(e){} for(const [name,code] of OCR_CITY_LIST){ if(!m.has(name)) m.set(name,code); } return [...m.entries()].sort((a,b)=>b[0].length-a[0].length); })();
+function ocrEditDistance(a,b){
+  const m=a.length, n=b.length; if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){ let cur=[i]; for(let j=1;j<=n;j++){ cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1)); } prev=cur; }
+  return prev[n];
+}
+/* 在一段文本里解析城市：先精确包含（长名优先），再容忍一字错读的近似匹配 */
+function ocrResolveCityFrag(frag){
+  const t=String(frag||'');
+  if(!t) return null;
+  for(const [name,code] of OCR_ALL_CITIES){ if(t.includes(name)) return {name,code}; }
+  let best=null;
+  for(const [name,code] of OCR_ALL_CITIES){
+    if(name.length<2) continue;
+    for(let i=0;i+name.length<=t.length;i++){
+      const w=t.slice(i,i+name.length);
+      const d=ocrEditDistance(w,name);
+      if(d<=1&&(!best||d<best.d||(d===best.d&&name.length>best.name.length))) best={name,code,d};
+    }
+  }
+  return best;
+}
+/* 时间 token 归一化：小时 0-23、分钟 0-59 才有效 */
+function ocrNormTimeTok(h,m){
+  const hh=ocrNormDigits(h), mm=ocrNormDigits(m);
+  if(hh===''||mm==='') return '';
+  const H=+hh, M=+mm; if(H>23||M>59) return '';
+  return pad2(hh)+':'+pad2(mm);
+}
+/* 在一段文本里提取起飞/到达时间。容忍：分隔符 : ; . ： ； 。、分隔符 - – — ~ 至 _ 及杂字、冒号丢失（1646）、o/O 读作 0（22:3o） */
+function ocrExtractTimes(seg){
+  const s=String(seg||'');
+  const SEP='[:;:.：；。]';
+  const GAP='[\\-–—~至_ ]+';
+  let m;
+  m=s.match(new RegExp('([0-9oO]{1,2})'+SEP+'([0-9oO]{2})\\s*'+GAP+'\\s*([0-9oO]{1,2})'+SEP+'([0-9oO]{2})'));
+  if(m){ const a=ocrNormTimeTok(m[1],m[2]), b=ocrNormTimeTok(m[3],m[4]); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
+  m=s.match(new RegExp('([0-9oO]{1,2})'+SEP+'([0-9oO]{2})\\s*'+GAP+'\\s*([0-9oO]{4})(?!\\d)'));
+  if(m){ const a=ocrNormTimeTok(m[1],m[2]), b=ocrNormTimeTok(m[3].slice(0,2),m[3].slice(2)); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
+  m=s.match(new RegExp('([0-9oO]{4})(?!\\d)\\s*'+GAP+'\\s*([0-9oO]{1,2})'+SEP+'([0-9oO]{2})'));
+  if(m){ const a=ocrNormTimeTok(m[1].slice(0,2),m[1].slice(2)), b=ocrNormTimeTok(m[2],m[3]); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
+  m=s.match(/([0-9oO]{4})(?!\d)\s*[\-–—~至_ ]+\s*([0-9oO]{4})(?!\d)/);
+  if(m){ const a=ocrNormTimeTok(m[1].slice(0,2),m[1].slice(2)), b=ocrNormTimeTok(m[2].slice(0,2),m[2].slice(2)); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
+  const all=[...s.matchAll(new RegExp('([0-9oO]{1,2})'+SEP+'([0-9oO]{2})','g'))].map(x=>ocrNormTimeTok(x[1],x[2])).filter(Boolean);
+  if(all.length>=2) return {dep:all[0],arr:all[1],idx:0,end:0};
+  return {dep:'',arr:'',idx:-1,end:-1};
+}
+/* 识别原文过滤：去掉含个人信息的行（证件/签到关键词、6 位以上连续数字），只留航班字段对照 */
+function ocrFilterRaw(text){
+  return String(text||'').split(/\n/).filter(l=>{ const t=l.trim(); if(!t) return false; if(/(证件|签到|暂无数据|OTHR)/.test(t)) return false; if(/\d{6,}/.test(t.replace(/:/g,''))) return false; return true; }).join('\n');
+}
+/* OCR 解析：按“航班号头”切块，块内按“城市（时间-时间）城市”位置结构解析 */
 function parseOcrFlights(text){
   const year=+todayBj().slice(0,4);
   const lines=String(text||'').split(/\n/).map(l=>ocrNormalizeText(l).trim()).filter(Boolean);
   let currentDate=null;
+  const blocks=[]; let cur=null;
+  const dateAtStart=l=>{ const m=l.match(/^(\d{1,2})月(\d{1,2})日/)||l.match(/^(\d{1,2})[.\-](\d{1,2})\b/); if(!m) return null; const mo=+m[1], d=+m[2]; if(mo<1||mo>12||d<1||d>31) return null; return year+'-'+pad2(mo)+'-'+pad2(d); };
+  for(const line of lines){
+    const d=dateAtStart(line); if(d) currentDate=d;
+    const fm=line.match(/C\s*[Z2]\s*[O0-9]{3,4}/i);
+    if(fm&&currentDate){
+      cur={flightRaw:fm[0],date:currentDate,lines:[]};
+      blocks.push(cur);
+      const rest=line.slice(line.indexOf(fm[0])+fm[0].length);
+      if(rest.trim()) cur.lines.push(rest);
+      continue;
+    }
+    if(d) continue; /* 纯日期分隔行，不并入上一班，避免把 10.23 当成时间 */
+    if(cur) cur.lines.push(line);
+  }
   const out=[];
-  for(let i=0;i<lines.length;i++){
-    const line=lines[i];
-    let m=line.match(/(\d{1,2})月(\d{1,2})日/)||line.match(/(?:^|\s)(\d{1,2})[.\-](\d{1,2})(?![\d:])/);
-    if(m) currentDate=year+'-'+pad2(m[1])+'-'+pad2(m[2]);
-    const flightMatches=line.match(/CZ\s*[O0-9]{3,4}/gi)||[];
-    if(!flightMatches.length) continue;
-    if(!currentDate) continue;
-    const windowText=[line,lines[i+1]||'',lines[i+2]||''].join(' ');
-    let aircraft='';
-    const am=windowText.match(/(7M8|773|77W|738|73G|789|359|333|32N)\b/);
+  for(const b of blocks){
+    const digits=ocrNormDigits(b.flightRaw.replace(/C\s*[Z2]\s*/i,''));
+    const flightNo='CZ'+String(parseInt(digits,10));
+    if(!flightNo||flightNo==='CZNaN') continue;
+    /* 块内去掉噪声行（签到/证件/暂无数据），避免把签到时间当成起飞时间 */
+    const bodyLines=b.lines.filter(l=>!/(证件|签到|暂无数据)/.test(l));
+    const body=bodyLines.join(' ');
+    let aircraft=''; const am=body.match(/(7M8|773|77W|738|73G|789|359|333|32N)\b/);
     if(am) aircraft=OCR_AIRCRAFT_MAP[am[1]]||'';
-    let depTime='', arrTime='';
-    const range=windowText.match(/([0-2]?\d):([0-5]\d)\s*[–—\-~至]\s*([0-2]?\d):([0-5]\d)/);
-    if(range){ depTime=ocrNormTime(range[1],range[2]); arrTime=ocrNormTime(range[3],range[4]); }
-    else{
-      const all=[...windowText.matchAll(/([0-2]?\d):([0-5]\d)/g)];
-      if(all.length>=2){ depTime=ocrNormTime(all[0][1],all[0][2]); arrTime=ocrNormTime(all[1][1],all[1][2]); }
-    }
-    const cities=ocrFindCities(windowText);
-    const codes=ocrFindCodes(windowText);
-    const depCode=cities[0]?cities[0].code:(codes[0]||'');
-    const arrCode=cities[1]?cities[1].code:((codes[0]&&codes[0]!==depCode)?codes[0]:(codes[1]||''));
-    const depCity=cities[0]?cities[0].name:'';
-    const arrCity=cities[1]?cities[1].name:'';
-    for(const fm of flightMatches){
-      const digits=ocrNormDigits(fm.replace(/CZ\s*/i,''));
-      const flightNo='CZ'+String(parseInt(digits,10));
-      if(!flightNo||flightNo==='CZNaN') continue;
-      if(!depCode&&!depCity&&!arrCode&&!arrCity&&!depTime&&!arrTime) continue;
-      const existing=out.find(c=>c.flight_no===flightNo&&c.flight_date===currentDate);
-      if(existing){
-        if(!existing.dep_code) existing.dep_code=depCode;
-        if(!existing.arr_code) existing.arr_code=arrCode;
-        if(!existing.dep_city) existing.dep_city=depCity;
-        if(!existing.arr_city) existing.arr_city=arrCity;
-        if(!existing.dep_time) existing.dep_time=depTime;
-        if(!existing.arr_time) existing.arr_time=arrTime;
-        if(!existing.aircraft) existing.aircraft=aircraft;
-        ocrAnnotate(existing);
-        continue;
+    /* 时间：只在块体里找（不含首行日期/航班号），避免把 10.18 当成时间 */
+    let depTime='',arrTime='',tIdx=-1,tEnd=-1;
+    const tr=ocrExtractTimes(body);
+    if(tr.dep){ depTime=tr.dep; arrTime=tr.arr; tIdx=tr.idx; tEnd=tr.end; }
+    if(!depTime&&!arrTime){
+      /* 兜底：只剩一个时间时，按它在破折号前/后来定是起飞还是到达 */
+      const sm=body.match(/([0-9oO]{1,2})[:;:.：；。]([0-9oO]{2})/);
+      if(sm){
+        const t=ocrNormTimeTok(sm[1],sm[2]);
+        if(t){
+          const after=body.slice(sm.index+sm[0].length, sm.index+sm[0].length+4);
+          const before=body.slice(Math.max(0,sm.index-4), sm.index);
+          if(/[-–—~至_]/.test(before)&&!/[-–—~至_]/.test(after)) arrTime=t; else depTime=t;
+          tIdx=sm.index; tEnd=sm.index+sm[0].length;
+        }
       }
-      out.push(ocrAnnotate({flight_no:flightNo,flight_date:currentDate,dep_code:depCode,arr_code:arrCode,dep_city:depCity,arr_city:arrCity,dep_time:depTime,arr_time:arrTime,aircraft:aircraft}));
     }
+    /* 城市：按时间位置切——时间前是出发，时间后是到达 */
+    let depCity='',depCode='',arrCity='',arrCode='';
+    if(tIdx>=0){
+      const depFrag=body.slice(0,tIdx).replace(/[\(（]/g,' ').replace(/C\s*[Z2]\s*[O0-9]{3,4}/gi,' ').replace(/AT[》>]/g,' ').replace(/[\d.:;_+\-–—~至]/g,' ');
+      const arrFrag=body.slice(tEnd).replace(/[\)）]/g,' ').replace(/AT[》>]/g,' ').replace(/\+1/g,' ').replace(/[\d.:;_+\-–—~至]/g,' ');
+      const dd=ocrResolveCityFrag(depFrag); if(dd){ depCity=dd.name; depCode=dd.code; }
+      const aa=ocrResolveCityFrag(arrFrag); if(aa){ arrCity=aa.name; arrCode=aa.code; }
+    }
+    if(!depCode&&!arrCode){
+      /* 兜底：整块扫城市（精确优先，长名优先） */
+      for(const [name,code] of OCR_ALL_CITIES){ if(body.includes(name)){ if(!depCode){ depCity=name; depCode=code; } else if(code!==depCode&&!arrCode){ arrCity=name; arrCode=code; break; } } }
+    }
+    /* 时长交叉校验：排班表里“2h40m”是冗余信息。缺一个时间时用时长算出；两个都有但与时长不符时只标出警告，不擅自改值 */
+    let timeWarn='';
+    const dm=body.match(/([0-9oO]{1,2})h([0-9oO]{1,2})m/);
+    if(dm){
+      const dur=+ocrNormDigits(dm[1])*60+ +ocrNormDigits(dm[2]);
+      const toMin=t=>{ const p=t.split(':'); return (+p[0])*60+(+p[1]); };
+      const fromMin=x=>{ const v=((x%1440)+1440)%1440; return pad2(Math.floor(v/60))+':'+pad2(v%60); };
+      if(depTime&&!arrTime&&dur>0) arrTime=fromMin(toMin(depTime)+dur);
+      else if(arrTime&&!depTime&&dur>0) depTime=fromMin(toMin(arrTime)-dur);
+      else if(depTime&&arrTime&&dur>0){
+        const exp=(toMin(depTime)+dur)%1440; const got=toMin(arrTime);
+        let diff=Math.abs(got-exp); if(diff>720) diff=1440-diff;
+        if(diff>0) timeWarn='时间与时长差'+diff+'分钟，请核对';
+      }
+    }
+    if(!depCode&&!depCity&&!arrCode&&!arrCity&&!depTime&&!arrTime&&!aircraft) continue;
+    const existing=out.find(c=>c.flight_no===flightNo&&c.flight_date===b.date);
+    const rec={flight_no:flightNo,flight_date:b.date,dep_code:depCode,arr_code:arrCode,dep_city:depCity,arr_city:arrCity,dep_time:depTime,arr_time:arrTime,aircraft:aircraft,timeWarn:timeWarn};
+    if(existing){ for(const k of ['dep_code','arr_code','dep_city','arr_city','dep_time','arr_time','aircraft','timeWarn']) if(!existing[k]) existing[k]=rec[k]; ocrAnnotate(existing); continue; }
+    out.push(ocrAnnotate(rec));
   }
   return out;
 }
@@ -911,7 +1061,7 @@ function ocrCandidateLabel(c){
   else if(c.dep_time) times='起飞 '+c.dep_time+' · 到达未识别';
   else if(c.arr_time) times='起飞未识别 · 到达 '+c.arr_time;
   else times='时间未识别';
-  return esc(c.flight_date)+' '+esc(c.flight_no)+' '+(depCity?esc(depCity):'出发未识别')+'→'+(arrCity?esc(arrCity):'到达未识别')+' '+esc(times)+(c.aircraft?' '+esc(c.aircraft):'');
+  return esc(c.flight_date)+' '+esc(c.flight_no)+' '+(depCity?esc(depCity):'出发未识别')+'→'+(arrCity?esc(arrCity):'到达未识别')+' '+esc(times)+(c.aircraft?' '+esc(c.aircraft):'')+(c.timeWarn?' ⚠️ '+esc(c.timeWarn):'');
 }
 function renderOcrCandidates(){
   const box=$('ocrCandidates'); if(!box) return;
@@ -981,6 +1131,7 @@ async function handleOcrFile(file){
     const res=await window.Tesseract.recognize(file,'chi_sim+eng');
     const text=(res&&res.data&&res.data.text)||(res&&res.text)||'';
     ocrCandidates=parseOcrFlights(text);
+    const rawEl=$('ocrRawText'), rawBox=$('ocrRawBox'); if(rawEl&&rawBox){ rawEl.textContent=ocrFilterRaw(text); rawBox.classList.remove('hidden'); }
     if(!ocrCandidates.length){ msg($('ocrMsg'),'没识别出航班，请换一张更清晰的截图再试'); renderOcrCandidates(); return; }
     msg($('ocrMsg'),'识别出 '+ocrCandidates.length+' 条航班，点一条填入表单，或点“全部保存”。',true);
     renderOcrCandidates();
@@ -992,6 +1143,52 @@ async function handleOcrFile(file){
     const inp=$('ocrFile'); if(inp) inp.value='';
   }
 }
+
+/* ===== 生活页（翻转框架；与航班页共用登录态，不读写航班库） ===== */
+let lifeMapTried=false, lifeMap=null;
+function lifeSoon(){ msg($('lifeMsg'),'生活页框架先行，上传/保存功能随后开放。',true); }
+function setLife(on){
+  $('flipInner').classList.toggle('flipped', !!on);
+  $('viewMain').classList.toggle('on-life', !!on);
+  window.scrollTo(0,0);
+}
+function loadLeaflet(){
+  return new Promise((res,rej)=>{
+    if(window.L) return res();
+    const link=document.createElement('link'); link.rel='stylesheet'; link.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(link);
+    const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+    const to=setTimeout(()=>rej(new Error('timeout')),12000);
+    s.onload=()=>{ clearTimeout(to); res(); }; s.onerror=()=>{ clearTimeout(to); rej(new Error('load fail')); };
+    document.head.appendChild(s);
+  });
+}
+async function initLifeMap(){
+  const el=$('lifeMap'); if(!el) return;
+  if(lifeMap){ try{ lifeMap.invalidateSize(); }catch(e){} return; }
+  try{
+    await loadLeaflet();
+    if(!window.L) throw new Error('no L');
+    lifeMap=L.map('lifeMap').setView([23.129,113.264],5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(lifeMap);
+    lifeMap.on('click',()=>lifeSoon());
+    setTimeout(()=>{ try{ lifeMap.invalidateSize(); }catch(e){} },200);
+  }catch(e){
+    el.textContent='地图暂未加载成功，点按重试';
+    el.style.cursor='pointer';
+    el.onclick=()=>{ el.textContent='地图加载中…'; el.onclick=null; lifeMapTried=false; initLifeMap(); };
+  }
+}
+$('btnLife').addEventListener('click',()=>setLife(true));
+$('btnBackFlights').addEventListener('click',()=>setLife(false));
+document.querySelectorAll('[data-life-tab]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-life-tab]').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('[data-life-panel]').forEach(p=>p.classList.toggle('hidden',p.dataset.lifePanel!==b.dataset.lifeTab));
+  if(b.dataset.lifeTab==='travel'){
+    if(!lifeMapTried){ lifeMapTried=true; setTimeout(initLifeMap,60); }
+    else if(lifeMap){ setTimeout(()=>{ try{ lifeMap.invalidateSize(); }catch(e){} },60); }
+  }
+}));
+document.querySelectorAll('.life-add').forEach(b=>b.addEventListener('click',lifeSoon));
 
 /* ===== 保存（新增 / 更新） ===== */
 function collectForm(){
@@ -1165,7 +1362,7 @@ async function refreshWeather(force){
 }
 
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-17-09-ocr-weather-icons';
+const APP_VERSION='2026-10-17-10-ocr-flip-life';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
