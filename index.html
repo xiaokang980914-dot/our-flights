@@ -217,6 +217,8 @@ function saveConfig(url,key){ localStorage.setItem(CFG_URL,url); localStorage.se
 
 /* 常用机场当地时区（无映射时回退北京时间并标注） */
 const AIRPORT_TZ={CAN:'Asia/Shanghai',PEK:'Asia/Shanghai',PKX:'Asia/Shanghai',SZX:'Asia/Shanghai',PVG:'Asia/Shanghai',SHA:'Asia/Shanghai',CTU:'Asia/Shanghai',TFU:'Asia/Shanghai',HGH:'Asia/Shanghai',XIY:'Asia/Shanghai',KMG:'Asia/Shanghai',XMN:'Asia/Shanghai',NKG:'Asia/Shanghai',TSN:'Asia/Shanghai',URC:'Asia/Shanghai',CKG:'Asia/Shanghai',WUH:'Asia/Shanghai',CSX:'Asia/Shanghai',SHE:'Asia/Shanghai',DLC:'Asia/Shanghai',TAO:'Asia/Shanghai',HFE:'Asia/Shanghai',KWE:'Asia/Shanghai',NNG:'Asia/Shanghai',HAK:'Asia/Shanghai',SYX:'Asia/Shanghai',LAX:'America/Los_Angeles',SFO:'America/Los_Angeles',JFK:'America/New_York',ORD:'America/Chicago',ANC:'America/Anchorage',SEA:'America/Los_Angeles',SYD:'Australia/Sydney',MEL:'Australia/Melbourne',AKL:'Pacific/Auckland',LHR:'Europe/London',CDG:'Europe/Paris',FRA:'Europe/Paris',AMS:'Europe/Amsterdam',ICN:'Asia/Seoul',NRT:'Asia/Tokyo',HND:'Asia/Tokyo',SIN:'Asia/Singapore',BKK:'Asia/Bangkok',KUL:'Asia/Kuala_Lumpur',DXB:'Asia/Dubai',HKG:'Asia/Hong_Kong',TPE:'Asia/Taipei'};
+const AIRPORT_CITY={CAN:'广州',PEK:'北京',PKX:'北京',SZX:'深圳',PVG:'上海',SHA:'上海',CTU:'成都',TFU:'成都',HGH:'杭州',XIY:'西安',KMG:'昆明',XMN:'厦门',NKG:'南京',TSN:'天津',URC:'乌鲁木齐',CKG:'重庆',WUH:'武汉',CSX:'长沙',SHE:'沈阳',DLC:'大连',TAO:'青岛',HFE:'合肥',KWE:'贵阳',NNG:'南宁',HAK:'海口',SYX:'三亚',LAX:'洛杉矶',SFO:'旧金山',JFK:'纽约',ORD:'芝加哥',ANC:'安克雷奇',SEA:'西雅图',SYD:'悉尼',MEL:'墨尔本',AKL:'奥克兰',LHR:'伦敦',CDG:'巴黎',FRA:'法兰克福',AMS:'阿姆斯特丹',ICN:'首尔',NRT:'东京',HND:'东京',SIN:'新加坡',BKK:'曼谷',KUL:'吉隆坡',DXB:'迪拜',HKG:'香港',TPE:'台北',ADD:'亚的斯亚贝巴',KHG:'喀什'};
+function cityOf(code){ return AIRPORT_CITY[String(code||'').toUpperCase()]||''; }
 const TZ_CHOICES=['Asia/Shanghai','Asia/Tokyo','Asia/Seoul','Asia/Singapore','Asia/Bangkok','Asia/Dubai','Europe/London','Europe/Paris','America/New_York','America/Chicago','America/Los_Angeles','America/Anchorage','Australia/Sydney','Pacific/Auckland'];
 
 /* ===== 全局状态 ===== */
@@ -353,6 +355,7 @@ function fmtInTz(iso,tz,withDate){
   return (withDate?(parts.month+'-'+parts.day+' '):'')+parts.hour+':'+parts.minute;
 }
 function displayTime(iso,airportCode){
+  if(!iso) return {t:'—', tag:''};
   if(timeMode==='local'){
     const tz=AIRPORT_TZ[String(airportCode||'').toUpperCase()];
     if(tz) return {t:fmtInTz(iso,tz,true), tag:'当地'};
@@ -405,10 +408,12 @@ function flightCard(f){
   const past=f.flight_date<today;
   const label=past?'已完成':'未来';
   const dep=displayTime(f.dep_time,f.dep_code), arr=displayTime(f.arr_time,f.arr_code);
+  const depLabel=cityOf(f.dep_code)?cityOf(f.dep_code)+' '+f.dep_code:(f.dep_code||'---');
+  const arrLabel=cityOf(f.arr_code)?cityOf(f.arr_code)+' '+f.arr_code:(f.arr_code||'---');
   return '<div class="flight">'
     +'<div><span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+(past?'past':'')+'">'+label+'</span></div>'
     +'<div class="muted">'+esc(f.flight_date)+(f.aircraft?' · '+esc(f.aircraft):'')+' · 添加人 '+esc(emailPrefix(f.added_by)||'-')+'</div>'
-    +'<div class="route"><span class="code">'+esc(f.dep_code||'---')+'</span><span class="arrow">→</span><span class="code">'+esc(f.arr_code||'---')+'</span></div>'
+    +'<div class="route"><span class="code">'+esc(depLabel)+'</span><span class="arrow">→</span><span class="code">'+esc(arrLabel)+'</span></div>'
     +'<div class="times"><span>起飞 <b>'+esc(dep.t)+'</b> <span class="muted">'+esc(dep.tag)+'</span></span><span>到达 <b>'+esc(arr.t)+'</b> <span class="muted">'+esc(arr.tag)+'</span></span></div>'
     +(f.note?'<div class="muted" style="margin-top:4px">备注：'+esc(f.note)+'</div>':'')
     +'<div class="ops"><button class="ghost small" data-edit="'+esc(f.id)+'">编辑</button><button class="danger small" data-del="'+esc(f.id)+'">删除</button></div>'
@@ -458,8 +463,8 @@ async function lookupFlight(){
     if(!info) throw new Error('航班接口响应超时，请重试');
     const depCode=info.origin||info.dep_code||info.origin_iata;
     const arrCode=info.dest||info.arr_code||info.dest_iata;
-    const depRaw=info.depActual||info.dep_time||info.depScheduled||info.dep_scheduled;
-    const arrRaw=info.arrActual||info.arr_time||info.arrScheduled||info.arr_scheduled;
+    const depRaw=info.depActual||info.depEstimated||info.dep_time||info.depScheduled||info.dep_scheduled;
+    const arrRaw=info.arrActual||info.arrEstimated||info.arr_time||info.arrScheduled||info.arr_scheduled;
     if(depCode) $('fDep').value=depCode;
     if(arrCode) $('fArr').value=arrCode;
     if(depRaw) $('fDepT').value=rpcTimeToBjInput(depRaw);
