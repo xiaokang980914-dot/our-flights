@@ -436,14 +436,26 @@ async function lookupFlight(){
   if(!dateISO) return msg($('lookupMsg'),'请先选日期。');
   $('btnLookup').disabled=true; msg($('lookupMsg'),'查询中…',true);
   try{
-    const {data,error}=await rpcFn('lookup_flight',{p_flight:flight_no, p_date:dateISO});
-    if(error) throw error;
-    if(!data) throw new Error('查询没有返回数据。');
-    let info=data;
-    if(typeof info==='string'){ try{ info=JSON.parse(info); }catch(e){ throw new Error('查询返回格式无法解析。'); } }
-    if(Array.isArray(info)) info=info[0];
-    if(!info||typeof info!=='object') throw new Error('查询没有返回数据。');
-    if(info.error) throw new Error(String(info.error));
+    // 第一步：启动查询，立即拿到请求 ID（不等待接口，单次查询很快，不会超时）
+    const {data:startData,error:startError}=await rpcFn('lookup_flight_start',{p_flight:flight_no, p_date:dateISO});
+    if(startError) throw startError;
+    let reqId=startData&&startData.request_id;
+    if(typeof startData==='string'){ try{ reqId=JSON.parse(startData).request_id; }catch(e){} }
+    if(!reqId) throw new Error('查询没有返回数据。');
+    // 第二步：每 1.5 秒轮询一次结果，最长 30 秒（每次查询都很快，不会超时）
+    let info=null;
+    for(let i=0;i<20;i++){
+      await new Promise(r=>setTimeout(r,1500));
+      const {data:resData,error:resError}=await rpcFn('lookup_flight_result',{p_request_id:reqId});
+      if(resError) throw resError;
+      let res=resData;
+      if(typeof res==='string'){ try{ res=JSON.parse(res); }catch(e){ throw new Error('查询返回格式无法解析。'); } }
+      if(Array.isArray(res)) res=res[0];
+      if(!res||typeof res!=='object') throw new Error('查询没有返回数据。');
+      if(res.status==='done'){ info=res; break; }
+      if(res.status==='error') throw new Error(res.message||'查航班失败');
+    }
+    if(!info) throw new Error('航班接口响应超时，请重试');
     const depCode=info.origin||info.dep_code||info.origin_iata;
     const arrCode=info.dest||info.arr_code||info.dest_iata;
     const depRaw=info.depActual||info.dep_time||info.depScheduled||info.dep_scheduled;
