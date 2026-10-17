@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>我们的航班</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#17233b;--sub:#66738c;--line:#e3e8f2;--brand:#2563eb;--danger:#dc2626;--ok:#0a7d4f;--radius:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei",sans-serif;font-size:15px;line-height:1.5}
+h1,h2,h3,.brand-font{font-family:"PingFang SC","Hiragino Sans GB","Source Han Sans SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:12px 12px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(20,40,80,.05)}
+label{display:block;font-size:13px;color:var(--sub);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:#fff;color:var(--ink);font-family:inherit}
+input[type=color]{padding:2px;height:34px;width:52px}
+button{border:0;border-radius:10px;padding:10px 14px;font-size:15px;background:var(--brand);color:#fff;cursor:pointer;font-family:inherit}
+button.ghost{background:#eef2fb;color:var(--brand)}
+button.danger{background:#fdecec;color:var(--danger)}
+button.small{padding:6px 10px;font-size:13px;border-radius:8px}
+button:disabled{opacity:.55}
+.row{display:flex;gap:8px;align-items:center}
+.row.wrap-flex{flex-wrap:wrap}
+.grow{flex:1}
+.muted{color:var(--sub);font-size:13px}
+.err{background:#fdecec;color:#8c1d1d;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:10px;white-space:pre-wrap;word-break:break-word}
+.okmsg{background:#e6f6ee;color:var(--ok);border-radius:10px;padding:10px 12px;font-size:14px;margin-top:10px;white-space:pre-wrap}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap" id="appRoot">
+<style>
+/* 顶栏与时钟 */
+.topbar{position:sticky;top:0;z-index:20;background:rgba(244,246,251,.94);backdrop-filter:blur(6px);padding:10px 0 8px;margin-bottom:4px}
+.clock-big{font-size:40px;font-weight:700;letter-spacing:1px;font-variant-numeric:tabular-nums;line-height:1.1}
+.clock-date{color:var(--sub);font-size:13px}
+.toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.wc-chip{display:inline-flex;align-items:center;gap:6px;background:#eef2fb;border-radius:999px;padding:5px 6px 5px 12px;font-size:13px;margin:0 6px 6px 0}
+.wc-chip b{font-variant-numeric:tabular-nums}
+.wc-chip button{background:transparent;color:var(--sub);padding:2px 6px;font-size:14px}
+/* 分区 */
+.section{border-top:5px solid var(--brand)}
+.sec-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sec-head h2{font-size:19px;margin:0}
+.sec-color{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)}
+/* 航班卡 */
+.flight{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:10px;background:#fbfcfe}
+.flight .fno{font-size:18px;font-weight:700}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#e6f6ee;color:var(--ok);vertical-align:2px;margin-left:6px}
+.badge.past{background:#eceff5;color:var(--sub)}
+.route{display:flex;align-items:center;gap:8px;margin:8px 0 2px}
+.route .code{font-size:24px;font-weight:700;letter-spacing:.5px}
+.route .arrow{color:var(--sub);font-size:18px}
+.times{display:flex;gap:10px;color:var(--ink);font-size:14px;flex-wrap:wrap}
+.times span b{font-variant-numeric:tabular-nums}
+.flight .ops{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.seg-toggle{display:flex;background:#eef2fb;border-radius:10px;padding:3px;gap:3px}
+.seg-toggle button{background:transparent;color:var(--sub);padding:6px 12px;font-size:13px}
+.seg-toggle button.on{background:#fff;color:var(--brand);box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid2>div{min-width:0}
+h2.view-title{font-size:22px;margin:6px 0 2px}
+</style>
+<!-- ===== 设置视图 ===== -->
+<div id="viewSetup" class="hidden">
+  <h2 class="view-title">连接设置</h2>
+  <p class="muted">填入 Supabase 项目的 Project URL 和 anon key，保存在这台手机的浏览器里。页面本身不内置任何地址和密钥。</p>
+  <div class="card">
+    <label for="cfgUrl">Project URL</label>
+    <input id="cfgUrl" type="text" inputmode="url" autocomplete="off" placeholder="粘贴 Project URL">
+    <label for="cfgKey">anon key</label>
+    <input id="cfgKey" type="text" autocomplete="off" placeholder="粘贴 anon key">
+    <div class="row" style="margin-top:14px">
+      <button id="btnSaveCfg" class="grow">保存连接</button>
+      <button id="btnSelfCheck" class="ghost">连接自检</button>
+    </div>
+    <div id="setupMsg"></div>
+  </div>
+</div>
+
+<!-- ===== 登录视图 ===== -->
+<div id="viewLogin" class="hidden">
+  <h2 class="view-title">登录</h2>
+  <p class="muted">用两人共用的账号登录，登录后双方的航班会互相可见。</p>
+  <div class="card">
+    <label for="loginEmail">邮箱</label>
+    <input id="loginEmail" type="email" autocomplete="username" placeholder="邮箱">
+    <label for="loginPwd">密码</label>
+    <input id="loginPwd" type="password" autocomplete="current-password" placeholder="密码">
+    <button id="btnLogin" style="width:100%;margin-top:14px">登录</button>
+    <div id="loginMsg"></div>
+    <div class="row" style="margin-top:12px">
+      <button id="btnGotoSetup" class="ghost small">连接设置</button>
+      <button id="btnClearCache2" class="ghost small">清除缓存并重新授权</button>
+    </div>
+  </div>
+</div>
+<!-- ===== 主视图 ===== -->
+<div id="viewMain" class="hidden">
+  <div class="topbar">
+    <div class="row">
+      <div class="grow">
+        <div class="muted">北京时间</div>
+        <div class="clock-big" id="bjClock">--:--:--</div>
+        <div class="clock-date" id="bjDate"></div>
+      </div>
+    </div>
+    <div class="muted" style="margin-top:4px">当前身份：<span id="meEmail">-</span></div>
+    <div class="toolbar">
+      <button id="btnRefresh" class="ghost small">刷新</button>
+      <button id="btnDisconnect" class="ghost small">断开连接</button>
+      <button id="btnClearCache" class="ghost small">清除缓存并重新授权</button>
+      <button id="btnSetup2" class="ghost small">连接设置</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <b class="grow">世界时钟</b>
+      <button id="btnWcToggle" class="ghost small">＋ 添加</button>
+    </div>
+    <div id="wcList" style="margin-top:8px"></div>
+    <div id="wcForm" class="hidden">
+      <label for="wcTitle">名称</label>
+      <input id="wcTitle" type="text" placeholder="如：洛杉矶">
+      <label for="wcTz">时区</label>
+      <select id="wcTz"></select>
+      <div class="row" style="margin-top:10px">
+        <button id="btnWcAdd" class="grow">添加时钟</button>
+        <button id="btnWcCancel" class="ghost">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <b class="grow">时间显示</b>
+      <div class="seg-toggle">
+        <button id="tmBj" class="on">北京时间</button>
+        <button id="tmLocal">当地时间</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <b id="formTitle">添加航班</b>
+    <label for="fNo">航班号</label>
+    <input id="fNo" type="text" autocomplete="off" placeholder="如 CZ659" style="text-transform:uppercase">
+    <label for="fDate">日期</label>
+    <input id="fDate" type="date">
+    <button id="btnLookup" style="width:100%;margin-top:12px">查询并自动填充</button>
+    <div id="lookupMsg"></div>
+    <div class="grid2">
+      <div><label for="fDep">出发三字码</label><input id="fDep" type="text" maxlength="4" style="text-transform:uppercase" placeholder="CAN"></div>
+      <div><label for="fArr">到达三字码</label><input id="fArr" type="text" maxlength="4" style="text-transform:uppercase" placeholder="SFO"></div>
+      <div><label for="fDepT">出发时间（北京时间）</label><input id="fDepT" type="datetime-local"></div>
+      <div><label for="fArrT">到达时间（北京时间）</label><input id="fArrT" type="datetime-local"></div>
+      <div><label for="fAc">机型</label><input id="fAc" type="text" placeholder="如 B777"></div>
+      <div><label for="fNote">备注</label><input id="fNote" type="text" placeholder="可空"></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button id="btnSaveFlight" class="grow">保存航班</button>
+      <button id="btnCancelEdit" class="ghost hidden">取消编辑</button>
+    </div>
+    <div id="saveMsg"></div>
+  </div>
+
+  <div id="listMsg"></div>
+
+  <div class="card section" id="secMine">
+    <div class="sec-head">
+      <h2>我的航班</h2>
+      <span class="muted" id="mineWho"></span>
+      <span class="sec-color">颜色 <input type="color" id="colorMine" value="#2563eb"></span>
+    </div>
+    <div id="listMine"></div>
+  </div>
+
+  <div class="card section" id="secPartner">
+    <div class="sec-head">
+      <h2>对方的航班</h2>
+      <span class="muted" id="partnerWho"></span>
+      <span class="sec-color">颜色 <input type="color" id="colorPartner" value="#db2777"></span>
+    </div>
+    <div id="listPartner"></div>
+  </div>
+</div>
+</div><!-- /wrap -->
+<script type="module">
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function msg(el,text,ok){ el.innerHTML=text?('<div class="'+(ok?'okmsg':'err')+'">'+esc(text)+'</div>'):''; }
+
+/* 粘贴进来的值常混入空格/换行/不可见字符，进请求头会直接网络层失败，先彻底清洗 */
+function clean(v){
+  if(v==null) return '';
+  return String(v).replace(/[\s᠎​-‏﻿]+/g,'').replace(/[^\x21-\x7E]/g,'');
+}
+function normalizeUrl(raw){
+  let u=clean(raw);
+  if(!u) return '';
+  if(/^http:\/\//i.test(u)) u='https://'+u.slice(7);
+  if(!/^https:\/\//i.test(u)) u='https://'+u;
+  try{ const p=new URL(u); return 'https://'+p.host; }catch(e){ return u.replace(/\/+$/,''); }
+}
+const CFG_URL='ourflights.cfg.url', CFG_KEY='ourflights.cfg.key';
+function loadConfig(repair=true){
+  const rawU=localStorage.getItem(CFG_URL)||'', rawK=localStorage.getItem(CFG_KEY)||'';
+  const url=normalizeUrl(rawU), key=clean(rawK);
+  if(repair && (url!==rawU||key!==rawK)){
+    if(url) localStorage.setItem(CFG_URL,url); if(key) localStorage.setItem(CFG_KEY,key);
+  }
+  return (url&&key)?{url,key}:null;
+}
+function saveConfig(url,key){ localStorage.setItem(CFG_URL,url); localStorage.setItem(CFG_KEY,key); }
+
+/* 常用机场当地时区（无映射时回退北京时间并标注） */
+const AIRPORT_TZ={CAN:'Asia/Shanghai',PEK:'Asia/Shanghai',PKX:'Asia/Shanghai',SZX:'Asia/Shanghai',PVG:'Asia/Shanghai',SHA:'Asia/Shanghai',CTU:'Asia/Shanghai',TFU:'Asia/Shanghai',HGH:'Asia/Shanghai',XIY:'Asia/Shanghai',KMG:'Asia/Shanghai',XMN:'Asia/Shanghai',NKG:'Asia/Shanghai',TSN:'Asia/Shanghai',URC:'Asia/Shanghai',CKG:'Asia/Shanghai',WUH:'Asia/Shanghai',CSX:'Asia/Shanghai',SHE:'Asia/Shanghai',DLC:'Asia/Shanghai',TAO:'Asia/Shanghai',HFE:'Asia/Shanghai',KWE:'Asia/Shanghai',NNG:'Asia/Shanghai',HAK:'Asia/Shanghai',SYX:'Asia/Shanghai',LAX:'America/Los_Angeles',SFO:'America/Los_Angeles',JFK:'America/New_York',ORD:'America/Chicago',ANC:'America/Anchorage',SEA:'America/Los_Angeles',SYD:'Australia/Sydney',MEL:'Australia/Melbourne',AKL:'Pacific/Auckland',LHR:'Europe/London',CDG:'Europe/Paris',FRA:'Europe/Paris',AMS:'Europe/Amsterdam',ICN:'Asia/Seoul',NRT:'Asia/Tokyo',HND:'Asia/Tokyo',SIN:'Asia/Singapore',BKK:'Asia/Bangkok',KUL:'Asia/Kuala_Lumpur',DXB:'Asia/Dubai',HKG:'Asia/Hong_Kong',TPE:'Asia/Taipei'};
+const TZ_CHOICES=['Asia/Shanghai','Asia/Tokyo','Asia/Seoul','Asia/Singapore','Asia/Bangkok','Asia/Dubai','Europe/London','Europe/Paris','America/New_York','America/Chicago','America/Los_Angeles','America/Anchorage','Australia/Sydney','Pacific/Auckland'];
+
+/* ===== 全局状态 ===== */
+let sbAuth=null, sbDb=null, sbClient=null, me=null, flights=[], editingId=null;
+let timeMode=localStorage.getItem('ourflights.timeMode')||'bj'; // bj=北京时间 local=当地时间
+const AUTH_STORAGE_KEY='family-manager-app-device-auth-token-v1';
+
+/* ===== 视图切换 ===== */
+function show(name){
+  for(const v of ['viewSetup','viewLogin','viewMain']) $(v).classList.toggle('hidden', v!==name);
+  window.scrollTo(0,0);
+}
+
+/* ===== 建立客户端（esm.sh 动态导入，no-store 防旧缓存） ===== */
+async function buildClients(cfg){
+  const mod=await import('https://esm.sh/@supabase/supabase-js@2');
+  const createClient=mod.createClient;
+  sbClient=createClient(cfg.url, cfg.key, {
+    auth:{ multiTab:false, autoRefreshToken:false, persistSession:true, storageKey:AUTH_STORAGE_KEY, detectSessionInUrl:false },
+    global:{ fetch:(...a)=>fetch(a[0],{...(a[1]||{}), cache:'no-store'}) }
+  });
+  sbAuth=sbClient.auth;
+  sbDb=sbClient;
+  return sbClient;
+}
+function dropClients(){ sbAuth=null; sbDb=null; sbClient=null; me=null; flights=[]; }
+async function currentUser(){
+  if(!sbAuth) return null;
+  const {data}=await sbAuth.getUser();
+  return data&&data.user?data.user:null;
+}
+
+/* ===== 错误翻译：不静默失败 ===== */
+function friendlyErr(e, scene){
+  if(!e) return '未知错误';
+  const m=String(e.message||e.error_description||e.details||e);
+  const st=e.status||e.code;
+  if(e instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(m))
+    return '没连上服务器（网络层失败）。请检查网络后再试；若多次失败，可能是当前页面环境拦截了请求。原始信息：'+m;
+  if(st===401 || /jwt|unauthorized|invalid api key/i.test(m))
+    return '服务器返回 401：登录状态或 key 不被接受，请重新登录；仍不行就到「连接设置」核对 Project URL 与 anon key 是否属于同一个项目。原始信息：'+m;
+  if(/invalid login credentials/i.test(m)) return '邮箱或密码不正确，请核对后重试。';
+  if(/email not confirmed/i.test(m)) return '账号邮箱尚未确认，无法登录。';
+  if(/relation .*our_flights|does not exist|schema cache/i.test(m))
+    return '数据库里还没有 our_flights 表（或当前 key 无权访问）。原始信息：'+m;
+  return (scene?scene+'失败：':'')+m;
+}
+
+/* ===== 登录：客户端方法优先，失败回退裸 fetch ===== */
+async function signIn(email,password){
+  // 主路径：supabase.auth 的 sign_in_with_password（signInWithPassword，grant_type=password 语义）
+  try{
+    const {data,error}=await sbAuth.signInWithPassword({email,password});
+    if(error) throw error;
+    return data.user;
+  }catch(firstErr){
+    // 回退：直接 POST /auth/v1/token?grant_type=password，scope 固定为 device
+    const cfg=loadConfig(false);
+    let res;
+    try{
+      res=await fetch(cfg.url+'/auth/v1/token?grant_type=password',{
+        method:'POST', cache:'no-store',
+        headers:{ 'apikey':cfg.key, 'Authorization':'Bearer '+cfg.key, 'Content-Type':'application/json' },
+        body: JSON.stringify({ email, password, gotrue_meta_security:{}, grant_type:'password', scope:'device' })
+      });
+    }catch(netErr){ throw firstErr; }
+    const body=await res.json().catch(()=>null);
+    if(!res.ok) throw Object.assign(new Error((body&&(body.msg||body.error_description||body.error))||('HTTP '+res.status)), {status:res.status});
+    if(body&&body.access_token){
+      const {data,error}=await sbAuth.setSession({access_token:body.access_token, refresh_token:body.refresh_token});
+      if(error) throw error;
+      return data.user;
+    }
+    throw firstErr;
+  }
+}
+
+/* ===== 连接自检：三级定位拦截方 ===== */
+async function selfCheck(url,key,out){
+  const lines=[];
+  const step=async(label,fn)=>{ try{ const r=await fn(); lines.push('✅ '+label+'：'+r); }catch(e){ lines.push('❌ '+label+'：'+(e&&e.message?e.message:String(e))); } out.innerHTML=lines.map(esc).join('<br>'); };
+  out.innerHTML='自检中…';
+  await step('1) 项目根地址（验网络与 URL）', async()=>{
+    const r=await fetch(url+'/',{cache:'no-store'}); return 'HTTP '+r.status+'，网络可达';
+  });
+  await step('2) 带 key 请求登录服务设置（验跨域预检与 key）', async()=>{
+    const r=await fetch(url+'/auth/v1/settings',{cache:'no-store',headers:{'apikey':key}});
+    if(!r.ok) throw new Error('HTTP '+r.status); return 'HTTP 200，key 被接受';
+  });
+  await step('3) 假密码试登录接口（预期 400，验登录链路）', async()=>{
+    const r=await fetch(url+'/auth/v1/token?grant_type=password',{method:'POST',cache:'no-store',headers:{'apikey':key,'Authorization':'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify({email:'check@example.com',password:'wrong-password'})});
+    if(r.status===400) return 'HTTP 400（预期结果），登录链路通';
+    if(r.status===401) return 'HTTP 401：key 与该项目对不上';
+    return 'HTTP '+r.status;
+  });
+  return lines;
+}
+if(window.__cspViolationLog===undefined){ window.__cspViolationLog=[];
+  document.addEventListener('securitypolicyviolation',e=>{ if(e.blockedURI) window.__cspViolationLog.push(e.blockedURI+' ← '+e.violatedDirective); });
+}
+
+/* ===== 时钟 ===== */
+const fmtHMS=new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+const fmtDate=new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',year:'numeric',month:'long',day:'numeric',weekday:'long'});
+function tickClock(){
+  const now=new Date();
+  const el=$('bjClock'); if(el) el.textContent=fmtHMS.format(now);
+  const de=$('bjDate'); if(de) de.textContent=fmtDate.format(now);
+  for(const w of loadWorldClocks()){
+    const t=document.querySelector('[data-wc-time="'+CSS.escape(w.id)+'"]');
+    if(t){ try{ t.textContent=new Intl.DateTimeFormat('zh-CN',{timeZone:w.tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now); }catch(e){ t.textContent='时区无效'; } }
+  }
+}
+setInterval(tickClock,1000);
+
+/* ===== 世界时钟（本地 localStorage 持久化） ===== */
+const WC_KEY='ourflights.worldClocks';
+function loadWorldClocks(){ try{ return JSON.parse(localStorage.getItem(WC_KEY)||'[]'); }catch(e){ return []; } }
+function saveWorldClocks(list){ localStorage.setItem(WC_KEY, JSON.stringify(list)); }
+function renderWorldClocks(){
+  const box=$('wcList'); if(!box) return;
+  const list=loadWorldClocks();
+  box.innerHTML=list.length? list.map(w=>'<span class="wc-chip">'+esc(w.title)+' <b data-wc-time="'+esc(w.id)+'">--:--:--</b><button data-wc-del="'+esc(w.id)+'" title="删除">✕</button></span>').join('') : '<span class="muted">还没有添加世界时钟</span>';
+  box.querySelectorAll('[data-wc-del]').forEach(b=>b.addEventListener('click',()=>{ saveWorldClocks(loadWorldClocks().filter(x=>x.id!==b.dataset.wcDel)); renderWorldClocks(); tickClock(); }));
+  tickClock();
+}
+
+/* ===== 时间格式化与换算 ===== */
+function fmtInTz(iso,tz,withDate){
+  if(!iso) return '-';
+  const d=new Date(iso); if(isNaN(d)) return '-';
+  const parts={};
+  new Intl.DateTimeFormat('zh-CN',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d).forEach(p=>parts[p.type]=p.value);
+  return (withDate?(parts.month+'-'+parts.day+' '):'')+parts.hour+':'+parts.minute;
+}
+function displayTime(iso,airportCode){
+  if(timeMode==='local'){
+    const tz=AIRPORT_TZ[String(airportCode||'').toUpperCase()];
+    if(tz) return {t:fmtInTz(iso,tz,true), tag:'当地'};
+    return {t:fmtInTz(iso,'Asia/Shanghai',true), tag:'当地（回退北京）'};
+  }
+  return {t:fmtInTz(iso,'Asia/Shanghai',true), tag:'北京'};
+}
+/* datetime-local（按北京时间填）<-> ISO */
+function bjInputToIso(v){ if(!v) return null; const d=new Date(v+':00+08:00'); return isNaN(d)?null:d.toISOString(); }
+function isoToBjInput(iso){
+  if(!iso) return '';
+  const p={};
+  new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date(iso)).forEach(x=>p[x.type]=x.value);
+  return p.year+'-'+p.month+'-'+p.day+'T'+(p.hour==='24'?'00':p.hour)+':'+p.minute;
+}
+function todayBj(){
+  const p={};
+  new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(x=>p[x.type]=x.value);
+  return p.year+'-'+p.month+'-'+p.day;
+}
+
+/* ===== 航班数据：our_flights 表 ===== */
+async function loadFlights(){
+  msg($('listMsg'),'正在加载航班…',true);
+  const {data,error}=await primary('our_flights').select('*').order('flight_date',{ascending:true}).order('dep_time',{ascending:true});
+  if(error){
+    msg($('listMsg'), friendlyErr(error,'加载航班'));
+    if(error.status===401||error.code==='PGRST301'){ show('viewLogin'); msg($('loginMsg'),'登录状态已失效，请重新登录。'); }
+    return;
+  }
+  flights=data||[]; msg($('listMsg'),'');
+  renderFlights();
+}
+function emailPrefix(email){ return email?String(email).split('@')[0]:''; }
+function renderFlights(){
+  const myEmail=me?me.email:'';
+  $('meEmail').textContent=myEmail||'-';
+  $('mineWho').textContent=myEmail?('· 我（'+emailPrefix(myEmail)+'）'):'';
+  const mine=flights.filter(f=>f.added_by===myEmail);
+  const others=flights.filter(f=>f.added_by!==myEmail);
+  const partnerEmails=[...new Set(others.map(f=>f.added_by).filter(Boolean))];
+  $('partnerWho').textContent=partnerEmails.length?('· '+partnerEmails.map(emailPrefix).join('、')):'';
+  $('listMine').innerHTML=mine.length?mine.map(flightCard).join(''):'<p class="muted">你还没有添加航班</p>';
+  $('listPartner').innerHTML=others.length?others.map(flightCard).join(''):'<p class="muted">对方还没有添加航班</p>';
+  document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.edit)));
+  document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>delFlight(b.dataset.del)));
+}
+function flightCard(f){
+  const today=todayBj();
+  const past=f.flight_date<today;
+  const label=past?'已完成':'未来';
+  const dep=displayTime(f.dep_time,f.dep_code), arr=displayTime(f.arr_time,f.arr_code);
+  return '<div class="flight">'
+    +'<div><span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+(past?'past':'')+'">'+label+'</span></div>'
+    +'<div class="muted">'+esc(f.flight_date)+(f.aircraft?' · '+esc(f.aircraft):'')+' · 添加人 '+esc(emailPrefix(f.added_by)||'-')+'</div>'
+    +'<div class="route"><span class="code">'+esc(f.dep_code||'---')+'</span><span class="arrow">→</span><span class="code">'+esc(f.arr_code||'---')+'</span></div>'
+    +'<div class="times"><span>起飞 <b>'+esc(dep.t)+'</b> <span class="muted">'+esc(dep.tag)+'</span></span><span>到达 <b>'+esc(arr.t)+'</b> <span class="muted">'+esc(arr.tag)+'</span></span></div>'
+    +(f.note?'<div class="muted" style="margin-top:4px">备注：'+esc(f.note)+'</div>':'')
+    +'<div class="ops"><button class="ghost small" data-edit="'+esc(f.id)+'">编辑</button><button class="danger small" data-del="'+esc(f.id)+'">删除</button></div>'
+    +'</div>';
+}
+
+/* db 门面：primary(表) 做增删改查，rpc 调 Postgres 函数 */
+const primary=t=>sbDb.from(t);
+const rpcFn=(name,args)=>sbDb.rpc(name,args);
+
+/* RPC 返回的当地时间字符串（如 2026-10-17 08:35+08:00）转成表单用的北京时间 */
+function rpcTimeToBjInput(v){
+  if(!v) return '';
+  let s=String(v).trim().replace(/^(\d{4}-\d{2}-\d{2})[ ](\d{2}:\d{2})/,'$1T$2');
+  if(isNaN(new Date(s))) return s.slice(0,16);
+  return isoToBjInput(s);
+}
+
+/* ===== 查航班自动填充 ===== */
+async function lookupFlight(){
+  const flight_no=clean($('fNo').value).toUpperCase();
+  const dateISO=$('fDate').value;
+  msg($('lookupMsg'),'');
+  if(!flight_no) return msg($('lookupMsg'),'请先填航班号。');
+  if(!dateISO) return msg($('lookupMsg'),'请先选日期。');
+  $('btnLookup').disabled=true; msg($('lookupMsg'),'查询中…',true);
+  try{
+    const {data,error}=await rpcFn('lookup_flight',{p_flight:flight_no, p_date:dateISO});
+    if(error) throw error;
+    if(!data) throw new Error('查询没有返回数据。');
+    let info=data;
+    if(typeof info==='string'){ try{ info=JSON.parse(info); }catch(e){ throw new Error('查询返回格式无法解析。'); } }
+    if(Array.isArray(info)) info=info[0];
+    if(!info||typeof info!=='object') throw new Error('查询没有返回数据。');
+    if(info.error) throw new Error(String(info.error));
+    const depCode=info.origin||info.dep_code||info.origin_iata;
+    const arrCode=info.dest||info.arr_code||info.dest_iata;
+    const depRaw=info.depActual||info.dep_time||info.depScheduled||info.dep_scheduled;
+    const arrRaw=info.arrActual||info.arr_time||info.arrScheduled||info.arr_scheduled;
+    if(depCode) $('fDep').value=depCode;
+    if(arrCode) $('fArr').value=arrCode;
+    if(depRaw) $('fDepT').value=rpcTimeToBjInput(depRaw);
+    if(arrRaw) $('fArrT').value=rpcTimeToBjInput(arrRaw);
+    if(info.aircraft) $('fAc').value=info.aircraft;
+    msg($('lookupMsg'),'已自动填充，可再手动修改后保存。',true);
+  }catch(e){ msg($('lookupMsg'), friendlyErr(e,'查航班')); }
+  finally{ $('btnLookup').disabled=false; }
+}
+
+/* ===== 保存（新增 / 更新） ===== */
+function collectForm(){
+  return {
+    flight_no: clean($('fNo').value).toUpperCase(),
+    flight_date: $('fDate').value||null,
+    dep_code: clean($('fDep').value).toUpperCase()||null,
+    arr_code: clean($('fArr').value).toUpperCase()||null,
+    dep_time: bjInputToIso($('fDepT').value),
+    arr_time: bjInputToIso($('fArrT').value),
+    aircraft: $('fAc').value.trim()||null,
+    note: $('fNote').value.trim()||null
+  };
+}
+async function saveFlight(){
+  const row=collectForm();
+  msg($('saveMsg'),'');
+  if(!row.flight_no) return msg($('saveMsg'),'航班号不能为空。');
+  if(!row.flight_date) return msg($('saveMsg'),'日期不能为空。');
+  $('btnSaveFlight').disabled=true;
+  try{
+    if(editingId){
+      const {error}=await primary('our_flights').update(row).eq('id',editingId);
+      if(error) throw error;
+      msg($('saveMsg'),'已更新。',true);
+    }else{
+      row.added_by=me?me.email:null;
+      const {error}=await primary('our_flights').insert(row);
+      if(error) throw error;
+      msg($('saveMsg'),'已保存。',true);
+    }
+    resetForm(); await loadFlights();
+  }catch(e){ msg($('saveMsg'), friendlyErr(e,'保存航班')); }
+  finally{ $('btnSaveFlight').disabled=false; }
+}
+function resetForm(){
+  editingId=null;
+  for(const id of ['fNo','fDep','fArr','fDepT','fArrT','fAc','fNote']) $(id).value='';
+  $('fDate').value=todayBj();
+  $('formTitle').textContent='添加航班';
+  $('btnSaveFlight').textContent='保存航班';
+  $('btnCancelEdit').classList.add('hidden');
+}
+function startEdit(id){
+  const f=flights.find(x=>x.id===id); if(!f) return;
+  editingId=id;
+  $('fNo').value=f.flight_no||''; $('fDate').value=f.flight_date||'';
+  $('fDep').value=f.dep_code||''; $('fArr').value=f.arr_code||'';
+  $('fDepT').value=isoToBjInput(f.dep_time); $('fArrT').value=isoToBjInput(f.arr_time);
+  $('fAc').value=f.aircraft||''; $('fNote').value=f.note||'';
+  $('formTitle').textContent='编辑航班';
+  $('btnSaveFlight').textContent='保存修改';
+  $('btnCancelEdit').classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function delFlight(id){
+  const f=flights.find(x=>x.id===id);
+  if(!confirm('确认删除航班 '+(f?f.flight_no:'')+'？')) return;
+  const {error}=await primary('our_flights').delete().eq('id',id);
+  if(error){ msg($('listMsg'), friendlyErr(error,'删除航班')); return; }
+  if(editingId===id) resetForm();
+  await loadFlights();
+}
+
+/* ===== 分区颜色（本地持久化） ===== */
+function applyColor(secEl,color){ secEl.style.borderTopColor=color; }
+function initColors(){
+  const cm=localStorage.getItem('ourflights.color.mine')||'#2563eb';
+  const cp=localStorage.getItem('ourflights.color.partner')||'#db2777';
+  $('colorMine').value=cm; $('colorPartner').value=cp;
+  applyColor($('secMine'),cm); applyColor($('secPartner'),cp);
+  $('colorMine').addEventListener('input',e=>{ localStorage.setItem('ourflights.color.mine',e.target.value); applyColor($('secMine'),e.target.value); });
+  $('colorPartner').addEventListener('input',e=>{ localStorage.setItem('ourflights.color.partner',e.target.value); applyColor($('secPartner'),e.target.value); });
+}
+
+/* ===== 时间显示切换（本地持久化） ===== */
+function applyTimeMode(){
+  $('tmBj').classList.toggle('on', timeMode==='bj');
+  $('tmLocal').classList.toggle('on', timeMode==='local');
+}
+$('tmBj').addEventListener('click',()=>{ timeMode='bj'; localStorage.setItem('ourflights.timeMode','bj'); applyTimeMode(); renderFlights(); });
+$('tmLocal').addEventListener('click',()=>{ timeMode='local'; localStorage.setItem('ourflights.timeMode','local'); applyTimeMode(); renderFlights(); });
+
+/* ===== 清除缓存并重新授权 ===== */
+function clearAuthCache(){
+  const kill=[];
+  for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i);
+    if(k&&(k.startsWith('device-auth-')||k.startsWith('supabase.')||k===AUTH_STORAGE_KEY)) kill.push(k); }
+  kill.forEach(k=>localStorage.removeItem(k));
+  sessionStorage.clear();
+}
+async function doClearCache(){
+  try{ if(sbAuth) await sbAuth.signOut(); }catch(e){}
+  clearAuthCache(); dropClients();
+  show('viewLogin'); msg($('loginMsg'),'缓存已清除，请重新登录。',true);
+}
+
+/* ===== 事件绑定 ===== */
+$('btnSaveCfg').addEventListener('click',async()=>{
+  const url=normalizeUrl($('cfgUrl').value), key=clean($('cfgKey').value);
+  msg($('setupMsg'),'');
+  if(!url||!key) return msg($('setupMsg'),'Project URL 和 anon key 都要填。');
+  if(!/^https:\/\//.test(url)) return msg($('setupMsg'),'Project URL 格式不对，应以 https:// 开头。');
+  saveConfig(url,key);
+  try{ await buildClients({url,key}); msg($('setupMsg'),'已保存，去登录吧。',true); show('viewLogin'); }
+  catch(e){ msg($('setupMsg'),'客户端初始化失败：'+(e.message||e)); }
+});
+$('btnSelfCheck').addEventListener('click',async()=>{
+  const url=normalizeUrl($('cfgUrl').value), key=clean($('cfgKey').value);
+  const out=$('setupMsg');
+  if(!url||!key){ out.innerHTML='<div class="err">先填 Project URL 和 anon key 再自检。</div>'; return; }
+  await selfCheck(url,key,out);
+  if(window.__cspViolationLog.length) out.innerHTML+='<br>⚠️ 检测到页面安全策略拦截：'+window.__cspViolationLog.map(esc).join('；');
+});
+$('btnLogin').addEventListener('click',async()=>{
+  const email=$('loginEmail').value.trim(), password=$('loginPwd').value;
+  msg($('loginMsg'),'');
+  if(!email||!password) return msg($('loginMsg'),'邮箱和密码都要填。');
+  $('btnLogin').disabled=true; msg($('loginMsg'),'登录中…',true);
+  try{
+    if(!sbAuth){ const cfg=loadConfig(false); if(!cfg){ show('viewSetup'); return; } await buildClients(cfg); }
+    const user=await signIn(email,password);
+    me=user||await currentUser();
+    if(!me) throw new Error('登录没有返回用户信息。');
+    msg($('loginMsg'),'');
+    show('viewMain'); resetForm(); await loadFlights();
+  }catch(e){ msg($('loginMsg'), friendlyErr(e,'登录')); }
+  finally{ $('btnLogin').disabled=false; }
+});
+$('btnGotoSetup').addEventListener('click',()=>{ const cfg=loadConfig(false); if(cfg){ $('cfgUrl').value=cfg.url; $('cfgKey').value=cfg.key; } show('viewSetup'); });
+$('btnSetup2').addEventListener('click',()=>{ const cfg=loadConfig(false); if(cfg){ $('cfgUrl').value=cfg.url; $('cfgKey').value=cfg.key; } show('viewSetup'); });
+$('btnClearCache').addEventListener('click',doClearCache);
+$('btnClearCache2').addEventListener('click',doClearCache);
+$('btnDisconnect').addEventListener('click',async()=>{
+  try{ if(sbAuth) await sbAuth.signOut(); }catch(e){}
+  dropClients(); show('viewLogin'); msg($('loginMsg'),'已断开连接。',true);
+});
+$('btnRefresh').addEventListener('click',()=>{ if(sbDb) loadFlights(); });
+$('btnLookup').addEventListener('click',lookupFlight);
+$('btnSaveFlight').addEventListener('click',saveFlight);
+$('btnCancelEdit').addEventListener('click',resetForm);
+
+/* ===== 世界时钟表单 ===== */
+function initWcForm(){
+  $('wcTz').innerHTML=TZ_CHOICES.map(t=>'<option value="'+t+'">'+t+'</option>').join('');
+  $('btnWcToggle').addEventListener('click',()=>$('wcForm').classList.toggle('hidden'));
+  $('btnWcCancel').addEventListener('click',()=>$('wcForm').classList.add('hidden'));
+  $('btnWcAdd').addEventListener('click',()=>{
+    const title=$('wcTitle').value.trim()||$('wcTz').value;
+    const list=loadWorldClocks();
+    list.push({id:'wc'+Date.now(), title, tz:$('wcTz').value});
+    saveWorldClocks(list); $('wcTitle').value=''; $('wcForm').classList.add('hidden');
+    renderWorldClocks();
+  });
+}
+
+/* ===== 启动：先修配置，再决定进哪个视图 ===== */
+async function boot(){
+  tickClock(); initWcForm(); initColors(); applyTimeMode();
+  $('fDate').value=todayBj();
+  const cfg=loadConfig(true); // 读取时自动修复已存的坏值
+  if(!cfg){ $('cfgUrl').value=''; $('cfgKey').value=''; show('viewSetup'); return; }
+  try{
+    await buildClients(cfg);
+    const user=await currentUser();
+    if(user){ me=user; show('viewMain'); resetForm(); await loadFlights(); return; }
+  }catch(e){ /* 客户端建不起来就落到登录页，登录时再报具体错误 */ }
+  show('viewLogin');
+}
+boot();
+</script>
+</body>
+</html>
