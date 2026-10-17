@@ -50,6 +50,31 @@ button:disabled{opacity:.55}
 @keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .skel-line{height:14px;border-radius:7px;background:#eef2f7;margin:8px 0}
 .life-map{height:320px;border-radius:12px;background:#e8eef5;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:13px}
+/* ===== 生活页上传（瀑布流照片墙 / 评级 / 导航，参考 Between 相册分类 + Polarsteps 地图日记 + Savor 菜品级评分） ===== */
+.life-form label{display:block;font-size:13px;color:#475569;margin:10px 0 4px}
+.life-form input[type=text],.life-form input[type=date],.life-form textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:14px;background:#fff;box-sizing:border-box}
+.life-form textarea{min-height:56px;resize:vertical}
+.life-photo-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.life-photo-thumb{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;background:#eef2f7}
+.life-photo-thumb img{width:100%;height:100%;object-fit:cover}
+.life-photo-thumb button{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:12px;cursor:pointer}
+.life-wall{columns:2;column-gap:10px}
+.life-wall-item{break-inside:avoid;margin-bottom:10px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.life-wall-item img{width:100%;display:block}
+.life-wall-item .cap{padding:8px 10px;font-size:13px}
+.life-card{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:#fff}
+.life-card img.main{width:100%;border-radius:10px;display:block;margin:8px 0}
+.life-rating-row{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.life-rating-chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 10px;font-size:12px;cursor:pointer}
+.life-rating-chip.on{border-color:#1e3a8a;background:#1e3a8a;color:#fff}
+.life-rating-tag{display:inline-block;border-radius:999px;padding:2px 8px;font-size:12px;margin-right:4px;color:#fff}
+.life-nav-btn{display:inline-block;border-radius:999px;padding:6px 12px;font-size:13px;margin:4px 6px 0 0;text-decoration:none;color:#fff}
+.life-nav-amap{background:#2563eb}.life-nav-baidu{background:#16a34a}
+.life-wish-done{opacity:.55}.life-wish-done .wish-text{text-decoration:line-through}
+.life-timeline{border-left:3px solid #e2e8f0;margin-left:6px;padding-left:14px}
+.life-timeline .tl-item{position:relative;padding-bottom:14px}
+.life-timeline .tl-item:before{content:'';position:absolute;left:-21px;top:5px;width:10px;height:10px;border-radius:50%;background:#db2777;border:2px solid #fff;box-shadow:0 0 0 2px #e2e8f0}
+.life-meta{font-size:12px;color:#64748b}
 </style>
 </head>
 <body>
@@ -313,10 +338,6 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
   <h2 style="margin:4px 0">我们的生活</h2>
   <p class="muted" style="margin:0 0 10px">航班之外，是日常、美食与远方。</p>
 </div>
-<div class="card">
-  <div class="row"><b class="grow">💛 纪念日倒计时</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
-  <div class="life-empty">还没有纪念日，点 + 添加第一个纪念日</div>
-</div>
 <div class="life-tabs" role="tablist">
   <button class="life-tab on" type="button" data-life-tab="album">日常相册</button>
   <button class="life-tab" type="button" data-life-tab="food">美食</button>
@@ -325,40 +346,37 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
   <button class="life-tab" type="button" data-life-tab="wishlist">愿望单</button>
 </div>
 <div id="lifeMsg"></div>
+<div id="lifeFormCard" class="card hidden"></div>
 <div class="life-panel" data-life-panel="album">
   <div class="card">
-    <div class="row"><b class="grow">📸 日常相册</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
-    <div class="life-empty">还没有照片，点 + 添加第一条</div>
-    <div class="skel-grid"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+    <div class="row"><b class="grow">📸 日常相册</b><button class="ghost small" type="button" data-life-add="album">＋ 添加</button></div>
+    <div id="lifeList-album"></div>
   </div>
 </div>
 <div class="life-panel hidden" data-life-panel="food">
   <div class="card">
-    <div class="row"><b class="grow">🍜 美食</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
-    <div class="life-empty">还没有美食打卡，点 + 添加第一条</div>
-    <div class="skel-line" style="width:80%"></div><div class="skel-line" style="width:60%"></div>
+    <div class="row"><b class="grow">🍜 美食</b><button class="ghost small" type="button" data-life-add="food">＋ 添加</button></div>
+    <div id="lifeList-food"></div>
   </div>
 </div>
 <div class="life-panel hidden" data-life-panel="travel">
   <div class="card">
-    <div class="row"><b class="grow">🗺️ 旅行足迹</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
-    <div class="life-empty">还没有足迹，点地图添加第一条</div>
+    <div class="row"><b class="grow">🗺️ 旅行足迹</b><button class="ghost small" type="button" data-life-add="travel">＋ 添加</button></div>
     <div id="lifeMap" class="life-map">地图加载中…</div>
-    <div class="muted" style="margin-top:6px">点地图添加足迹（后续开放）</div>
+    <div class="muted" style="margin-top:6px">保存足迹后地图上自动落图钉。</div>
+    <div id="lifeList-travel" style="margin-top:10px"></div>
   </div>
 </div>
 <div class="life-panel hidden" data-life-panel="timeline">
   <div class="card">
-    <div class="row"><b class="grow">🕰️ 时光轴</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
-    <div class="life-empty">还没有时光记录，点 + 添加第一条</div>
-    <div class="skel-line" style="width:90%"></div><div class="skel-line" style="width:70%"></div><div class="skel-line" style="width:80%"></div>
+    <div class="row"><b class="grow">🕰️ 时光轴</b><button class="ghost small" type="button" data-life-add="timeline">＋ 添加</button></div>
+    <div id="lifeList-timeline"></div>
   </div>
 </div>
 <div class="life-panel hidden" data-life-panel="wishlist">
   <div class="card">
-    <div class="row"><b class="grow">📝 愿望单</b><button class="ghost small life-add" type="button">＋ 添加</button></div>
-    <div class="life-empty">还没有愿望，点 + 添加第一个愿望</div>
-    <div class="skel-line" style="width:75%"></div><div class="skel-line" style="width:55%"></div>
+    <div class="row"><b class="grow">📝 愿望单</b><button class="ghost small" type="button" data-life-add="wishlist">＋ 添加</button></div>
+    <div id="lifeList-wishlist"></div>
   </div>
 </div>
 
@@ -1164,8 +1182,287 @@ async function handleOcrFile(file){
 }
 
 /* ===== 生活页（翻转框架；与航班页共用登录态，不读写航班库） ===== */
-let lifeMapTried=false, lifeMap=null;
-function lifeSoon(){ msg($('lifeMsg'),'生活页框架先行，上传/保存功能随后开放。',true); }
+let lifeMapTried=false, lifeMap=null, lifeMarkers=null;
+let lifeMemories=[], lifeEditingId=null, lifeFormType=null, lifeFormFiles=[], lifeFormExisting=[], lifeFormRemoved=[], lifeFormRatings={pilot:null,attendant:null}, lifeSignedCache={}, lifeLoaded=false;
+const LIFE_TITLES={album:'日常相册',food:'美食',travel:'旅行足迹',timeline:'时光轴',wishlist:'愿望单'};
+const RATING_TIERS=[{v:'拉完了',c:'#94a3b8'},{v:'npc',c:'#64748b'},{v:'人上人',c:'#16a34a'},{v:'顶级',c:'#ca8a04'},{v:'夯',c:'#c026d3'}];
+const ratingColor=v=>(RATING_TIERS.find(t=>t.v===v)||{}).c||'#64748b';
+function ratingTag(role,v){ if(!v) return ''; return '<span class="life-rating-tag" style="background:'+ratingColor(v)+'">'+(role==='pilot'?'🧑‍✈️ ':'🤵🏻‍♀️ ')+esc(v)+'</span>'; }
+function buildNavLinks(name,addr){
+  const kw=[String(name||'').trim(),String(addr||'').trim()].filter(Boolean).join(' ');
+  if(!kw) return {amap:'',baidu:''};
+  return {amap:'https://uri.amap.com/search?keyword='+encodeURIComponent(kw), baidu:'https://api.map.baidu.com/place/search?query='+encodeURIComponent(kw)+'&region=全国'};
+}
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+async function compressImage(file){
+  const bmp=await createImageBitmap(file).catch(()=>null);
+  const imgEl=document.createElement('img'); const url=URL.createObjectURL(file);
+  try{
+    await new Promise((res,rej)=>{ imgEl.onload=res; imgEl.onerror=rej; imgEl.src=url; });
+    const src=bmp||imgEl; let w=src.width||imgEl.naturalWidth, h=src.height||imgEl.naturalHeight;
+    const scale=Math.min(1,1600/Math.max(w,h)); w=Math.round(w*scale); h=Math.round(h*scale);
+    const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+    cv.getContext('2d').drawImage(src,0,0,w,h);
+    return await new Promise(res=>cv.toBlob(res,'image/jpeg',0.8));
+  }finally{ URL.revokeObjectURL(url); if(bmp) bmp.close(); }
+}
+async function signLifeUrl(path){
+  if(!path) return '';
+  const hit=lifeSignedCache[path]; if(hit&&hit.exp>Date.now()+60000) return hit.url;
+  try{
+    const {data,error}=await sbDb.storage.from('life-photos').createSignedUrl(path,31536000);
+    if(error||!data||!data.signedUrl) return '';
+    lifeSignedCache[path]={url:data.signedUrl,exp:Date.now()+31536000000}; return data.signedUrl;
+  }catch(e){ return ''; }
+}
+async function signLifeUrls(paths){ const out={}; for(const p of (paths||[])){ out[p]=await signLifeUrl(p); } return out; }
+async function geocodePlace(name){
+  if(!name) return null;
+  try{
+    const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),8000);
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(name),{signal:ctrl.signal,headers:{'Accept':'application/json'}});
+    clearTimeout(to); if(!r.ok) return null;
+    const j=await r.json(); if(!j||!j.length) return null;
+    return {lat:parseFloat(j[0].lat),lng:parseFloat(j[0].lon)};
+  }catch(e){ return null; }
+}
+function lifeFormHtml(){
+  const t=lifeFormType, rec=lifeMemories.find(x=>x.id===lifeEditingId)||null;
+  const val=k=>(rec&&rec[k])||'';
+  const dateVal=val('memory_date')||todayStr();
+  let h='<div class="life-form"><h3 style="margin:0 0 6px">'+(lifeEditingId?'编辑':'添加')+' · '+LIFE_TITLES[t]+'</h3>';
+  h+='<div id="lifeFormMsg"></div>';
+  if(t==='album'){
+    h+='<label>照片（可多张）</label><input type="file" id="lifePhotoInput" accept="image/*" multiple>';
+    h+='<div id="lifePhotoPreview" class="life-photo-grid"></div>';
+    h+='<label>配文</label><textarea id="lifeNote">'+esc(val('note'))+'</textarea>';
+    h+='<label>日期</label><input type="date" id="lifeDate" value="'+esc(dateVal)+'">';
+    h+='<label>地点</label><input type="text" id="lifePlace" value="'+esc(val('place_name'))+'" placeholder="例如：广州 · 珠江边">';
+  }else if(t==='food'){
+    h+='<label>餐厅名称</label><input type="text" id="lifeTitle" value="'+esc(val('title'))+'" placeholder="自己输入餐厅名">';
+    h+='<label>地址（可选，拼进导航关键词）</label><input type="text" id="lifeAddr" placeholder="例如：天河区某路 123 号">';
+    h+='<div id="lifeNavPreview" style="margin-top:6px"></div>';
+    h+='<label>菜品照片</label><input type="file" id="lifePhotoInput" accept="image/*" multiple>';
+    h+='<div id="lifePhotoPreview" class="life-photo-grid"></div>';
+    h+='<label>🧑‍✈️ 评分</label><div class="life-rating-row" id="lifeRatePilot"></div>';
+    h+='<label>🤵🏻‍♀️ 评分</label><div class="life-rating-row" id="lifeRateAttendant"></div>';
+    h+='<label>一句点评</label><textarea id="lifeNote">'+esc(val('note'))+'</textarea>';
+    h+='<label>日期</label><input type="date" id="lifeDate" value="'+esc(dateVal)+'">';
+  }else if(t==='travel'){
+    h+='<label>地点名称</label><input type="text" id="lifePlace" value="'+esc(val('place_name'))+'" placeholder="例如：大理古城">';
+    h+='<label>日期</label><input type="date" id="lifeDate" value="'+esc(dateVal)+'">';
+    h+='<label>照片</label><input type="file" id="lifePhotoInput" accept="image/*" multiple>';
+    h+='<div id="lifePhotoPreview" class="life-photo-grid"></div>';
+    h+='<label>一句备注</label><textarea id="lifeNote">'+esc(val('note'))+'</textarea>';
+  }else if(t==='timeline'){
+    h+='<label>日期</label><input type="date" id="lifeDate" value="'+esc(dateVal)+'">';
+    h+='<label>标题</label><input type="text" id="lifeTitle" value="'+esc(val('title'))+'" placeholder="例如：第一次一起看海">';
+    h+='<label>一段文字</label><textarea id="lifeNote">'+esc(val('note'))+'</textarea>';
+    h+='<label>照片（可选）</label><input type="file" id="lifePhotoInput" accept="image/*" multiple>';
+    h+='<div id="lifePhotoPreview" class="life-photo-grid"></div>';
+  }else{
+    h+='<label>愿望</label><input type="text" id="lifeTitle" value="'+esc(val('title'))+'" placeholder="例如：一起去冰岛看极光">';
+    h+='<label>照片（可选）</label><input type="file" id="lifePhotoInput" accept="image/*" multiple>';
+    h+='<div id="lifePhotoPreview" class="life-photo-grid"></div>';
+    h+='<label>日期（可选）</label><input type="date" id="lifeDate" value="'+esc(val('memory_date')||'')+'">';
+  }
+  h+='<div class="row" style="gap:8px;margin-top:14px"><button id="lifeFormSave" class="ghost grow" type="button">保存</button><button id="lifeFormCancel" class="ghost grow" type="button">取消</button></div></div>';
+  return h;
+}
+function lifeRenderPhotoPreview(){
+  const box=$('lifePhotoPreview'); if(!box) return;
+  let h='';
+  for(const p of lifeFormExisting){ h+='<div class="life-photo-thumb"><img src="'+esc(lifeSignedCache[p]?lifeSignedCache[p].url:'')+'" alt=""><button type="button" data-remove-existing="'+esc(p)+'">×</button></div>'; }
+  lifeFormFiles.forEach((f,i)=>{ h+='<div class="life-photo-thumb"><img src="'+esc(f.preview)+'" alt=""><button type="button" data-remove-new="'+i+'">×</button></div>'; });
+  box.innerHTML=h||'<span class="muted" style="font-size:12px">还没选照片</span>';
+  box.querySelectorAll('[data-remove-existing]').forEach(b=>b.addEventListener('click',()=>{ const p=b.dataset.removeExisting; lifeFormExisting=lifeFormExisting.filter(x=>x!==p); lifeFormRemoved.push(p); lifeRenderPhotoPreview(); }));
+  box.querySelectorAll('[data-remove-new]').forEach(b=>b.addEventListener('click',()=>{ lifeFormFiles.splice(parseInt(b.dataset.removeNew,10),1); lifeRenderPhotoPreview(); }));
+}
+function lifeRenderRatingRow(elId,role){
+  const el=$(elId); if(!el) return;
+  el.innerHTML=RATING_TIERS.map(t=>'<button type="button" class="life-rating-chip'+(lifeFormRatings[role]===t.v?' on':'')+'" data-rate="'+esc(t.v)+'">'+esc(t.v)+'</button>').join('');
+  el.querySelectorAll('[data-rate]').forEach(b=>b.addEventListener('click',()=>{ const v=b.dataset.rate; lifeFormRatings[role]=(lifeFormRatings[role]===v?null:v); lifeRenderRatingRow(elId,role); }));
+}
+function lifeUpdateNavPreview(){
+  const box=$('lifeNavPreview'); if(!box) return;
+  const name=$('lifeTitle')?$('lifeTitle').value:'', addr=$('lifeAddr')?$('lifeAddr').value:'';
+  const links=buildNavLinks(name,addr);
+  box.innerHTML=(links.amap?'<a class="life-nav-btn life-nav-amap" href="'+esc(links.amap)+'" target="_blank" rel="noopener">高德导航</a><a class="life-nav-btn life-nav-baidu" href="'+esc(links.baidu)+'" target="_blank" rel="noopener">百度导航</a>':'<span class="muted" style="font-size:12px">输入餐厅名后自动生成导航链接</span>');
+}
+function openLifeForm(type,existingId){
+  lifeFormType=type; lifeEditingId=existingId||null;
+  const rec=existingId?lifeMemories.find(x=>x.id===existingId):null;
+  lifeFormFiles=[]; lifeFormRemoved=[];
+  lifeFormExisting=rec?[...(rec.photo_urls||[])]:[];
+  lifeFormRatings={pilot:rec?rec.rating_pilot||null:null,attendant:rec?rec.rating_attendant||null:null};
+  const card=$('lifeFormCard'); card.classList.remove('hidden'); card.innerHTML=lifeFormHtml();
+  lifeRenderPhotoPreview(); lifeRenderRatingRow('lifeRatePilot','pilot'); lifeRenderRatingRow('lifeRateAttendant','attendant');
+  const photoInput=$('lifePhotoInput');
+  if(photoInput) photoInput.addEventListener('change',()=>{ for(const f of photoInput.files){ lifeFormFiles.push({file:f,preview:URL.createObjectURL(f)}); } photoInput.value=''; lifeRenderPhotoPreview(); });
+  const titleEl=$('lifeTitle'), addrEl=$('lifeAddr');
+  if(titleEl) titleEl.addEventListener('input',lifeUpdateNavPreview);
+  if(addrEl) addrEl.addEventListener('input',lifeUpdateNavPreview);
+  lifeUpdateNavPreview();
+  $('lifeFormCancel').addEventListener('click',closeLifeForm);
+  $('lifeFormSave').addEventListener('click',saveLifeMemory);
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closeLifeForm(){ lifeEditingId=null; lifeFormType=null; lifeFormFiles=[]; lifeFormExisting=[]; const c=$('lifeFormCard'); c.classList.add('hidden'); c.innerHTML=''; }
+async function saveLifeMemory(){
+  const btn=$('lifeFormSave'); if(!btn||btn.disabled) return;
+  const t=lifeFormType, fm=$('lifeFormMsg');
+  const get=id=>{ const e=$(id); return e?e.value.trim():''; };
+  const title=get('lifeTitle'), note=get('lifeNote'), place=get('lifePlace'), addr=get('lifeAddr'), date=get('lifeDate')||null;
+  if(t==='food'&&!title) return msg(fm,'餐厅名称不能为空。');
+  if(t==='travel'&&!place) return msg(fm,'地点名称不能为空。');
+  if(t==='timeline'&&!title) return msg(fm,'标题不能为空。');
+  if(t==='wishlist'&&!title) return msg(fm,'愿望不能为空。');
+  btn.disabled=true; btn.textContent='上传中…';
+  try{
+    const paths=[...lifeFormExisting];
+    for(const f of lifeFormFiles){
+      const blob=await compressImage(f.file);
+      const path='life/'+(crypto.randomUUID?crypto.randomUUID():(Date.now()+'-'+Math.random().toString(36).slice(2)))+'.jpg';
+      const {error}=await sbDb.storage.from('life-photos').upload(path,blob,{contentType:'image/jpeg',upsert:false});
+      if(error) throw new Error('照片上传失败：'+(error.message||error));
+      paths.push(path);
+    }
+    const row={type:t,title:title||place||null,note:note||null,place_name:place||null,photo_urls:paths,memory_date:date||null,rating_pilot:null,rating_attendant:null,nav_amap:null,nav_baidu:null,lat:null,lng:null,done:false};
+    if(t==='food'){ const links=buildNavLinks(title,addr); row.nav_amap=links.amap||null; row.nav_baidu=links.baidu||null; row.rating_pilot=lifeFormRatings.pilot; row.rating_attendant=lifeFormRatings.attendant; }
+    if(t==='travel'){ const g=await geocodePlace(place); if(g){ row.lat=g.lat; row.lng=g.lng; } }
+    if(t==='wishlist'){ row.done=false; }
+    let saved=null;
+    if(lifeEditingId){
+      const prev=lifeMemories.find(x=>x.id===lifeEditingId);
+      if(prev) row.done=!!prev.done; // 编辑不重置愿望完成状态
+      row.updated_at=new Date().toISOString();
+      if(error) throw error; saved=data;
+    }else{
+      row.added_by=myRole;
+      const {data,error}=await sbDb.from('life_memories').insert(row).select().single();
+      if(error) throw error; saved=data;
+    }
+    if(lifeFormRemoved.length){ try{ await sbDb.storage.from('life-photos').remove(lifeFormRemoved); }catch(e){} }
+    closeLifeForm(); await loadLifeMemories();
+    if(saved) msg($('lifeMsg'),'已保存。',true);
+  }catch(e){ msg(fm, friendlyErr(e,'保存生活记录')); }
+  finally{ btn.disabled=false; btn.textContent='保存'; }
+}
+async function loadLifeMemories(){
+  if(!sbDb) return;
+  try{
+    const {data,error}=await sbDb.from('life_memories').select('*').order('memory_date',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false});
+    if(error) throw error;
+    lifeMemories=data||[]; lifeLoaded=true; await renderLifeAll();
+  }catch(e){
+    msg($('lifeMsg'),'生活记录暂未开通（数据库表还没建好，跑完 SQL 即可使用）：'+friendlyErr(e,'加载生活记录'));
+  }
+}
+async function delLifeMemory(id){
+  const rec=lifeMemories.find(x=>x.id===id); if(!rec) return;
+  if(!confirm('确认删除这条“'+(rec.title||rec.place_name||'生活记录')+'”？')) return;
+  const {error}=await sbDb.from('life_memories').delete().eq('id',id);
+  if(error){ msg($('lifeMsg'), friendlyErr(error,'删除生活记录')); return; }
+  if(rec.photo_urls&&rec.photo_urls.length){ try{ await sbDb.storage.from('life-photos').remove(rec.photo_urls); }catch(e){ msg($('lifeMsg'),'记录已删，但照片清理失败，可忽略。',true); } }
+  await loadLifeMemories();
+}
+async function toggleLifeWish(id){
+  const rec=lifeMemories.find(x=>x.id===id); if(!rec) return;
+  const {error}=await sbDb.from('life_memories').update({done:!rec.done}).eq('id',id);
+  if(error){ msg($('lifeMsg'), friendlyErr(error,'更新愿望')); return; }
+  await loadLifeMemories();
+}
+function lifeCardButtons(rec){ return '<div class="row" style="gap:8px;margin-top:8px"><button class="ghost small" type="button" data-life-edit="'+esc(rec.id)+'">编辑</button><button class="ghost small" type="button" data-life-del="'+esc(rec.id)+'" style="color:#dc2626">删除</button></div>'; }
+function lifeBindCardButtons(scope){
+  scope.querySelectorAll('[data-life-edit]').forEach(b=>b.addEventListener('click',()=>openLifeForm(lifeMemories.find(x=>x.id===b.dataset.lifeEdit)?.type||'album',b.dataset.lifeEdit)));
+  scope.querySelectorAll('[data-life-del]').forEach(b=>b.addEventListener('click',()=>delLifeMemory(b.dataset.lifeDel)));
+  scope.querySelectorAll('[data-life-wish]').forEach(b=>b.addEventListener('click',()=>toggleLifeWish(b.dataset.lifeWish)));
+}
+async function renderLifeAll(){
+  const byType=t=>lifeMemories.filter(x=>x.type===t);
+  const emptyHtml=t=>'<div class="life-empty">还没有'+LIFE_TITLES[t]+'，点 + 添加第一条</div>';
+  // 相册：瀑布流（Between 相册分类 + 照片墙瀑布流）
+  {
+    const el=$('lifeList-album'), items=byType('album');
+    if(!items.length){ el.innerHTML=emptyHtml('album'); }
+    else{
+      const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
+      el.innerHTML='<div class="life-wall">'+items.map(rec=>{
+        const imgs=(rec.photo_urls||[]).map(p=>signed[p]?'<img src="'+esc(signed[p])+'" alt="">':'').join('');
+        return '<div class="life-wall-item">'+imgs+'<div class="cap">'+(rec.note?esc(rec.note)+'<br>':'')+'<span class="life-meta">'+esc(rec.memory_date||'')+(rec.place_name?' · '+esc(rec.place_name):'')+'</span>'+lifeCardButtons(rec)+'</div></div>';
+      }).join('')+'</div>';
+    }
+    lifeBindCardButtons(el);
+  }
+  // 美食：菜品级记录 + 双人评分 + 一键导航（Savor 菜品级评分 + Tabelog 收藏备注 + 地图导航）
+  {
+    const el=$('lifeList-food'), items=byType('food');
+    if(!items.length){ el.innerHTML=emptyHtml('food'); }
+    else{
+      const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
+      el.innerHTML=items.map(rec=>{
+        const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
+        const navHtml=(rec.nav_amap?'<a class="life-nav-btn life-nav-amap" href="'+esc(rec.nav_amap)+'" target="_blank" rel="noopener">高德导航</a>':'')+(rec.nav_baidu?'<a class="life-nav-btn life-nav-baidu" href="'+esc(rec.nav_baidu)+'" target="_blank" rel="noopener">百度导航</a>':'');
+        return '<div class="life-card"><b>'+esc(rec.title||'')+'</b><div class="life-meta">'+esc(rec.memory_date||'')+'</div>'+imgHtml+'<div>'+ratingTag('pilot',rec.rating_pilot)+ratingTag('attendant',rec.rating_attendant)+'</div>'+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+'<div>'+navHtml+'</div>'+lifeCardButtons(rec)+'</div>';
+      }).join('');
+    }
+    lifeBindCardButtons(el);
+  }
+  // 旅行足迹：列表 + 地图图钉（Polarsteps 地图日记：地点 + 照片 + 备注钉在地图上）
+  {
+    const el=$('lifeList-travel'), items=byType('travel');
+    if(!items.length){ el.innerHTML=emptyHtml('travel'); }
+    else{
+      const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
+      el.innerHTML=items.map(rec=>{
+        const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
+        return '<div class="life-card"><b>📍 '+esc(rec.place_name||rec.title||'')+'</b><div class="life-meta">'+esc(rec.memory_date||'')+'</div>'+imgHtml+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+lifeCardButtons(rec)+'</div>';
+      }).join('');
+    }
+    lifeBindCardButtons(el);
+    renderTravelMarkers();
+  }
+  // 时光轴（Between 按事件归档 + 时光轴汇总）
+  {
+    const el=$('lifeList-timeline'), items=byType('timeline');
+    if(!items.length){ el.innerHTML=emptyHtml('timeline'); }
+    else{
+      const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
+      el.innerHTML='<div class="life-timeline">'+items.map(rec=>{
+        const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
+        return '<div class="tl-item"><b>'+esc(rec.memory_date||'')+'</b> '+esc(rec.title||'')+'<div class="life-meta">'+esc(rec.note||'')+'</div>'+imgHtml+lifeCardButtons(rec)+'</div>';
+      }).join('')+'</div>';
+    }
+    lifeBindCardButtons(el);
+  }
+  // 愿望单：完成进度 + 打勾变灰（情侣愿望清单 + 完成进度）
+  {
+    const el=$('lifeList-wishlist'), items=byType('wishlist');
+    if(!items.length){ el.innerHTML=emptyHtml('wishlist'); }
+    else{
+      const doneCount=items.filter(x=>x.done).length;
+      const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
+      el.innerHTML='<div class="life-meta" style="margin-bottom:8px">已完成 '+doneCount+' / '+items.length+'</div>'+items.map(rec=>{
+        const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
+        return '<div class="life-card'+(rec.done?' life-wish-done':'')+'"><span class="wish-text">'+esc(rec.title||'')+'</span>'+imgHtml+'<div class="row" style="gap:8px;margin-top:8px"><button class="ghost small" type="button" data-life-wish="'+esc(rec.id)+'">'+(rec.done?'✓ 已完成，点按取消':'○ 标记完成')+'</button></div>'+lifeCardButtons(rec)+'</div>';
+      }).join('');
+    }
+    lifeBindCardButtons(el);
+  }
+}
+async function renderTravelMarkers(){
+  if(!lifeMap||!window.L) return;
+  try{
+    if(!lifeMarkers){ lifeMarkers=L.layerGroup().addTo(lifeMap); } else lifeMarkers.clearLayers();
+    const items=lifeMemories.filter(x=>x.type==='travel'&&x.lat!=null&&x.lng!=null);
+    for(const rec of items){
+      const img=(rec.photo_urls||[])[0]; const signedImg=img?await signLifeUrl(img):'';
+      const popup='<b>'+esc(rec.place_name||rec.title||'')+'</b><br>'+esc(rec.memory_date||'')+(signedImg?'<br><img src="'+esc(signedImg)+'" style="width:120px;border-radius:8px;margin-top:4px">':'');
+      L.marker([rec.lat,rec.lng]).bindPopup(popup).addTo(lifeMarkers);
+    }
+    if(items.length){ try{ lifeMap.fitBounds(L.latLngBounds(items.map(x=>[x.lat,x.lng])).pad(0.4)); }catch(e){} }
+  }catch(e){ /* 地图图钉失败不阻塞列表 */ }
+}
 function setLife(on){
   const f=$('viewFlights'), l=$('viewLife');
   if(!f||!l) return;
@@ -1207,7 +1504,7 @@ async function initLifeMap(){
     if(!window.L) throw new Error('no L');
     lifeMap=L.map('lifeMap').setView([23.129,113.264],5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(lifeMap);
-    lifeMap.on('click',()=>lifeSoon());
+    renderTravelMarkers();
     setTimeout(()=>{ try{ lifeMap.invalidateSize(); }catch(e){} },200);
   }catch(e){
     el.textContent='地图暂未加载成功，点按重试';
@@ -1215,7 +1512,7 @@ async function initLifeMap(){
     el.onclick=()=>{ el.textContent='地图加载中…'; el.onclick=null; lifeMapTried=false; initLifeMap(); };
   }
 }
-$('btnLife').addEventListener('click',()=>setLife(true));
+$('btnLife').addEventListener('click',()=>{ setLife(true); loadLifeMemories(); });
 $('btnBackFlights').addEventListener('click',()=>setLife(false));
 document.querySelectorAll('[data-life-tab]').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('[data-life-tab]').forEach(x=>x.classList.toggle('on',x===b));
@@ -1225,7 +1522,7 @@ document.querySelectorAll('[data-life-tab]').forEach(b=>b.addEventListener('clic
     else if(lifeMap){ setTimeout(()=>{ try{ lifeMap.invalidateSize(); }catch(e){} },60); }
   }
 }));
-document.querySelectorAll('.life-add').forEach(b=>b.addEventListener('click',lifeSoon));
+document.querySelectorAll('[data-life-add]').forEach(b=>b.addEventListener('click',()=>openLifeForm(b.dataset.lifeAdd)));
 
 /* ===== 保存（新增 / 更新） ===== */
 function collectForm(){
@@ -1399,7 +1696,7 @@ async function refreshWeather(force){
 }
 
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-17-11-ocr-once-page-switch';
+const APP_VERSION='2026-10-17-12-life-uploads';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
