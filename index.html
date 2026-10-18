@@ -75,6 +75,22 @@ button:disabled{opacity:.55}
 </style>
 </head>
 <body>
+<!-- ===== 开屏动画（纯视觉层，不阻塞登录初始化；CSS 会自动淡出，JS 只做跳过与兜底） ===== -->
+<div id="splash" aria-hidden="true">
+  <div class="splash-stars"></div>
+  <div class="splash-inner">
+    <svg class="splash-route" viewBox="0 0 300 120" aria-hidden="true">
+      <path class="route-line" d="M8,96 C60,18 118,108 168,48 C205,10 250,86 292,26" fill="none" stroke="rgba(140,190,255,.4)" stroke-width="2"/>
+      <circle cx="8" cy="96" r="4" fill="#7db4ff"/>
+      <circle cx="292" cy="26" r="4" fill="#f6c453"/>
+      <g class="splash-plane"><text x="-11" y="8" font-size="22">✈️</text></g>
+    </svg>
+    <div class="splash-title">我们的航班</div>
+    <div class="splash-sub">PILOT · CABIN CREW</div>
+    <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+    <div class="splash-skip-hint">点击跳过</div>
+  </div>
+</div>
 <div class="wrap" id="appRoot">
 <style>
 /* 顶栏与时钟 */
@@ -223,6 +239,44 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 .life-lightbox .lb-cap{color:#fff;font-size:13px;margin-top:10px;text-align:center}
 .life-lightbox .lb-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 .life-lightbox .lb-actions button{background:rgba(255,255,255,.15);color:#fff}
+/* ===== 开屏动画（纯视觉层，不阻塞登录初始化；CSS 动画会自动淡出，JS 只做跳过与兜底） ===== */
+#splash{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 90% at 50% 10%,#16295e 0%,#0b1533 55%,#060b21 100%);overflow:hidden;cursor:pointer;animation:splashOut .45s ease 1.55s forwards}
+@keyframes splashOut{to{opacity:0;visibility:hidden}}
+#splash.splash-gone{animation:none;opacity:0;visibility:hidden;transition:opacity .3s ease}
+.splash-stars{position:absolute;inset:0;background-image:radial-gradient(1.6px 1.6px at 12% 22%,#fff,transparent 60%),radial-gradient(1.2px 1.2px at 28% 70%,#9fc2ff,transparent 60%),radial-gradient(1.4px 1.4px at 45% 18%,#fff,transparent 60%),radial-gradient(1px 1px at 62% 42%,#cfe2ff,transparent 60%),radial-gradient(1.6px 1.6px at 78% 76%,#fff,transparent 60%),radial-gradient(1.2px 1.2px at 88% 30%,#9fc2ff,transparent 60%),radial-gradient(1px 1px at 20% 48%,#fff,transparent 60%),radial-gradient(1.4px 1.4px at 55% 88%,#cfe2ff,transparent 60%),radial-gradient(1px 1px at 72% 12%,#fff,transparent 60%),radial-gradient(1.2px 1.2px at 38% 36%,#fff,transparent 60%);animation:starTwinkle 2.4s ease-in-out infinite}
+@keyframes starTwinkle{0%,100%{opacity:.5}50%{opacity:1}}
+.splash-inner{position:relative;text-align:center;padding:0 24px}
+.splash-route{width:min(78vw,320px);height:auto;margin:0 auto;display:block}
+.splash-route .route-line{stroke-dasharray:5 7}
+.splash-plane{offset-path:path('M8,96 C60,18 118,108 168,48 C205,10 250,86 292,26');offset-rotate:auto;animation:flyAlong 1.4s cubic-bezier(.45,.05,.55,.95) .15s both}
+@keyframes flyAlong{from{offset-distance:0%;opacity:0}10%{opacity:1}to{offset-distance:100%;opacity:1}}
+@supports not (offset-path:path('M0,0')){.splash-plane{offset-path:none;animation:splashPlaneFade .8s ease .2s both}}
+@keyframes splashPlaneFade{from{opacity:0}to{opacity:1}}
+.splash-title{color:#fff;font-size:34px;font-weight:800;letter-spacing:8px;margin:8px 0 4px;text-shadow:0 0 18px rgba(90,160,255,.9),0 0 48px rgba(90,160,255,.5);animation:splashRise .55s ease both}
+.splash-sub{color:#9fc2ff;font-size:12px;letter-spacing:4px;animation:splashRise .55s .12s ease both}
+@keyframes splashRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.splash-bar{width:min(64vw,260px);height:4px;margin:18px auto 0;border-radius:2px;background:rgba(255,255,255,.14);overflow:hidden}
+.splash-bar-fill{height:100%;width:40%;border-radius:2px;background:linear-gradient(90deg,transparent,#7db4ff,transparent);animation:barShimmer 1.05s ease-in-out infinite}
+@keyframes barShimmer{from{transform:translateX(-110%)}to{transform:translateX(280%)}}
+.splash-skip-hint{margin-top:14px;color:rgba(255,255,255,.45);font-size:11px;letter-spacing:2px}
+/* ===== 逗包小形象（Jolly 简化版，常驻 idle 动画，点按互动） ===== */
+.jolly-slot{position:relative;width:64px;flex:0 0 auto;cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none}
+.jolly-slot .jolly-svg{width:64px;height:64px;display:block;animation:jollyFloat 3.2s ease-in-out infinite}
+@keyframes jollyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.jolly-sway{transform-box:fill-box;transform-origin:50% 62%;animation:jollySway 3.2s ease-in-out infinite}
+@keyframes jollySway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+.jolly-eyes{transform-box:fill-box;transform-origin:center;animation:jollyBlink 4.4s infinite}
+@keyframes jollyBlink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
+.jolly-arm-l,.jolly-arm-r{transform-box:fill-box;transform-origin:top center;animation:jollyArm 3.2s ease-in-out infinite}
+.jolly-arm-r{animation-delay:-1.6s}
+@keyframes jollyArm{0%,100%{transform:rotate(7deg)}50%{transform:rotate(-7deg)}}
+.jolly-slot.hopping .jolly-svg{animation:jollyHop .55s ease}
+@keyframes jollyHop{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-14px) scale(1.04)}60%{transform:translateY(0) scale(.94)}80%{transform:translateY(-4px) scale(1)}100%{transform:translateY(0) scale(1)}}
+.jolly-bubble{position:absolute;bottom:calc(100% + 6px);right:0;background:#fff;color:#1e293b;border:1px solid var(--line);border-radius:12px;padding:6px 10px;font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 4px 14px rgba(20,40,80,.12);opacity:0;transform:translateY(6px) scale(.9);transform-origin:bottom right;transition:opacity .25s ease,transform .25s ease;pointer-events:none}
+.jolly-bubble::after{content:'';position:absolute;top:100%;right:14px;border:6px solid transparent;border-top-color:#fff}
+.jolly-bubble.show{opacity:1;transform:translateY(0) scale(1)}
+@media (max-width:400px){.jolly-slot,.jolly-slot .jolly-svg{width:56px;height:56px}}
+@media (prefers-reduced-motion:reduce){#splash{animation:none;opacity:0;visibility:hidden}.jolly-slot .jolly-svg,.jolly-sway,.jolly-eyes,.jolly-arm-l,.jolly-arm-r{animation:none}}
 </style>
 <!-- ===== 加载视图（默认先显示，避免组件没拉到时白屏） ===== -->
 <div id="viewLoading">
@@ -285,6 +339,31 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
         <div class="top-icon-item"><button id="btnSync" class="icon-circle sync-circle" type="button" title="刷新同步" aria-label="刷新同步"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button><span class="icon-label">同步</span></div>
         <div class="top-icon-item"><button id="btnCheckUpdate" class="icon-circle update-circle" type="button" title="检查新版" aria-label="检查新版">⬆️</button><span class="icon-label">更新</span></div>
         <div class="top-icon-item"><button id="btnLife" class="icon-circle life-circle" type="button" title="生活" aria-label="生活">💛</button><span class="icon-label">生活</span></div>
+      </div>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:6px">
+      <div class="jolly-slot" id="jollyFlights" role="button" tabindex="0" aria-label="逗包">
+        <svg class="jolly-svg" viewBox="0 0 64 64" aria-hidden="true">
+          <defs><radialGradient id="jollyBodyA" cx="42%" cy="30%" r="78%"><stop offset="0%" stop-color="#FCF8EE"/><stop offset="100%" stop-color="#ECE1C9"/></radialGradient></defs>
+          <g class="jolly-sway">
+            <ellipse class="jolly-arm-l" cx="11.5" cy="42" rx="5" ry="9" fill="#E9DEC6"/>
+            <ellipse class="jolly-arm-r" cx="52.5" cy="42" rx="5" ry="9" fill="#E9DEC6"/>
+            <ellipse cx="32" cy="36" rx="20" ry="23" fill="url(#jollyBodyA)"/>
+            <rect x="24.5" y="51" width="6.5" height="9" rx="3.2" fill="#E2D5B8"/>
+            <rect x="33" y="51" width="6.5" height="9" rx="3.2" fill="#E2D5B8"/>
+            <ellipse cx="32" cy="29" rx="13.5" ry="11.5" fill="#FDFBF5"/>
+            <ellipse cx="19.6" cy="32.5" rx="3.4" ry="2.5" fill="#F4B7C1" opacity=".65"/>
+            <ellipse cx="44.4" cy="32.5" rx="3.4" ry="2.5" fill="#F4B7C1" opacity=".65"/>
+            <g class="jolly-eyes">
+              <ellipse cx="25.5" cy="28" rx="2.9" ry="3.7" fill="#22262f"/>
+              <ellipse cx="38.5" cy="28" rx="2.9" ry="3.7" fill="#22262f"/>
+              <circle cx="26.5" cy="26.7" r="1.05" fill="#fff"/>
+              <circle cx="39.5" cy="26.7" r="1.05" fill="#fff"/>
+            </g>
+            <path d="M28.3,35.2 Q32,38 35.7,35.2" fill="none" stroke="#6B5B45" stroke-width="1.7" stroke-linecap="round"/>
+          </g>
+        </svg>
+        <div class="jolly-bubble">我在！</div>
       </div>
     </div>
     <div class="muted" style="margin-top:4px">当前身份：<span id="meRole">-</span></div>
@@ -390,6 +469,31 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
   <div class="page-view hidden" id="viewLife">
 <div class="life-head">
   <div class="row" style="justify-content:flex-end"><div class="top-icon-item"><button id="btnBackFlights" class="icon-circle life-circle" type="button" title="回航班" aria-label="回航班">✈️</button><span class="icon-label">航班</span></div></div>
+  <div class="row" style="justify-content:flex-end;margin-top:6px">
+    <div class="jolly-slot" id="jollyLife" role="button" tabindex="0" aria-label="逗包">
+      <svg class="jolly-svg" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><radialGradient id="jollyBodyB" cx="42%" cy="30%" r="78%"><stop offset="0%" stop-color="#FCF8EE"/><stop offset="100%" stop-color="#ECE1C9"/></radialGradient></defs>
+        <g class="jolly-sway">
+          <ellipse class="jolly-arm-l" cx="11.5" cy="42" rx="5" ry="9" fill="#E9DEC6"/>
+          <ellipse class="jolly-arm-r" cx="52.5" cy="42" rx="5" ry="9" fill="#E9DEC6"/>
+          <ellipse cx="32" cy="36" rx="20" ry="23" fill="url(#jollyBodyB)"/>
+          <rect x="24.5" y="51" width="6.5" height="9" rx="3.2" fill="#E2D5B8"/>
+          <rect x="33" y="51" width="6.5" height="9" rx="3.2" fill="#E2D5B8"/>
+          <ellipse cx="32" cy="29" rx="13.5" ry="11.5" fill="#FDFBF5"/>
+          <ellipse cx="19.6" cy="32.5" rx="3.4" ry="2.5" fill="#F4B7C1" opacity=".65"/>
+          <ellipse cx="44.4" cy="32.5" rx="3.4" ry="2.5" fill="#F4B7C1" opacity=".65"/>
+          <g class="jolly-eyes">
+            <ellipse cx="25.5" cy="28" rx="2.9" ry="3.7" fill="#22262f"/>
+            <ellipse cx="38.5" cy="28" rx="2.9" ry="3.7" fill="#22262f"/>
+            <circle cx="26.5" cy="26.7" r="1.05" fill="#fff"/>
+            <circle cx="39.5" cy="26.7" r="1.05" fill="#fff"/>
+          </g>
+          <path d="M28.3,35.2 Q32,38 35.7,35.2" fill="none" stroke="#6B5B45" stroke-width="1.7" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <div class="jolly-bubble">我在！</div>
+    </div>
+  </div>
   <div class="life-avatars"><span>👨🏿‍✈️</span><span>💛</span><span>👩🏻‍🦱</span></div>
   <h2 style="margin:4px 0">我们的生活</h2>
   <p class="muted" style="margin:0 0 10px">航班之外，是日常、美食与远方。</p>
@@ -1943,7 +2047,7 @@ async function refreshWeather(force){
 }
 
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-18-15-life-polish';
+const APP_VERSION='2026-10-18-16-splash-jolly';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
@@ -2079,7 +2183,33 @@ async function boot(){
   }catch(e){ /* 客户端建不起来就落到登录页，登录时再重试建客户端 */ }
   show('viewLogin');
 }
+/* ===== 开屏动画控制：点按跳过 + 定时消失（CSS 动画本身也会自动淡出开屏，多重保险） ===== */
+(function(){
+  var sp=document.getElementById('splash');
+  if(sp){
+    var gone=false;
+    function hideSplash(){ if(gone) return; gone=true; sp.classList.add('splash-gone'); setTimeout(function(){ sp.style.display='none'; },400); }
+    sp.addEventListener('click',hideSplash);
+    setTimeout(hideSplash,1700);
+  }
+  /* ===== 逗包小形象：点一下蹦一下 + 气泡“我在！”1.5 秒 ===== */
+  var slots=document.querySelectorAll('.jolly-slot');
+  slots.forEach(function(slot){
+    var bubble=slot.querySelector('.jolly-bubble'); var bt=null;
+    function poke(){
+      slot.classList.remove('hopping'); void slot.offsetWidth; slot.classList.add('hopping');
+      if(bubble){ bubble.classList.add('show'); if(bt) clearTimeout(bt); bt=setTimeout(function(){ bubble.classList.remove('show'); },1500); }
+      setTimeout(function(){ slot.classList.remove('hopping'); },620);
+    }
+    slot.addEventListener('click',poke);
+    slot.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); poke(); } });
+  });
+})();
 boot();
+</script>
+<script>
+/* 开屏最终兜底：即使上方 module 脚本整体失败，开屏也一定消失，绝不挡住登录页 */
+setTimeout(function(){try{var sp=document.getElementById('splash');if(sp&&sp.style.display!=='none'){sp.style.transition='opacity .35s ease';sp.style.opacity='0';sp.style.visibility='hidden';sp.style.pointerEvents='none';setTimeout(function(){sp.style.display='none';},450);}}catch(e){}},4000);
 </script>
 </body>
 </html>
