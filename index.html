@@ -261,22 +261,26 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 .splash-skip-hint{margin-top:14px;color:rgba(255,255,255,.45);font-size:11px;letter-spacing:2px}
 /* ===== 逗包小形象（Jolly 简化版，常驻 idle 动画，点按互动） ===== */
 .jolly-slot{position:relative;width:64px;flex:0 0 auto;cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none}
-.jolly-slot .jolly-svg{width:64px;height:64px;display:block;animation:jollyFloat 3.2s ease-in-out infinite}
-@keyframes jollyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.jolly-sway{transform-box:fill-box;transform-origin:50% 62%;animation:jollySway 3.2s ease-in-out infinite}
-@keyframes jollySway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
-.jolly-eyes{transform-box:fill-box;transform-origin:center;animation:jollyBlink 4.4s infinite}
-@keyframes jollyBlink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
+.jolly-slot .jolly-svg{width:64px;height:64px;display:block;transform-origin:50% 88%;animation:jollyFloat 3.2s ease-in-out infinite}
+@keyframes jollyFloat{0%,100%{transform:translateY(0) scale(1,1)}25%{transform:translateY(-2.5px) scale(.99,1.02)}50%{transform:translateY(-5px) scale(.975,1.045)}75%{transform:translateY(-1.5px) scale(1.015,.985)}}
+.jolly-shadow{position:absolute;left:50%;bottom:0;width:46px;height:11px;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(30,41,59,.30) 0%,rgba(30,41,59,0) 70%);animation:jollyShadow 3.2s ease-in-out infinite;pointer-events:none}
+@keyframes jollyShadow{0%,100%{transform:translateX(-50%) scaleX(1);opacity:.9}50%{transform:translateX(-50%) scaleX(.7);opacity:.5}}
+.jolly-head{transform-box:fill-box;transform-origin:50% 42%;animation:jollyHead 5s ease-in-out infinite}
+@keyframes jollyHead{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+.jolly-eyes{transform-box:fill-box;transform-origin:center;animation:jollyBlink 4.2s infinite}
+@keyframes jollyBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
 .jolly-arm-l,.jolly-arm-r{transform-box:fill-box;transform-origin:top center;animation:jollyArm 3.2s ease-in-out infinite}
 .jolly-arm-r{animation-delay:-1.6s}
-@keyframes jollyArm{0%,100%{transform:rotate(7deg)}50%{transform:rotate(-7deg)}}
-.jolly-slot.hopping .jolly-svg{animation:jollyHop .55s ease}
-@keyframes jollyHop{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-14px) scale(1.04)}60%{transform:translateY(0) scale(.94)}80%{transform:translateY(-4px) scale(1)}100%{transform:translateY(0) scale(1)}}
+@keyframes jollyArm{0%,100%{transform:rotate(8deg)}50%{transform:rotate(-8deg)}}
+.jolly-slot.hopping .jolly-svg{animation:jollyHop3d .6s ease}
+@keyframes jollyHop3d{0%{transform:translateY(0) scale(1,1) rotate(0)}30%{transform:translateY(-16px) scale(1.05,1.09) rotate(3deg)}55%{transform:translateY(0) scale(1.09,.88) rotate(0)}75%{transform:translateY(-5px) scale(.99,1.03) rotate(-2deg)}100%{transform:translateY(0) scale(1,1) rotate(0)}}
+.jolly-slot.hopping .jolly-shadow{animation:jollyShadowHop .6s ease}
+@keyframes jollyShadowHop{0%,100%{transform:translateX(-50%) scaleX(1);opacity:.9}30%{transform:translateX(-50%) scaleX(.58);opacity:.35}55%{transform:translateX(-50%) scaleX(1.14);opacity:1}}
 .jolly-bubble{position:absolute;bottom:calc(100% + 6px);right:0;background:#fff;color:#1e293b;border:1px solid var(--line);border-radius:12px;padding:6px 10px;font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 4px 14px rgba(20,40,80,.12);opacity:0;transform:translateY(6px) scale(.9);transform-origin:bottom right;transition:opacity .25s ease,transform .25s ease;pointer-events:none}
 .jolly-bubble::after{content:'';position:absolute;top:100%;right:14px;border:6px solid transparent;border-top-color:#fff}
 .jolly-bubble.show{opacity:1;transform:translateY(0) scale(1)}
-@media (max-width:400px){.jolly-slot,.jolly-slot .jolly-svg{width:56px;height:56px}}
-@media (prefers-reduced-motion:reduce){#splash{animation:none;opacity:0;visibility:hidden}.jolly-slot .jolly-svg,.jolly-sway,.jolly-eyes,.jolly-arm-l,.jolly-arm-r{animation:none}}
+@media (max-width:400px){.jolly-slot,.jolly-slot .jolly-svg{width:56px;height:56px}.jolly-shadow{width:40px}}
+@media (prefers-reduced-motion:reduce){#splash{animation:none;opacity:0;visibility:hidden}.jolly-slot .jolly-svg,.jolly-head,.jolly-eyes,.jolly-arm-l,.jolly-arm-r,.jolly-shadow{animation:none}.jolly-shadow{opacity:.75}}
 </style>
 <!-- ===== 加载视图（默认先显示，避免组件没拉到时白屏） ===== -->
 <div id="viewLoading">
@@ -342,27 +346,54 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
       </div>
     </div>
     <div class="row" style="justify-content:flex-end;margin-top:6px">
-      <div class="jolly-slot" id="jollyFlights" role="button" tabindex="0" aria-label="逗包">
-        <svg class="jolly-svg" viewBox="0 0 64 64" aria-hidden="true">
-          <defs><radialGradient id="jollyBodyA" cx="42%" cy="30%" r="78%"><stop offset="0%" stop-color="#FCF8EE"/><stop offset="100%" stop-color="#ECE1C9"/></radialGradient></defs>
-          <g class="jolly-sway">
-            <ellipse class="jolly-arm-l" cx="11.5" cy="42" rx="5" ry="9" fill="#E9DEC6"/>
-            <ellipse class="jolly-arm-r" cx="52.5" cy="42" rx="5" ry="9" fill="#E9DEC6"/>
-            <ellipse cx="32" cy="36" rx="20" ry="23" fill="url(#jollyBodyA)"/>
-            <rect x="24.5" y="51" width="6.5" height="9" rx="3.2" fill="#E2D5B8"/>
-            <rect x="33" y="51" width="6.5" height="9" rx="3.2" fill="#E2D5B8"/>
-            <ellipse cx="32" cy="29" rx="13.5" ry="11.5" fill="#FDFBF5"/>
-            <ellipse cx="19.6" cy="32.5" rx="3.4" ry="2.5" fill="#F4B7C1" opacity=".65"/>
-            <ellipse cx="44.4" cy="32.5" rx="3.4" ry="2.5" fill="#F4B7C1" opacity=".65"/>
+      <div class="jolly-slot" id="jollyFlights" role="button" tabindex="0" aria-label="Muse">
+        <svg class="jolly-svg" viewBox="0 0 72 72" aria-hidden="true">
+          <defs>
+            <radialGradient id="jollyFurA" cx="38%" cy="24%" r="82%">
+              <stop offset="0%" stop-color="#FFFDF6"/><stop offset="45%" stop-color="#F8EFDD"/><stop offset="78%" stop-color="#EBDDC1"/><stop offset="100%" stop-color="#D9C6A2"/>
+            </radialGradient>
+            <radialGradient id="jollyFaceA" cx="50%" cy="30%" r="85%">
+              <stop offset="0%" stop-color="#FFFDF8"/><stop offset="70%" stop-color="#FAF3E3"/><stop offset="100%" stop-color="#EDDFC4"/>
+            </radialGradient>
+            <radialGradient id="jollyEyeA" cx="42%" cy="34%" r="78%">
+              <stop offset="0%" stop-color="#4A505E"/><stop offset="55%" stop-color="#1E222B"/><stop offset="100%" stop-color="#090B0F"/>
+            </radialGradient>
+            <radialGradient id="jollyBlushA" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#F4A6B3" stop-opacity=".9"/><stop offset="100%" stop-color="#F4A6B3" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="jollySoftA" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.15"/></filter>
+          </defs>
+          <ellipse cx="19.5" cy="14" rx="6.5" ry="7.5" fill="url(#jollyFurA)"/>
+          <ellipse cx="52.5" cy="14" rx="6.5" ry="7.5" fill="url(#jollyFurA)"/>
+          <g transform="rotate(13 12 30)"><rect class="jolly-arm-l" x="6.5" y="29" width="11" height="25" rx="5.5" fill="url(#jollyFurA)"/></g>
+          <g transform="rotate(-13 60 30)"><rect class="jolly-arm-r" x="54.5" y="29" width="11" height="25" rx="5.5" fill="url(#jollyFurA)"/></g>
+          <rect x="23.5" y="51" width="10.5" height="14" rx="5.2" fill="url(#jollyFurA)"/>
+          <rect x="38" y="51" width="10.5" height="14" rx="5.2" fill="url(#jollyFurA)"/>
+          <path d="M36,8 C23,8 16.5,23 16.5,38 C16.5,53 25,62 36,62 C47,62 55.5,53 55.5,38 C55.5,23 49,8 36,8 Z" fill="url(#jollyFurA)"/>
+          <path d="M36,8 C23,8 16.5,23 16.5,38 C16.5,53 25,62 36,62 C47,62 55.5,53 55.5,38 C55.5,23 49,8 36,8 Z" fill="none" stroke="#FFFFFF" stroke-width="3.6" opacity=".32"/>
+          <path d="M36,8 C23,8 16.5,23 16.5,38 C16.5,53 25,62 36,62 C47,62 55.5,53 55.5,38 C55.5,23 49,8 36,8 Z" fill="none" stroke="#E4D3B0" stroke-width="1.5" opacity=".65"/>
+          <ellipse cx="29" cy="15.5" rx="10" ry="5" fill="#FFFFFF" opacity=".5" filter="url(#jollySoftA)"/>
+          <ellipse cx="36" cy="56" rx="14" ry="4.6" fill="#C6AE82" opacity=".32" filter="url(#jollySoftA)"/>
+          <g class="jolly-head">
+            <rect x="21.5" y="14.5" width="29" height="23.5" rx="10.5" fill="url(#jollyFaceA)"/>
+            <rect x="21.5" y="14.5" width="29" height="23.5" rx="10.5" fill="none" stroke="#E0CFAE" stroke-width="1" opacity=".75"/>
+            <ellipse cx="36" cy="17.2" rx="11" ry="3.1" fill="#D9C49C" opacity=".34" filter="url(#jollySoftA)"/>
+            <ellipse cx="24.8" cy="31.6" rx="4.8" ry="3.5" fill="url(#jollyBlushA)" filter="url(#jollySoftA)"/>
+            <ellipse cx="47.2" cy="31.6" rx="4.8" ry="3.5" fill="url(#jollyBlushA)" filter="url(#jollySoftA)"/>
             <g class="jolly-eyes">
-              <ellipse cx="25.5" cy="28" rx="2.9" ry="3.7" fill="#22262f"/>
-              <ellipse cx="38.5" cy="28" rx="2.9" ry="3.7" fill="#22262f"/>
-              <circle cx="26.5" cy="26.7" r="1.05" fill="#fff"/>
-              <circle cx="39.5" cy="26.7" r="1.05" fill="#fff"/>
+              <ellipse cx="29.3" cy="31.4" rx="2.9" ry="1.3" fill="#C2AB80" opacity=".5" filter="url(#jollySoftA)"/>
+              <ellipse cx="42.7" cy="31.4" rx="2.9" ry="1.3" fill="#C2AB80" opacity=".5" filter="url(#jollySoftA)"/>
+              <ellipse cx="29.3" cy="26.8" rx="3.5" ry="4.3" fill="url(#jollyEyeA)"/>
+              <ellipse cx="42.7" cy="26.8" rx="3.5" ry="4.3" fill="url(#jollyEyeA)"/>
+              <circle cx="30.5" cy="25.1" r="1.3" fill="#fff" opacity=".96"/>
+              <circle cx="43.9" cy="25.1" r="1.3" fill="#fff" opacity=".96"/>
+              <circle cx="28.3" cy="28.7" r=".55" fill="#fff" opacity=".7"/>
+              <circle cx="41.7" cy="28.7" r=".55" fill="#fff" opacity=".7"/>
             </g>
-            <path d="M28.3,35.2 Q32,38 35.7,35.2" fill="none" stroke="#6B5B45" stroke-width="1.7" stroke-linecap="round"/>
+            <path d="M31.8,33.4 Q36,37.2 40.2,33.4" fill="none" stroke="#6B5B45" stroke-width="1.9" stroke-linecap="round"/>
           </g>
         </svg>
+        <div class="jolly-shadow"></div>
         <div class="jolly-bubble">我在！</div>
       </div>
     </div>
@@ -470,27 +501,54 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 <div class="life-head">
   <div class="row" style="justify-content:flex-end"><div class="top-icon-item"><button id="btnBackFlights" class="icon-circle life-circle" type="button" title="回航班" aria-label="回航班">✈️</button><span class="icon-label">航班</span></div></div>
   <div class="row" style="justify-content:flex-end;margin-top:6px">
-    <div class="jolly-slot" id="jollyLife" role="button" tabindex="0" aria-label="逗包">
-      <svg class="jolly-svg" viewBox="0 0 64 64" aria-hidden="true">
-        <defs><radialGradient id="jollyBodyB" cx="42%" cy="30%" r="78%"><stop offset="0%" stop-color="#FCF8EE"/><stop offset="100%" stop-color="#ECE1C9"/></radialGradient></defs>
-        <g class="jolly-sway">
-          <ellipse class="jolly-arm-l" cx="11.5" cy="42" rx="5" ry="9" fill="#E9DEC6"/>
-          <ellipse class="jolly-arm-r" cx="52.5" cy="42" rx="5" ry="9" fill="#E9DEC6"/>
-          <ellipse cx="32" cy="36" rx="20" ry="23" fill="url(#jollyBodyB)"/>
-          <rect x="24.5" y="51" width="6.5" height="9" rx="3.2" fill="#E2D5B8"/>
-          <rect x="33" y="51" width="6.5" height="9" rx="3.2" fill="#E2D5B8"/>
-          <ellipse cx="32" cy="29" rx="13.5" ry="11.5" fill="#FDFBF5"/>
-          <ellipse cx="19.6" cy="32.5" rx="3.4" ry="2.5" fill="#F4B7C1" opacity=".65"/>
-          <ellipse cx="44.4" cy="32.5" rx="3.4" ry="2.5" fill="#F4B7C1" opacity=".65"/>
-          <g class="jolly-eyes">
-            <ellipse cx="25.5" cy="28" rx="2.9" ry="3.7" fill="#22262f"/>
-            <ellipse cx="38.5" cy="28" rx="2.9" ry="3.7" fill="#22262f"/>
-            <circle cx="26.5" cy="26.7" r="1.05" fill="#fff"/>
-            <circle cx="39.5" cy="26.7" r="1.05" fill="#fff"/>
+    <div class="jolly-slot" id="jollyLife" role="button" tabindex="0" aria-label="Muse">
+      <svg class="jolly-svg" viewBox="0 0 72 72" aria-hidden="true">
+          <defs>
+            <radialGradient id="jollyFurB" cx="38%" cy="24%" r="82%">
+              <stop offset="0%" stop-color="#FFFDF6"/><stop offset="45%" stop-color="#F8EFDD"/><stop offset="78%" stop-color="#EBDDC1"/><stop offset="100%" stop-color="#D9C6A2"/>
+            </radialGradient>
+            <radialGradient id="jollyFaceB" cx="50%" cy="30%" r="85%">
+              <stop offset="0%" stop-color="#FFFDF8"/><stop offset="70%" stop-color="#FAF3E3"/><stop offset="100%" stop-color="#EDDFC4"/>
+            </radialGradient>
+            <radialGradient id="jollyEyeB" cx="42%" cy="34%" r="78%">
+              <stop offset="0%" stop-color="#4A505E"/><stop offset="55%" stop-color="#1E222B"/><stop offset="100%" stop-color="#090B0F"/>
+            </radialGradient>
+            <radialGradient id="jollyBlushB" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#F4A6B3" stop-opacity=".9"/><stop offset="100%" stop-color="#F4A6B3" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="jollySoftB" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.15"/></filter>
+          </defs>
+          <ellipse cx="19.5" cy="14" rx="6.5" ry="7.5" fill="url(#jollyFurB)"/>
+          <ellipse cx="52.5" cy="14" rx="6.5" ry="7.5" fill="url(#jollyFurB)"/>
+          <g transform="rotate(13 12 30)"><rect class="jolly-arm-l" x="6.5" y="29" width="11" height="25" rx="5.5" fill="url(#jollyFurB)"/></g>
+          <g transform="rotate(-13 60 30)"><rect class="jolly-arm-r" x="54.5" y="29" width="11" height="25" rx="5.5" fill="url(#jollyFurB)"/></g>
+          <rect x="23.5" y="51" width="10.5" height="14" rx="5.2" fill="url(#jollyFurB)"/>
+          <rect x="38" y="51" width="10.5" height="14" rx="5.2" fill="url(#jollyFurB)"/>
+          <path d="M36,8 C23,8 16.5,23 16.5,38 C16.5,53 25,62 36,62 C47,62 55.5,53 55.5,38 C55.5,23 49,8 36,8 Z" fill="url(#jollyFurB)"/>
+          <path d="M36,8 C23,8 16.5,23 16.5,38 C16.5,53 25,62 36,62 C47,62 55.5,53 55.5,38 C55.5,23 49,8 36,8 Z" fill="none" stroke="#FFFFFF" stroke-width="3.6" opacity=".32"/>
+          <path d="M36,8 C23,8 16.5,23 16.5,38 C16.5,53 25,62 36,62 C47,62 55.5,53 55.5,38 C55.5,23 49,8 36,8 Z" fill="none" stroke="#E4D3B0" stroke-width="1.5" opacity=".65"/>
+          <ellipse cx="29" cy="15.5" rx="10" ry="5" fill="#FFFFFF" opacity=".5" filter="url(#jollySoftB)"/>
+          <ellipse cx="36" cy="56" rx="14" ry="4.6" fill="#C6AE82" opacity=".32" filter="url(#jollySoftB)"/>
+          <g class="jolly-head">
+            <rect x="21.5" y="14.5" width="29" height="23.5" rx="10.5" fill="url(#jollyFaceB)"/>
+            <rect x="21.5" y="14.5" width="29" height="23.5" rx="10.5" fill="none" stroke="#E0CFAE" stroke-width="1" opacity=".75"/>
+            <ellipse cx="36" cy="17.2" rx="11" ry="3.1" fill="#D9C49C" opacity=".34" filter="url(#jollySoftB)"/>
+            <ellipse cx="24.8" cy="31.6" rx="4.8" ry="3.5" fill="url(#jollyBlushB)" filter="url(#jollySoftB)"/>
+            <ellipse cx="47.2" cy="31.6" rx="4.8" ry="3.5" fill="url(#jollyBlushB)" filter="url(#jollySoftB)"/>
+            <g class="jolly-eyes">
+              <ellipse cx="29.3" cy="31.4" rx="2.9" ry="1.3" fill="#C2AB80" opacity=".5" filter="url(#jollySoftB)"/>
+              <ellipse cx="42.7" cy="31.4" rx="2.9" ry="1.3" fill="#C2AB80" opacity=".5" filter="url(#jollySoftB)"/>
+              <ellipse cx="29.3" cy="26.8" rx="3.5" ry="4.3" fill="url(#jollyEyeB)"/>
+              <ellipse cx="42.7" cy="26.8" rx="3.5" ry="4.3" fill="url(#jollyEyeB)"/>
+              <circle cx="30.5" cy="25.1" r="1.3" fill="#fff" opacity=".96"/>
+              <circle cx="43.9" cy="25.1" r="1.3" fill="#fff" opacity=".96"/>
+              <circle cx="28.3" cy="28.7" r=".55" fill="#fff" opacity=".7"/>
+              <circle cx="41.7" cy="28.7" r=".55" fill="#fff" opacity=".7"/>
+            </g>
+            <path d="M31.8,33.4 Q36,37.2 40.2,33.4" fill="none" stroke="#6B5B45" stroke-width="1.9" stroke-linecap="round"/>
           </g>
-          <path d="M28.3,35.2 Q32,38 35.7,35.2" fill="none" stroke="#6B5B45" stroke-width="1.7" stroke-linecap="round"/>
-        </g>
-      </svg>
+        </svg>
+        <div class="jolly-shadow"></div>
       <div class="jolly-bubble">我在！</div>
     </div>
   </div>
@@ -2047,7 +2105,7 @@ async function refreshWeather(force){
 }
 
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-18-16-splash-jolly';
+const APP_VERSION='2026-10-18-17-jolly-3d';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
