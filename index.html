@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="night">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>try{var _t=localStorage.getItem("ourflights.theme");document.documentElement.setAttribute("data-theme",_t==="day"?"day":"night");}catch(e){document.documentElement.setAttribute("data-theme","night");}</script>
 <title>我们的航班</title>
 <style>
 :root{--bg:#050b18;--card:#0d1730;--ink:#e9f0ff;--sub:#93a1c4;--line:#22314f;--brand:#4f8cff;--danger:#ff7b7b;--ok:#34d399;--radius:14px}
@@ -315,6 +316,39 @@ button.ghost{background:#14224a;color:#9dbcff}
 .life-timeline{border-left-color:#22314f}
 .life-timeline .tl-item:before{border-color:#0d1730;box-shadow:0 0 0 2px #22314f}
 @media (prefers-reduced-motion:reduce){#splash{animation:none;opacity:0;visibility:hidden}.wx-ticker-track{animation:none}#bgFx .bg-aurora{animation:none}}
+/* ===== 2026-10-18-20 白天模式：data-theme="day" 覆盖（夜间为默认，保持原样） ===== */
+html[data-theme="day"]{--bg:#e9f2fc;--card:#ffffff;--ink:#16233f;--sub:#5c6c8f;--line:#d5e2f4;--brand:#2563eb;--danger:#dc2626;--ok:#16a34a}
+html[data-theme="day"] body{background-color:#e9f2fc;background-image:radial-gradient(700px 460px at 10% -6%,rgba(56,189,248,.22),transparent 62%),radial-gradient(760px 520px at 96% 10%,rgba(129,140,248,.17),transparent 62%),radial-gradient(900px 640px at 50% 112%,rgba(14,165,233,.15),transparent 60%),linear-gradient(rgba(37,99,235,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.08) 1px,transparent 1px);background-size:auto,auto,auto,44px 44px,44px 44px;background-attachment:fixed}
+html[data-theme="day"] #bgFx .bg-aurora{background:radial-gradient(38% 30% at 30% 28%,rgba(56,189,248,.17),transparent 70%),radial-gradient(34% 28% at 72% 64%,rgba(167,139,250,.15),transparent 70%)}
+html[data-theme="day"] .topbar{background:rgba(233,242,252,.92)}
+html[data-theme="day"] input,html[data-theme="day"] select,html[data-theme="day"] textarea{background:#fff}
+html[data-theme="day"] button.ghost{background:#eef2fb;color:var(--brand)}
+html[data-theme="day"] .life-tab{background:#fff}
+html[data-theme="day"] .life-form input[type=text],html[data-theme="day"] .life-form input[type=date],html[data-theme="day"] .life-form textarea{background:#fff}
+html[data-theme="day"] .life-wall-item,html[data-theme="day"] .life-card,html[data-theme="day"] .life-rating-chip,html[data-theme="day"] .cal-cell,html[data-theme="day"] .wx-circle{background:#fff}
+html[data-theme="day"] .wx-circle{box-shadow:0 1px 3px rgba(20,40,80,.12)}
+html[data-theme="day"] .wc-chip{background:#eef2fb}
+html[data-theme="day"] .flight,html[data-theme="day"] .bp-dash span,html[data-theme="day"] .ocr-item{background:#fbfcfe}
+html[data-theme="day"] .flight.batch-selected{background:#eef4ff}
+html[data-theme="day"] .role-btn{background:#eef2fb}
+html[data-theme="day"] .ocr-item:active{background:#e2e8f0}
+html[data-theme="day"] .past-stack-head{background:#eef2fb}
+html[data-theme="day"] .life-rate-cols>div{background:#f8fafc}
+html[data-theme="day"] .card{box-shadow:0 1px 3px rgba(20,40,80,.08)}
+html[data-theme="day"] .card-date{color:#111}
+html[data-theme="day"] .wish-bar{background:#e2e8f0}
+html[data-theme="day"] .life-timeline{border-left-color:#e2e8f0}
+html[data-theme="day"] .life-timeline .tl-item:before{border-color:#fff;box-shadow:0 0 0 2px #e2e8f0}
+html[data-theme="day"] .wx-ticker{background:rgba(255,255,255,.72);border-color:rgba(37,99,235,.22);box-shadow:inset 0 0 18px rgba(37,99,235,.06)}
+html[data-theme="day"] .wx-ticker-chunk{color:#33507e}
+html[data-theme="day"] .wx-ticker-chunk b{color:#16233f}
+/* ===== 主题切换悬浮按钮（左下角，不遮挡右下角＋按钮） ===== */
+.theme-toggle{position:fixed;left:16px;bottom:20px;z-index:60;width:44px;height:44px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1;background:rgba(13,23,48,.72);border:1px solid rgba(125,211,252,.28);box-shadow:0 4px 14px rgba(0,0,0,.35);backdrop-filter:blur(4px);cursor:pointer}
+.theme-toggle:active{transform:scale(.92)}
+html[data-theme="day"] .theme-toggle{background:rgba(255,255,255,.88);border-color:rgba(37,99,235,.28);box-shadow:0 4px 14px rgba(37,99,235,.2)}
+/* ===== 主题切换平滑过渡（仅切换时加 .theming 类） ===== */
+html.theming body,html.theming .card,html.theming .flight,html.theming .topbar,html.theming input,html.theming select,html.theming textarea,html.theming button,html.theming .life-card,html.theming .life-wall-item,html.theming .life-rating-chip,html.theming .cal-cell,html.theming .wx-circle,html.theming .ocr-item,html.theming .wx-ticker,html.theming .theme-toggle{transition:background-color .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease}
+@media (prefers-reduced-motion:reduce){html.theming body,html.theming .card,html.theming .flight,html.theming .topbar,html.theming input,html.theming select,html.theming textarea,html.theming button,html.theming .life-card,html.theming .life-wall-item,html.theming .life-rating-chip,html.theming .cal-cell,html.theming .wx-circle,html.theming .ocr-item,html.theming .wx-ticker,html.theming .theme-toggle{transition:none}}
 </style>
 <!-- ===== 加载视图（默认先显示，避免组件没拉到时白屏） ===== -->
 <div id="viewLoading">
@@ -363,6 +397,7 @@ button.ghost{background:#14224a;color:#9dbcff}
 <!-- ===== 主视图 ===== -->
 <div id="viewMain" class="hidden">
   <button id="btnFab" class="fab" title="添加航班" aria-label="添加航班">＋</button>
+  <button id="btnTheme" class="theme-toggle" title="切换白天/夜间模式" aria-label="切换到白天模式">☀️</button>
   <div class="page-view" id="viewFlights">
   <div class="ptr" id="ptr"><span id="ptrText">↓ 下拉刷新</span></div>
   <div class="topbar">
@@ -2074,7 +2109,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-18-19-splash5-ticker-bg';
+const APP_VERSION='2026-10-18-20-day-night';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
@@ -2246,6 +2281,23 @@ async function boot(){
       rid=requestAnimationFrame(frame);
     }catch(e){}
   })();
+})();
+/* ===== 白天/夜间模式切换（localStorage 持久化，默认夜间） ===== */
+(function(){
+  var KEY='ourflights.theme';
+  var btn=$('btnTheme');
+  function cur(){return document.documentElement.getAttribute('data-theme')==='day'?'day':'night';}
+  function paint(){ if(!btn) return; var d=cur()==='day'; btn.textContent=d?'🌙':'☀️'; btn.setAttribute('aria-label',d?'切换到夜间模式':'切换到白天模式'); btn.setAttribute('title',d?'切换到夜间模式':'切换到白天模式'); }
+  function apply(t){
+    var root=document.documentElement;
+    root.classList.add('theming');
+    root.setAttribute('data-theme',t);
+    try{localStorage.setItem(KEY,t);}catch(e){}
+    paint();
+    setTimeout(function(){root.classList.remove('theming');},450);
+  }
+  if(btn) btn.addEventListener('click',function(){apply(cur()==='day'?'night':'day');});
+  paint();
 })();
 boot();
 </script>
