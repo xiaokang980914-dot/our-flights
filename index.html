@@ -35,9 +35,6 @@ button:disabled{opacity:.55}
 @keyframes pageOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-16px)}}
 @keyframes pageIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 @keyframes pageInRev{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
-/* 生活/航班切换大药丸按钮：金粉渐变，顶栏右上角主按钮 */
-.life-switch-btn{flex:0 0 auto;padding:12px 20px;border-radius:999px;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,#f6c453,#f472b6 55%,#a78bfa);box-shadow:0 8px 20px rgba(244,114,182,.35), inset 0 1px 0 rgba(255,255,255,.45), inset 0 0 0 1px rgba(255,255,255,.35);border:none;cursor:pointer;transition:transform .15s ease, box-shadow .15s ease}
-.life-switch-btn:active{transform:scale(.97)}
 #viewMain.on-life #btnFab{display:none}
 .life-head{text-align:center;padding:8px 0 4px}
 .life-avatars{display:flex;gap:10px;align-items:center;justify-content:center;font-size:44px;margin:6px 0}
@@ -69,7 +66,7 @@ button:disabled{opacity:.55}
 .life-rating-chip.on{border-color:#1e3a8a;background:#1e3a8a;color:#fff}
 .life-rating-tag{display:inline-block;border-radius:999px;padding:2px 8px;font-size:12px;margin-right:4px;color:#fff}
 .life-nav-btn{display:inline-block;border-radius:999px;padding:6px 12px;font-size:13px;margin:4px 6px 0 0;text-decoration:none;color:#fff}
-.life-nav-amap{background:#2563eb}.life-nav-baidu{background:#16a34a}
+.life-nav-baidu{background:#16a34a}
 .life-wish-done{opacity:.55}.life-wish-done .wish-text{text-decoration:line-through}
 .life-timeline{border-left:3px solid #e2e8f0;margin-left:6px;padding-left:14px}
 .life-timeline .tl-item{position:relative;padding-bottom:14px}
@@ -104,25 +101,12 @@ button:disabled{opacity:.55}
 .times{display:flex;gap:10px;color:var(--ink);font-size:14px;flex-wrap:wrap}
 .times span b{font-variant-numeric:tabular-nums}
 .flight .ops{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.seg-toggle{display:flex;background:#eef2fb;border-radius:10px;padding:3px;gap:3px}
-.seg-toggle button{background:transparent;color:var(--sub);padding:6px 12px;font-size:13px}
-.seg-toggle button.on{background:#fff;color:var(--brand);box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:600}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .grid2>div{min-width:0}
 h2.view-title{font-size:22px;margin:6px 0 2px}
 /* 右上角图标区：天气 chip + 版本更新圆钮 + 同步圆钮（随顶栏吸顶，不再 fixed 覆盖时钟） */
 .top-icons{display:flex;align-items:center;gap:6px;flex:0 0 auto}
-.wx-chip{flex:0 0 auto;max-width:38vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#fff;border:1px solid var(--line);color:var(--ink);padding:8px 10px;border-radius:999px;font-size:12px;box-shadow:0 1px 3px rgba(20,40,80,.06);cursor:pointer}
-.wx-chip:active{transform:scale(.97)}
 @media (max-width:480px){ .wx-city{display:none} }
-.icon-btn.update-btn{flex:0 0 auto;width:44px;height:44px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#10b981,#06b6d4);box-shadow:0 6px 16px rgba(16,185,129,.35), inset 0 1px 0 rgba(255,255,255,.25);font-size:20px;line-height:1}
-.icon-btn.update-btn:active{transform:scale(.9)}
-.sync-btn{flex:0 0 auto;width:48px;height:48px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 6px 16px rgba(37,99,235,.35), inset 0 1px 0 rgba(255,255,255,.25);transition:transform .15s ease, box-shadow .3s ease}
-.sync-btn:active{transform:scale(.9)}
-.sync-btn svg{width:24px;height:24px;stroke:#fff}
-.sync-btn.spinning{pointer-events:none}
-.sync-btn.spinning svg{animation:syncspin .8s linear infinite}
-.sync-btn.done{box-shadow:0 0 0 5px rgba(34,197,94,.22), 0 6px 16px rgba(37,99,235,.35)}
 @keyframes syncspin{to{transform:rotate(360deg)}}
 /* 角色选择按钮 */
 .role-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;background:#eef2fb;color:var(--ink);font-size:15px}
@@ -175,6 +159,70 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 .cal-num{font-weight:700;font-size:13px}
 .cal-bar{font-size:11px;line-height:1.3;padding:2px 4px;border-radius:4px;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;border-left:3px solid var(--brand)}
 .ptr span{display:block;padding:8px 0 2px}
+/* ===== 2026-10-18-15-life-polish：彩虹时钟 / 圆形图标 / 卡片强调 / 折叠堆 / 日历节假日 / 生活区 ===== */
+/* 1. 流光彩虹时钟：多色渐变 + 缓慢流动，文字保持深色可读 */
+.clock-wrap{background:linear-gradient(120deg,#fda4af,#fcd34d,#86efac,#67e8f9,#a5b4fc,#f0abfc,#fda4af);background-size:300% 100%;animation:rainbowFlow 14s linear infinite;border-radius:12px;padding:10px 12px}
+.clock-wrap .muted,.clock-wrap .clock-date{color:#17233b}
+@keyframes rainbowFlow{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+@media (max-width:480px){ .clock-big{font-size:30px} .clock-wrap{min-width:0} }
+/* 2. 顶部四圆图标：同尺寸圆 + 下方 2 字标签，等距排列 */
+.top-icons{align-items:flex-start}
+.top-icon-item{display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 auto}
+.top-icon-item .icon-circle{width:52px;height:52px;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;line-height:1.15;cursor:pointer;border:none}
+@media (max-width:400px){ .top-icon-item .icon-circle{width:44px;height:44px} }
+.top-icon-item .icon-circle:active{transform:scale(.92)}
+.top-icon-item .icon-label{font-size:10px;color:var(--sub);line-height:1}
+.wx-circle{background:#fff;border:1px solid var(--line);color:var(--ink);box-shadow:0 1px 3px rgba(20,40,80,.06)}
+.wx-circle .wx-ico{font-size:16px;line-height:1}
+.wx-circle .wx-tmp{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+.life-circle{background:linear-gradient(135deg,#f6c453,#f472b6 55%,#a78bfa);box-shadow:0 8px 20px rgba(244,114,182,.35), inset 0 1px 0 rgba(255,255,255,.45);font-size:20px;color:#fff}
+.update-circle{background:linear-gradient(135deg,#10b981,#06b6d4);box-shadow:0 6px 16px rgba(16,185,129,.35), inset 0 1px 0 rgba(255,255,255,.25);font-size:20px;color:#fff}
+.sync-circle{background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 6px 16px rgba(37,99,235,.35), inset 0 1px 0 rgba(255,255,255,.25)}
+.sync-circle svg{width:24px;height:24px;stroke:#fff}
+.sync-circle.spinning{pointer-events:none}
+.sync-circle.spinning svg{animation:syncspin .8s linear infinite}
+.sync-circle.done{box-shadow:0 0 0 5px rgba(34,197,94,.22), 0 6px 16px rgba(37,99,235,.35)}
+/* 5. 卡片日期/倒计时强调 */
+.card-date{color:#111;font-weight:700}
+.card-count{color:#dc2626;font-weight:700}
+.card-count.past{color:var(--sub);font-weight:400}
+/* 6. 已飞过折叠堆（钱包式：纵向错开叠放，每张露顶部一截） */
+.past-stack{margin-top:10px}
+.past-stack-head{width:100%;background:#eef2fb;color:var(--ink);font-weight:700;text-align:left}
+.past-stack-cards{position:relative}
+.past-stack.collapsed .past-stack-cards{height:84px;overflow:hidden}
+.past-stack.collapsed .flight{position:absolute;left:0;right:0;margin-top:0}
+.past-stack.collapsed .flight:nth-child(1){top:0;z-index:1}
+.past-stack.collapsed .flight:nth-child(2){top:10px;z-index:2}
+.past-stack.collapsed .flight:nth-child(3){top:20px;z-index:3}
+.past-stack.collapsed .flight:nth-child(4){top:30px;z-index:4}
+.past-stack.collapsed .flight:nth-child(5){top:40px;z-index:5}
+.past-stack.collapsed .flight:nth-child(n+6){display:none}
+.past-stack-cover{position:absolute;inset:0;z-index:10;cursor:pointer}
+/* 4. 日历星期 + 节假日 */
+.cal-cell{min-height:72px}
+.cal-wd{font-size:10px;color:#94a3b8;line-height:1.2}
+.cal-hol{font-size:10px;line-height:1.3;padding:1px 3px;border-radius:3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-hol.cn{background:#fee2e2;color:#b91c1c}
+.cal-hol.us{background:#dbeafe;color:#1d4ed8}
+.cal-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:8px}
+.cal-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+/* 7a. 白字白底修复：标签/评分未选中态必须深色字（根因：按钮基类 color:#fff 被继承） */
+.life-tab{color:var(--ink)}
+.life-rating-chip{color:var(--ink)}
+.life-rating-chip.readonly{cursor:default;opacity:.75}
+.life-rating-chip.readonly.on{opacity:1}
+/* 7c. 生活区升级 */
+.life-empty-ico{font-size:34px;margin-bottom:8px}
+.life-rate-cols{display:flex;gap:10px;margin:6px 0}
+.life-rate-cols>div{flex:1;background:#f8fafc;border-radius:10px;padding:8px;min-width:0}
+.wish-bar{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin:6px 0}
+.wish-bar-fill{height:100%;background:linear-gradient(90deg,#f6c453,#f472b6);border-radius:4px}
+.life-lightbox{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+.life-lightbox img{max-width:100%;max-height:78vh;border-radius:12px;object-fit:contain}
+.life-lightbox .lb-cap{color:#fff;font-size:13px;margin-top:10px;text-align:center}
+.life-lightbox .lb-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+.life-lightbox .lb-actions button{background:rgba(255,255,255,.15);color:#fff}
 </style>
 <!-- ===== 加载视图（默认先显示，避免组件没拉到时白屏） ===== -->
 <div id="viewLoading">
@@ -227,16 +275,16 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
   <div class="ptr" id="ptr"><span id="ptrText">↓ 下拉刷新</span></div>
   <div class="topbar">
     <div class="row">
-      <div class="grow">
+      <div class="grow clock-wrap">
         <div class="muted">北京时间</div>
         <div class="clock-big" id="bjClock">--:--:--</div>
         <div class="clock-date" id="bjDate"></div>
       </div>
       <div class="top-icons">
-        <button id="wxChip" class="wx-chip" type="button">📍 点我获取天气</button>
-        <button id="btnLife" class="life-switch-btn" type="button">💛 生活</button>
-        <button id="btnCheckUpdate" class="icon-btn update-btn" title="检查新版" aria-label="检查新版">⬆️</button>
-        <button id="btnSync" class="sync-btn" title="刷新同步" aria-label="刷新同步"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
+        <div class="top-icon-item"><button id="wxChip" class="icon-circle wx-circle" type="button" title="天气" aria-label="天气"><span class="wx-ico">📍</span><span class="wx-tmp">--°</span></button><span class="icon-label">天气</span></div>
+        <div class="top-icon-item"><button id="btnSync" class="icon-circle sync-circle" type="button" title="刷新同步" aria-label="刷新同步"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button><span class="icon-label">同步</span></div>
+        <div class="top-icon-item"><button id="btnCheckUpdate" class="icon-circle update-circle" type="button" title="检查新版" aria-label="检查新版">⬆️</button><span class="icon-label">更新</span></div>
+        <div class="top-icon-item"><button id="btnLife" class="icon-circle life-circle" type="button" title="生活" aria-label="生活">💛</button><span class="icon-label">生活</span></div>
       </div>
     </div>
     <div class="muted" style="margin-top:4px">当前身份：<span id="meRole">-</span></div>
@@ -266,16 +314,6 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
     </div>
   </div>
 
-  <div class="card">
-    <div class="row">
-      <b class="grow">时间显示</b>
-      <div class="seg-toggle">
-        <button id="tmBj" class="on">北京时间</button>
-        <button id="tmLocal">当地时间</button>
-      </div>
-    </div>
-  </div>
-
   <div class="card" id="calCard">
     <div class="row">
       <b class="grow">本月日历</b>
@@ -285,6 +323,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
     </div>
     <div class="muted" style="margin-top:6px" id="calTitle">-</div>
     <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend"><span><span class="dot" style="background:#ef4444"></span>中国节假日</span><span><span class="dot" style="background:#2563eb"></span>美国节假日</span></div>
     <div class="muted" style="margin-top:6px">点日期格填到添加表单；点航班小条跳到对应航班。</div>
   </div>
   <div class="card" id="formCard">
@@ -350,7 +389,7 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
   </div><!-- /viewFlights -->
   <div class="page-view hidden" id="viewLife">
 <div class="life-head">
-  <div class="row" style="justify-content:flex-end"><button id="btnBackFlights" class="life-switch-btn" type="button">✈️ 航班</button></div>
+  <div class="row" style="justify-content:flex-end"><div class="top-icon-item"><button id="btnBackFlights" class="icon-circle life-circle" type="button" title="回航班" aria-label="回航班">✈️</button><span class="icon-label">航班</span></div></div>
   <div class="life-avatars"><span>👨🏿‍✈️</span><span>💛</span><span>👩🏻‍🦱</span></div>
   <h2 style="margin:4px 0">我们的生活</h2>
   <p class="muted" style="margin:0 0 10px">航班之外，是日常、美食与远方。</p>
@@ -366,19 +405,19 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 <div id="lifeFormCard" class="card hidden"></div>
 <div class="life-panel" data-life-panel="album">
   <div class="card">
-    <div class="row"><b class="grow">📸 日常相册</b><button class="ghost small" type="button" data-life-add="album">＋ 添加</button></div>
+    <div class="row"><b>📸 日常相册 <span class="muted" id="lifeCount-album" style="font-size:12px;font-weight:400"></span></b><span class="grow"></span><button class="ghost small" type="button" data-life-add="album">＋ 添加</button></div>
     <div id="lifeList-album"></div>
   </div>
 </div>
 <div class="life-panel hidden" data-life-panel="food">
   <div class="card">
-    <div class="row"><b class="grow">🍜 美食</b><button class="ghost small" type="button" data-life-add="food">＋ 添加</button></div>
+    <div class="row"><b>🍜 美食 <span class="muted" id="lifeCount-food" style="font-size:12px;font-weight:400"></span></b><span class="grow"></span><button class="ghost small" type="button" data-life-add="food">＋ 添加</button></div>
     <div id="lifeList-food"></div>
   </div>
 </div>
 <div class="life-panel hidden" data-life-panel="travel">
   <div class="card">
-    <div class="row"><b class="grow">🗺️ 旅行足迹</b><button class="ghost small" type="button" data-life-add="travel">＋ 添加</button></div>
+    <div class="row"><b>🗺️ 旅行足迹 <span class="muted" id="lifeCount-travel" style="font-size:12px;font-weight:400"></span></b><span class="grow"></span><button class="ghost small" type="button" data-life-add="travel">＋ 添加</button></div>
     <div id="lifeMap" class="life-map">地图加载中…</div>
     <div class="muted" style="margin-top:6px">保存足迹后地图上自动落图钉。</div>
     <div id="lifeList-travel" style="margin-top:10px"></div>
@@ -386,13 +425,13 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 </div>
 <div class="life-panel hidden" data-life-panel="timeline">
   <div class="card">
-    <div class="row"><b class="grow">🕰️ 时光轴</b><button class="ghost small" type="button" data-life-add="timeline">＋ 添加</button></div>
+    <div class="row"><b>🕰️ 时光轴 <span class="muted" id="lifeCount-timeline" style="font-size:12px;font-weight:400"></span></b><span class="grow"></span><button class="ghost small" type="button" data-life-add="timeline">＋ 添加</button></div>
     <div id="lifeList-timeline"></div>
   </div>
 </div>
 <div class="life-panel hidden" data-life-panel="wishlist">
   <div class="card">
-    <div class="row"><b class="grow">📝 愿望单</b><button class="ghost small" type="button" data-life-add="wishlist">＋ 添加</button></div>
+    <div class="row"><b>📝 愿望单 <span class="muted" id="lifeCount-wishlist" style="font-size:12px;font-weight:400"></span></b><span class="grow"></span><button class="ghost small" type="button" data-life-add="wishlist">＋ 添加</button></div>
     <div id="lifeList-wishlist"></div>
   </div>
 </div>
@@ -410,6 +449,16 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
   </div>
 </div>
 </div><!-- /wrap -->
+<div id="lifeLightbox" class="life-lightbox hidden">
+  <img id="lifeLbImg" src="" alt="">
+  <div class="lb-cap" id="lifeLbCap"></div>
+  <div class="lb-actions">
+    <button type="button" id="lifeLbPrev">‹ 上一张</button>
+    <button type="button" id="lifeLbNext">下一张 ›</button>
+    <button type="button" id="lifeLbDel">删除这条</button>
+    <button type="button" id="lifeLbClose">关闭</button>
+  </div>
+</div>
 <script type="module">
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -493,7 +542,7 @@ const TZ_CHOICES=['Asia/Shanghai','Asia/Tokyo','Asia/Seoul','Asia/Singapore','As
 
 /* ===== 全局状态 ===== */
 let sbAuth=null, sbDb=null, sbClient=null, me=null, flights=[], editingId=null;
-let timeMode=localStorage.getItem('ourflights.timeMode')||'bj'; // bj=北京时间 local=当地时间
+/* 时间一律按北京时间显示（“时间显示”板块已删除，无当地切换） */
 let myRole=localStorage.getItem('ourflights.role')||''; // pilot=飞行员 attendant=乘务员（按设备存，两台手机各选一次）
 if(!myRole){ const old=localStorage.getItem('ourflights.identity'); if(old==='partner') myRole='attendant'; else if(old==='me') myRole='pilot'; if(myRole) localStorage.setItem('ourflights.role',myRole); } // 迁移旧版我/对方
 function ownerOf(f){ const a=f&&f.added_by; if(a==='attendant'||a==='partner') return 'attendant'; return 'pilot'; } // 旧记录 added_by 是邮箱，归为飞行员
@@ -652,13 +701,8 @@ function fmtInTz(iso,tz,withDate){
   new Intl.DateTimeFormat('zh-CN',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d).forEach(p=>parts[p.type]=p.value);
   return (withDate?(parts.month+'-'+parts.day+' '):'')+parts.hour+':'+parts.minute;
 }
-function displayTime(iso,airportCode){
+function displayTime(iso){
   if(!iso) return {t:'', tag:''};
-  if(timeMode==='local'){
-    const _ac=String(airportCode||'').toUpperCase(); const tz=AIRPORT_TZ[_ac]||(dynAirport(_ac)?dynAirport(_ac).tz:null);
-    if(tz) return {t:fmtInTz(iso,tz,true), tag:'当地'};
-    return {t:fmtInTz(iso,'Asia/Shanghai',true), tag:'当地（回退北京）'};
-  }
   return {t:fmtInTz(iso,'Asia/Shanghai',true), tag:''};
 }
 /* datetime-local（按北京时间填）<-> ISO */
@@ -735,8 +779,8 @@ function renderFlights(){
   const seenKey='ourflights.lastSeen.'+myRole;
   lastSeenMine=+(localStorage.getItem(seenKey)||0);
   if(!lastSeenMine){ lastSeenMine=Date.now(); localStorage.setItem(seenKey,String(lastSeenMine)); }
-  $('listPilot').innerHTML=renderRoleList(flights.filter(f=>ownerOf(f)==='pilot'));
-  $('listAttendant').innerHTML=renderRoleList(flights.filter(f=>ownerOf(f)==='attendant'));
+  $('listPilot').innerHTML=renderRoleList(flights.filter(f=>ownerOf(f)==='pilot'),'pilot');
+  $('listAttendant').innerHTML=renderRoleList(flights.filter(f=>ownerOf(f)==='attendant'),'attendant');
   // 看过即记：这次渲染完，对方再新增的才算“新”
   localStorage.setItem(seenKey,String(Date.now()));
   document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.edit)));
@@ -744,17 +788,31 @@ function renderFlights(){
   document.querySelectorAll('[data-add-first]').forEach(b=>b.addEventListener('click',()=>{ scrollToForm(); }));
   document.querySelectorAll('[data-batch-check]').forEach(cb=>cb.addEventListener('change',()=>toggleBatch(cb.dataset.batchCheck)));
   document.querySelectorAll('.flight').forEach(card=>card.addEventListener('click',e=>{ if(!batchMode) return; if(e.target.closest('button, input, label, a')) return; const cb=card.querySelector('[data-batch-check]'); if(cb) toggleBatch(cb.dataset.batchCheck); }));
+  document.querySelectorAll('[data-past-toggle]').forEach(b=>b.addEventListener('click',()=>togglePastStack(b.dataset.pastToggle)));
+  document.querySelectorAll('[data-past-expand]').forEach(c=>c.addEventListener('click',()=>{ pastExpanded[c.dataset.pastExpand]=true; renderFlights(); }));
   if(batchMode) updateBatchBar();
   applySectionColors();
   renderCalendar();
 }
-function renderRoleList(list){
+function togglePastStack(role){ pastExpanded[role]=!pastExpanded[role]; renderFlights(); }
+let pastExpanded={pilot:false,attendant:false};
+function renderRoleList(list,role){
   if(!list.length) return '<div class="empty-state"><div class="big">✈️</div><div>还没有航班</div><button class="ghost small" data-add-first style="margin-top:8px">添加第一班</button></div>';
+  const today=todayBj();
   const sorted=list.slice().sort((a,b)=>(a.flight_date||'').localeCompare(b.flight_date||'')||String(a.dep_time||'').localeCompare(String(b.dep_time||'')));
+  const upcoming=sorted.filter(f=>f.flight_date>=today);
+  const past=sorted.filter(f=>f.flight_date<today);
   let html='', cur='';
-  for(const f of sorted){
+  for(const f of upcoming){
     if(f.flight_date!==cur){ cur=f.flight_date; html+='<div class="date-head" id="date-'+esc(cur)+'">'+esc(fmtDateHead(cur))+'</div>'; }
     html+=flightCard(f);
+  }
+  if(past.length){
+    const expanded=!!pastExpanded[role];
+    html+='<div class="past-stack'+(expanded?'':' collapsed')+'" data-past-stack="'+esc(role)+'">'
+      +'<button class="past-stack-head" type="button" data-past-toggle="'+esc(role)+'">已飞过 · '+past.length+' 张，点击'+(expanded?'收起 ▴':'展开 ▾')+'</button>'
+      +'<div class="past-stack-cards">'+past.map(f=>flightCard(f)).join('')+(expanded?'':'<div class="past-stack-cover" data-past-expand="'+esc(role)+'"></div>')+'</div>'
+      +'</div>';
   }
   return html;
 }
@@ -778,7 +836,7 @@ function flightCard(f){
   const roleColor=(typeof sectionColors!=='undefined'&&sectionColors[ownerOf(f)])||DEFAULT_COLORS[ownerOf(f)]||'#2563eb';
   return '<div class="flight'+(batchMode&&batchSelected.has(f.id)?' batch-selected':'')+'" id="flight-'+esc(f.id)+'" style="border-top-color:'+esc(roleColor)+'">'
     +'<div>'+(batchMode?'<label class="batch-check"><input type="checkbox" data-batch-check="'+esc(f.id)+'"'+(batchSelected.has(f.id)?' checked':'')+' aria-label="选中这张航班卡"></label>':'')+'<span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+st.key+'">'+st.label+'</span>'+overlapBadge(f)+(isNew?'<span class="badge new">新</span>':'')+'</div>'
-    +'<div class="muted">'+esc(f.flight_date)+' · '+esc(flightCountdown(f))+(f.aircraft?' · '+esc(f.aircraft):'')+(dur?' · 飞行时长 '+dur:'')+' · 添加人 '+(ownerOf(f)==='attendant'?'👩🏻‍🦱 乘务员':'👨🏿‍✈️ 飞行员')+'</div>'
+    +'<div class="muted"><span class="card-date">'+esc(f.flight_date)+'</span> · <span class="card-count'+(f.flight_date<todayBj()?' past':'')+'">'+esc(flightCountdown(f))+'</span>'+(f.aircraft?' · '+esc(f.aircraft):'')+(dur?' · 飞行时长 '+dur:'')+' · 添加人 '+(ownerOf(f)==='attendant'?'👩🏻‍🦱 乘务员':'👨🏿‍✈️ 飞行员')+'</div>'
     +'<div class="bp-route">'+bpEnd(depCode,depCity,dep.t,dep.tag,false)
     +'<div class="bp-dash"><span>✈️</span></div>'
     +bpEnd(arrCode,arrCity,arr.t,arr.tag,true)+'</div>'
@@ -866,6 +924,50 @@ function addDaysISO(iso,days){
   const d=new Date(iso+'T12:00:00+08:00'); d.setDate(d.getDate()+days);
   return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
 }
+/* ===== 节假日（中国：2026 年国务院放假表已核实；其他年份仅固定日期，不编农历；美国：联邦节假日按规则计算，任意年份） ===== */
+const CN_2026_HOLIDAYS=[
+  {name:'元旦',from:'2026-01-01',to:'2026-01-03'},
+  {name:'春节',from:'2026-02-15',to:'2026-02-23'},
+  {name:'清明节',from:'2026-04-04',to:'2026-04-06'},
+  {name:'劳动节',from:'2026-05-01',to:'2026-05-05'},
+  {name:'端午节',from:'2026-06-19',to:'2026-06-21'},
+  {name:'中秋节',from:'2026-09-25',to:'2026-09-27'},
+  {name:'国庆节',from:'2026-10-01',to:'2026-10-07'},
+];
+function cnHolidaysFor(dateStr){
+  const out=[];
+  if(+dateStr.slice(0,4)===2026){
+    for(const h of CN_2026_HOLIDAYS){ if(dateStr>=h.from&&dateStr<=h.to) out.push(h.name); }
+  }else{
+    const md=dateStr.slice(5);
+    if(md==='01-01') out.push('元旦');
+    if(md==='05-01') out.push('劳动节');
+    if(md==='10-01') out.push('国庆节');
+  }
+  return out;
+}
+function nthWeekday(year,month,weekday,n){ // month 0-11；weekday 0=日；n>=1 为第 n 个，n=-1 为最后一个
+  if(n>0){ const d=new Date(year,month,1); const off=(weekday-d.getDay()+7)%7; return new Date(year,month,1+off+(n-1)*7); }
+  const d=new Date(year,month+1,0); const off=(d.getDay()-weekday+7)%7; return new Date(year,month+1,0-off);
+}
+function usHolidaysFor(dateStr){
+  const y=+dateStr.slice(0,4);
+  const fmt=d=>d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+  const list=[
+    ['元旦',fmt(new Date(y,0,1))],
+    ['马丁·路德·金纪念日',fmt(nthWeekday(y,0,1,3))],
+    ['总统日',fmt(nthWeekday(y,1,1,3))],
+    ['阵亡将士纪念日',fmt(nthWeekday(y,4,1,-1))],
+    ['六月节',fmt(new Date(y,5,19))],
+    ['独立日',fmt(new Date(y,6,4))],
+    ['劳动节',fmt(nthWeekday(y,8,1,1))],
+    ['哥伦布日',fmt(nthWeekday(y,9,1,2))],
+    ['退伍军人节',fmt(new Date(y,10,11))],
+    ['感恩节',fmt(nthWeekday(y,10,4,4))],
+    ['圣诞节',fmt(new Date(y,11,25))],
+  ];
+  return list.filter(x=>x[1]===dateStr).map(x=>x[0]);
+}
 function renderCalendar(){
   const grid=$('calGrid'), title=$('calTitle'); if(!grid||!title) return;
   title.textContent=calYear+'年'+(calMonth+1)+'月';
@@ -882,7 +984,9 @@ function renderCalendar(){
       const c=(typeof sectionColors!=='undefined'&&sectionColors[ownerOf(f)])||DEFAULT_COLORS[ownerOf(f)]||'#2563eb';
       return '<div class="cal-bar" data-flight-id="'+esc(f.id)+'" style="border-left-color:'+esc(c)+';background:'+esc(c)+'22">'+esc(f.flight_no)+'</div>';
     }).join('');
-    html+='<div class="cal-cell'+(dateStr===today?' today':'')+'" data-cal-date="'+esc(dateStr)+'"><div class="cal-num">'+d+'</div>'+bars+'</div>';
+    const wd=['日','一','二','三','四','五','六'][new Date(calYear,calMonth,d).getDay()];
+    const hols=cnHolidaysFor(dateStr).map(n=>'<div class="cal-hol cn">'+esc(n)+'</div>').join('')+usHolidaysFor(dateStr).map(n=>'<div class="cal-hol us">'+esc(n)+'</div>').join('');
+    html+='<div class="cal-cell'+(dateStr===today?' today':'')+'" data-cal-date="'+esc(dateStr)+'"><div class="cal-num">'+d+'</div><div class="cal-wd">周'+wd+'</div>'+hols+bars+'</div>';
   }
   grid.innerHTML=html;
   grid.querySelectorAll('[data-flight-id]').forEach(b=>b.addEventListener('click',e=>{
@@ -907,7 +1011,7 @@ function calGo(delta){
 const primary=t=>sbDb.from(t);
 const rpcFn=(name,args)=>sbDb.rpc(name,args);
 
-/* RPC 返回的当地时间字符串（如 2026-10-17 08:35+08:00）转成表单用的北京时间 */
+/* RPC 返回的带时区时间字符串（如 2026-10-17 08:35+08:00）转成表单用的北京时间 */
 function rpcTimeToBjInput(v){
   if(!v) return '';
   let s=String(v).trim().replace(/^(\d{4}-\d{2}-\d{2})[ ](\d{2}:\d{2})/,'$1T$2');
@@ -1262,7 +1366,7 @@ async function handleOcrFile(file){
 }
 
 /* ===== 生活页（翻转框架；与航班页共用登录态，不读写航班库） ===== */
-let lifeMapTried=false, lifeMap=null, lifeMarkers=null;
+let lifeMapTried=false, lifeMap=null, lifeMarkers=null, lifeMarkerById={};
 let lifeMemories=[], lifeEditingId=null, lifeFormType=null, lifeFormFiles=[], lifeFormExisting=[], lifeFormRemoved=[], lifeFormRatings={pilot:null,attendant:null}, lifeSignedCache={}, lifeLoaded=false;
 const LIFE_TITLES={album:'日常相册',food:'美食',travel:'旅行足迹',timeline:'时光轴',wishlist:'愿望单'};
 const RATING_TIERS=[{v:'拉完了',c:'#94a3b8'},{v:'npc',c:'#64748b'},{v:'人上人',c:'#16a34a'},{v:'顶级',c:'#ca8a04'},{v:'夯',c:'#c026d3'}];
@@ -1270,8 +1374,8 @@ const ratingColor=v=>(RATING_TIERS.find(t=>t.v===v)||{}).c||'#64748b';
 function ratingTag(role,v){ if(!v) return ''; return '<span class="life-rating-tag" style="background:'+ratingColor(v)+'">'+(role==='pilot'?'👨🏿‍✈️ ':'👩🏻‍🦱 ')+esc(v)+'</span>'; }
 function buildNavLinks(name,addr){
   const kw=[String(name||'').trim(),String(addr||'').trim()].filter(Boolean).join(' ');
-  if(!kw) return {amap:'',baidu:''};
-  return {amap:'https://uri.amap.com/search?keyword='+encodeURIComponent(kw), baidu:'https://api.map.baidu.com/place/search?query='+encodeURIComponent(kw)+'&region=全国'};
+  if(!kw) return {baidu:''};
+  return {baidu:'https://api.map.baidu.com/place/search?query='+encodeURIComponent(kw)+'&region=全国'};
 }
 function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 async function compressImage(file){
@@ -1324,8 +1428,8 @@ function lifeFormHtml(){
     h+='<div id="lifeNavPreview" style="margin-top:6px"></div>';
     h+='<label>菜品照片</label><input type="file" id="lifePhotoInput" accept="image/*" multiple>';
     h+='<div id="lifePhotoPreview" class="life-photo-grid"></div>';
-    h+='<label>👨🏿‍✈️ 评分</label><div class="life-rating-row" id="lifeRatePilot"></div>';
-    h+='<label>👩🏻‍🦱 评分</label><div class="life-rating-row" id="lifeRateAttendant"></div>';
+    h+='<label>👨🏿‍✈️ 评分'+(myRole==='pilot'?'':'（对方，仅展示）')+'</label><div class="life-rating-row" id="lifeRatePilot"></div>';
+    h+='<label>👩🏻‍🦱 评分'+(myRole==='attendant'?'':'（对方，仅展示）')+'</label><div class="life-rating-row" id="lifeRateAttendant"></div>';
     h+='<label>一句点评</label><textarea id="lifeNote">'+esc(val('note'))+'</textarea>';
     h+='<label>日期</label><input type="date" id="lifeDate" value="'+esc(dateVal)+'">';
   }else if(t==='travel'){
@@ -1360,14 +1464,19 @@ function lifeRenderPhotoPreview(){
 }
 function lifeRenderRatingRow(elId,role){
   const el=$(elId); if(!el) return;
-  el.innerHTML=RATING_TIERS.map(t=>'<button type="button" class="life-rating-chip'+(lifeFormRatings[role]===t.v?' on':'')+'" data-rate="'+esc(t.v)+'">'+esc(t.v)+'</button>').join('');
-  el.querySelectorAll('[data-rate]').forEach(b=>b.addEventListener('click',()=>{ const v=b.dataset.rate; lifeFormRatings[role]=(lifeFormRatings[role]===v?null:v); lifeRenderRatingRow(elId,role); }));
+  const editable=role===myRole; // 对方的评分只做展示，不可点
+  if(editable){
+    el.innerHTML=RATING_TIERS.map(t=>'<button type="button" class="life-rating-chip'+(lifeFormRatings[role]===t.v?' on':'')+'" data-rate="'+esc(t.v)+'">'+esc(t.v)+'</button>').join('');
+    el.querySelectorAll('[data-rate]').forEach(b=>b.addEventListener('click',()=>{ const v=b.dataset.rate; lifeFormRatings[role]=(lifeFormRatings[role]===v?null:v); lifeRenderRatingRow(elId,role); }));
+  }else{
+    el.innerHTML=RATING_TIERS.map(t=>'<span class="life-rating-chip readonly'+(lifeFormRatings[role]===t.v?' on':'')+'">'+esc(t.v)+'</span>').join('');
+  }
 }
 function lifeUpdateNavPreview(){
   const box=$('lifeNavPreview'); if(!box) return;
   const name=$('lifeTitle')?$('lifeTitle').value:'', addr=$('lifeAddr')?$('lifeAddr').value:'';
   const links=buildNavLinks(name,addr);
-  box.innerHTML=(links.amap?'<a class="life-nav-btn life-nav-amap" href="'+esc(links.amap)+'" target="_blank" rel="noopener">高德导航</a><a class="life-nav-btn life-nav-baidu" href="'+esc(links.baidu)+'" target="_blank" rel="noopener">百度导航</a>':'<span class="muted" style="font-size:12px">输入餐厅名后自动生成导航链接</span>');
+  box.innerHTML=(links.baidu?'<a class="life-nav-btn life-nav-baidu" href="'+esc(links.baidu)+'" target="_blank" rel="noopener">百度导航</a>':'<span class="muted" style="font-size:12px">输入餐厅名后自动生成导航链接</span>');
 }
 function openLifeForm(type,existingId){
   lifeFormType=type; lifeEditingId=existingId||null;
@@ -1393,6 +1502,7 @@ async function saveLifeMemory(){
   const t=lifeFormType, fm=$('lifeFormMsg');
   const get=id=>{ const e=$(id); return e?e.value.trim():''; };
   const title=get('lifeTitle'), note=get('lifeNote'), place=get('lifePlace'), addr=get('lifeAddr'), date=get('lifeDate')||null;
+  if(t==='album'&&!lifeFormFiles.length&&!lifeFormExisting.length&&!note) return msg(fm,'请至少选一张照片或写一句配文。');
   if(t==='food'&&!title) return msg(fm,'餐厅名称不能为空。');
   if(t==='travel'&&!place) return msg(fm,'地点名称不能为空。');
   if(t==='timeline'&&!title) return msg(fm,'标题不能为空。');
@@ -1407,15 +1517,25 @@ async function saveLifeMemory(){
       if(error) throw new Error('照片上传失败：'+(error.message||error));
       paths.push(path);
     }
-    const row={type:t,title:title||place||null,note:note||null,place_name:place||null,photo_urls:paths,memory_date:date||null,rating_pilot:null,rating_attendant:null,nav_amap:null,nav_baidu:null,lat:null,lng:null,done:false};
-    if(t==='food'){ const links=buildNavLinks(title,addr); row.nav_amap=links.amap||null; row.nav_baidu=links.baidu||null; row.rating_pilot=lifeFormRatings.pilot; row.rating_attendant=lifeFormRatings.attendant; }
+    const row={type:t,title:title||place||null,note:note||null,place_name:place||null,photo_urls:paths,memory_date:date||null,rating_pilot:null,rating_attendant:null,nav_baidu:null,lat:null,lng:null,done:false};
+    if(t==='food'){ const links=buildNavLinks(title,addr); row.nav_baidu=links.baidu||null;
+      // 双方独立打分：只写自己这一侧的评分，绝不碰对方的字段
+      if(myRole==='pilot') row.rating_pilot=lifeFormRatings.pilot;
+      else if(myRole==='attendant') row.rating_attendant=lifeFormRatings.attendant;
+    }
     if(t==='travel'){ const g=await geocodePlace(place); if(g){ row.lat=g.lat; row.lng=g.lng; } }
     if(t==='wishlist'){ row.done=false; }
     let saved=null;
     if(lifeEditingId){
       const prev=lifeMemories.find(x=>x.id===lifeEditingId);
       if(prev) row.done=!!prev.done; // 编辑不重置愿望完成状态
+      // 编辑时若新值为空，保留旧坐标/旧导航（地理编码失败时不把原有坐标清掉）
+      if(prev&&row.lat==null){ row.lat=prev.lat; row.lng=prev.lng; }
+      if(prev&&t!=='food'&&row.nav_baidu==null) row.nav_baidu=prev.nav_baidu;
+      // 编辑美食时不带对方评分字段，绝不覆盖对方评分
+      if(t==='food'){ if(myRole==='pilot') delete row.rating_attendant; else if(myRole==='attendant') delete row.rating_pilot; }
       row.updated_at=new Date().toISOString();
+      const {data,error}=await sbDb.from('life_memories').update(row).eq('id',lifeEditingId).select().single();
       if(error) throw error; saved=data;
     }else{
       row.added_by=myRole;
@@ -1441,6 +1561,7 @@ async function loadLifeMemories(){
 async function delLifeMemory(id){
   const rec=lifeMemories.find(x=>x.id===id); if(!rec) return;
   if(!confirm('确认删除这条“'+(rec.title||rec.place_name||'生活记录')+'”？')) return;
+  if(!confirm('删除后无法恢复，确定删除？')) return;
   const {error}=await sbDb.from('life_memories').delete().eq('id',id);
   if(error){ msg($('lifeMsg'), friendlyErr(error,'删除生活记录')); return; }
   if(rec.photo_urls&&rec.photo_urls.length){ try{ await sbDb.storage.from('life-photos').remove(rec.photo_urls); }catch(e){ msg($('lifeMsg'),'记录已删，但照片清理失败，可忽略。',true); } }
@@ -1457,74 +1578,90 @@ function lifeBindCardButtons(scope){
   scope.querySelectorAll('[data-life-edit]').forEach(b=>b.addEventListener('click',()=>openLifeForm(lifeMemories.find(x=>x.id===b.dataset.lifeEdit)?.type||'album',b.dataset.lifeEdit)));
   scope.querySelectorAll('[data-life-del]').forEach(b=>b.addEventListener('click',()=>delLifeMemory(b.dataset.lifeDel)));
   scope.querySelectorAll('[data-life-wish]').forEach(b=>b.addEventListener('click',()=>toggleLifeWish(b.dataset.lifeWish)));
+  scope.querySelectorAll('[data-travel-focus]').forEach(card=>card.addEventListener('click',e=>{ if(e.target.closest('button')) return; focusTravel(card.dataset.travelFocus); }));
 }
+function setLifeCount(id,txt){ const el=$(id); if(el) el.textContent=txt; }
 async function renderLifeAll(){
   const byType=t=>lifeMemories.filter(x=>x.type===t);
-  const emptyHtml=t=>'<div class="life-empty">还没有'+LIFE_TITLES[t]+'，点 + 添加第一条</div>';
+  const LIFE_EMPTY_TIP={album:['📸','还没有照片','把今天的日常拍下来，点 + 添加第一条'],food:['🍜','还没吃过一家','吃到好吃的就记下来，点 + 添加第一家'],travel:['🗺️','还没留下足迹','去过的地方点 + 记下来，地图上会落图钉'],timeline:['🕰️','还没有时光记录','值得记住的时刻，点 + 写下第一条'],wishlist:['📝','愿望单还是空的','想一起做的事，点 + 写下第一个愿望']};
+  const emptyHtml=t=>{ const e=LIFE_EMPTY_TIP[t]||['','还没有内容','点 + 添加第一条']; return '<div class="life-empty"><div class="life-empty-ico">'+e[0]+'</div><div>'+e[1]+'</div><div class="muted" style="margin-top:4px">'+e[2]+'</div></div>'; };
   // 相册：瀑布流（Between 相册分类 + 照片墙瀑布流）
   {
     const el=$('lifeList-album'), items=byType('album');
+    setLifeCount('lifeCount-album', items.length?('共 '+items.reduce((n,x)=>n+(x.photo_urls||[]).length,0)+' 张 · '+items.length+' 条'):'');
     if(!items.length){ el.innerHTML=emptyHtml('album'); }
     else{
       const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
       el.innerHTML='<div class="life-wall">'+items.map(rec=>{
-        const imgs=(rec.photo_urls||[]).map(p=>signed[p]?'<img src="'+esc(signed[p])+'" alt="">':'').join('');
+        const imgs=(rec.photo_urls||[]).map((p,i)=>signed[p]?'<img src="'+esc(signed[p])+'" alt="" data-life-photo="'+esc(rec.id)+'" data-life-photo-idx="'+i+'" style="cursor:zoom-in">':'').join('');
         return '<div class="life-wall-item">'+imgs+'<div class="cap">'+(rec.note?esc(rec.note)+'<br>':'')+'<span class="life-meta">'+esc(rec.memory_date||'')+(rec.place_name?' · '+esc(rec.place_name):'')+'</span>'+lifeCardButtons(rec)+'</div></div>';
       }).join('')+'</div>';
     }
     lifeBindCardButtons(el);
+    el.querySelectorAll('[data-life-photo]').forEach(img=>img.addEventListener('click',()=>openLifeLightbox(img.dataset.lifePhoto,+img.dataset.lifePhotoIdx)));
   }
-  // 美食：菜品级记录 + 双人评分 + 一键导航（Savor 菜品级评分 + Tabelog 收藏备注 + 地图导航）
+  // 美食：菜品级记录 + 双人评分左右并排 + 百度导航（Savor 菜品级评分 + Tabelog 收藏备注 + 地图导航）
   {
     const el=$('lifeList-food'), items=byType('food');
+    setLifeCount('lifeCount-food', items.length?('共 '+items.length+' 家'):'');
     if(!items.length){ el.innerHTML=emptyHtml('food'); }
     else{
       const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
       el.innerHTML=items.map(rec=>{
         const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
-        const navHtml=(rec.nav_amap?'<a class="life-nav-btn life-nav-amap" href="'+esc(rec.nav_amap)+'" target="_blank" rel="noopener">高德导航</a>':'')+(rec.nav_baidu?'<a class="life-nav-btn life-nav-baidu" href="'+esc(rec.nav_baidu)+'" target="_blank" rel="noopener">百度导航</a>':'');
-        return '<div class="life-card"><b>'+esc(rec.title||'')+'</b><div class="life-meta">'+esc(rec.memory_date||'')+'</div>'+imgHtml+'<div>'+ratingTag('pilot',rec.rating_pilot)+ratingTag('attendant',rec.rating_attendant)+'</div>'+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+'<div>'+navHtml+'</div>'+lifeCardButtons(rec)+'</div>';
+        const navHtml=(rec.nav_baidu?'<a class="life-nav-btn life-nav-baidu" href="'+esc(rec.nav_baidu)+'" target="_blank" rel="noopener">百度导航</a>':'');
+        const rateCell=(role,v)=>'<div><div class="life-meta">'+(role==='pilot'?'👨🏿‍✈️ 评分':'👩🏻‍🦱 评分')+'</div><div style="margin-top:4px">'+(v?ratingTag(role,v):'<span class="muted" style="font-size:12px">未评分</span>')+'</div></div>';
+        return '<div class="life-card"><b>'+esc(rec.title||'')+'</b><div class="life-meta">'+esc(rec.memory_date||'')+'</div>'+imgHtml+'<div class="life-rate-cols">'+rateCell('pilot',rec.rating_pilot)+rateCell('attendant',rec.rating_attendant)+'</div>'+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+'<div>'+navHtml+'</div>'+lifeCardButtons(rec)+'</div>';
       }).join('');
     }
     lifeBindCardButtons(el);
   }
-  // 旅行足迹：列表 + 地图图钉（Polarsteps 地图日记：地点 + 照片 + 备注钉在地图上）
+  // 旅行足迹：列表 + 地图图钉，点列表卡片地图定位到该点（Polarsteps 地图日记：地点 + 照片 + 备注钉在地图上）
   {
     const el=$('lifeList-travel'), items=byType('travel');
+    setLifeCount('lifeCount-travel', items.length?('共 '+items.length+' 个地点'):'');
     if(!items.length){ el.innerHTML=emptyHtml('travel'); }
     else{
       const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
       el.innerHTML=items.map(rec=>{
         const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
-        return '<div class="life-card"><b>📍 '+esc(rec.place_name||rec.title||'')+'</b><div class="life-meta">'+esc(rec.memory_date||'')+'</div>'+imgHtml+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+lifeCardButtons(rec)+'</div>';
+        return '<div class="life-card" data-travel-focus="'+esc(rec.id)+'" style="cursor:pointer"><b>📍 '+esc(rec.place_name||rec.title||'')+'</b><div class="life-meta">'+esc(rec.memory_date||'')+'</div>'+imgHtml+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+'<div class="muted" style="font-size:12px;margin-top:4px">点卡片在地图上定位</div>'+lifeCardButtons(rec)+'</div>';
       }).join('');
     }
     lifeBindCardButtons(el);
     renderTravelMarkers();
   }
-  // 时光轴（Between 按事件归档 + 时光轴汇总）
+  // 时光轴（Between 按事件归档 + 时光轴汇总，按年/月分组）
   {
     const el=$('lifeList-timeline'), items=byType('timeline');
+    setLifeCount('lifeCount-timeline', items.length?('共 '+items.length+' 条'):'');
     if(!items.length){ el.innerHTML=emptyHtml('timeline'); }
     else{
       const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
-      el.innerHTML='<div class="life-timeline">'+items.map(rec=>{
-        const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
-        return '<div class="tl-item"><b>'+esc(rec.memory_date||'')+'</b> '+esc(rec.title||'')+'<div class="life-meta">'+esc(rec.note||'')+'</div>'+imgHtml+lifeCardButtons(rec)+'</div>';
-      }).join('')+'</div>';
+      let groups={}; for(const rec of items){ const k=(rec.memory_date||'').slice(0,7)||'未标注日期'; (groups[k]=groups[k]||[]).push(rec); }
+      const groupHtml=Object.keys(groups).sort().reverse().map(k=>{
+        const label=k==='未标注日期'?'未标注日期':(k.slice(0,4)+'年'+(+k.slice(5,7))+'月');
+        return '<div class="muted" style="font-weight:700;color:var(--ink);margin:10px 0 6px">'+esc(label)+'</div><div class="life-timeline">'+groups[k].map(rec=>{
+          const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
+          return '<div class="tl-item"><b>'+esc(rec.memory_date||'')+'</b> '+esc(rec.title||'')+'<div class="life-meta">'+esc(rec.note||'')+'</div>'+imgHtml+lifeCardButtons(rec)+'</div>';
+        }).join('')+'</div>';
+      }).join('');
+      el.innerHTML=groupHtml;
     }
     lifeBindCardButtons(el);
   }
-  // 愿望单：完成进度 + 打勾变灰（情侣愿望清单 + 完成进度）
+  // 愿望单：完成进度条 + 打勾更明显（情侣愿望清单 + 完成进度）
   {
     const el=$('lifeList-wishlist'), items=byType('wishlist');
+    setLifeCount('lifeCount-wishlist', items.length?('共 '+items.length+' 个愿望'):'');
     if(!items.length){ el.innerHTML=emptyHtml('wishlist'); }
     else{
       const doneCount=items.filter(x=>x.done).length;
+      const pct=items.length?Math.round(doneCount/items.length*100):0;
       const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
-      el.innerHTML='<div class="life-meta" style="margin-bottom:8px">已完成 '+doneCount+' / '+items.length+'</div>'+items.map(rec=>{
+      el.innerHTML='<div class="life-meta">已完成 '+doneCount+' / '+items.length+' · '+pct+'%</div><div class="wish-bar"><div class="wish-bar-fill" style="width:'+pct+'%"></div></div>'+items.map(rec=>{
         const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
-        return '<div class="life-card'+(rec.done?' life-wish-done':'')+'"><span class="wish-text">'+esc(rec.title||'')+'</span>'+imgHtml+'<div class="row" style="gap:8px;margin-top:8px"><button class="ghost small" type="button" data-life-wish="'+esc(rec.id)+'">'+(rec.done?'✓ 已完成，点按取消':'○ 标记完成')+'</button></div>'+lifeCardButtons(rec)+'</div>';
+        return '<div class="life-card'+(rec.done?' life-wish-done':'')+'"><span class="wish-text">'+esc(rec.title||'')+'</span>'+imgHtml+'<div class="row" style="gap:8px;margin-top:8px"><button class="ghost" type="button" style="padding:8px 14px;font-weight:700" data-life-wish="'+esc(rec.id)+'">'+(rec.done?'✓ 已完成，点按取消':'○ 标记完成')+'</button></div>'+lifeCardButtons(rec)+'</div>';
       }).join('');
     }
     lifeBindCardButtons(el);
@@ -1533,16 +1670,55 @@ async function renderLifeAll(){
 async function renderTravelMarkers(){
   if(!lifeMap||!window.L) return;
   try{
-    if(!lifeMarkers){ lifeMarkers=L.layerGroup().addTo(lifeMap); } else lifeMarkers.clearLayers();
+    if(!lifeMarkers){ lifeMarkers=L.layerGroup().addTo(lifeMap); } else { lifeMarkers.clearLayers(); lifeMarkerById={}; }
     const items=lifeMemories.filter(x=>x.type==='travel'&&x.lat!=null&&x.lng!=null);
     for(const rec of items){
       const img=(rec.photo_urls||[])[0]; const signedImg=img?await signLifeUrl(img):'';
       const popup='<b>'+esc(rec.place_name||rec.title||'')+'</b><br>'+esc(rec.memory_date||'')+(signedImg?'<br><img src="'+esc(signedImg)+'" style="width:120px;border-radius:8px;margin-top:4px">':'');
-      L.marker([rec.lat,rec.lng]).bindPopup(popup).addTo(lifeMarkers);
+      const mk=L.marker([rec.lat,rec.lng]).bindPopup(popup).addTo(lifeMarkers);
+      lifeMarkerById[rec.id]=mk;
     }
     if(items.length){ try{ lifeMap.fitBounds(L.latLngBounds(items.map(x=>[x.lat,x.lng])).pad(0.4)); }catch(e){} }
   }catch(e){ /* 地图图钉失败不阻塞列表 */ }
 }
+/* 旅行足迹：点列表卡片 → 地图定位到该点并打开气泡 */
+function focusTravel(id){
+  const rec=lifeMemories.find(x=>x.id===id); if(!rec) return;
+  const mapEl=$('lifeMap'); if(mapEl) mapEl.scrollIntoView({behavior:'smooth',block:'center'});
+  if(rec.lat==null||rec.lng==null){ msg($('lifeMsg'),'这条足迹没有坐标，无法在地图上定位。'); return; }
+  if(!lifeMap){ if(!lifeMapTried){ lifeMapTried=true; initLifeMap(); } msg($('lifeMsg'),'地图加载中，加载完再点一次即可定位。',true); return; }
+  try{ lifeMap.setView([rec.lat,rec.lng],13); const mk=lifeMarkerById[id]; if(mk) mk.openPopup(); }catch(e){ msg($('lifeMsg'),'地图定位失败。'); }
+}
+/* 相册灯箱：点图放大，点空白关闭，可删 */
+let lifeLb={recId:null,idx:0,urls:[]};
+function openLifeLightbox(recId,idx){
+  const rec=lifeMemories.find(x=>x.id===recId); if(!rec) return;
+  lifeLb.recId=recId; lifeLb.idx=idx||0; lifeLb.urls=[];
+  $('lifeLightbox').classList.remove('hidden');
+  (async()=>{
+    for(const p of (rec.photo_urls||[])){ const u=await signLifeUrl(p); if(u) lifeLb.urls.push(u); }
+    if(lifeLb.idx>=lifeLb.urls.length) lifeLb.idx=Math.max(0,lifeLb.urls.length-1);
+    lifeLbShow();
+  })();
+}
+function lifeLbShow(){
+  const rec=lifeMemories.find(x=>x.id===lifeLb.recId);
+  const img=$('lifeLbImg'), cap=$('lifeLbCap');
+  if(!lifeLb.urls.length){ if(img) img.src=''; if(cap) cap.textContent='照片加载失败，请关闭后重试'; }
+  else{
+  if(img) img.src=lifeLb.urls[lifeLb.idx]||'';
+  if(cap) cap.textContent=(rec?((rec.note||'')+' · '+(rec.memory_date||'')+(rec.place_name?' · '+rec.place_name:'')):'')+'（'+(lifeLb.idx+1)+' / '+lifeLb.urls.length+'）';
+  }
+  const prev=$('lifeLbPrev'), next=$('lifeLbNext');
+  if(prev) prev.style.visibility=lifeLb.idx>0?'visible':'hidden';
+  if(next) next.style.visibility=lifeLb.idx<lifeLb.urls.length-1?'visible':'hidden';
+}
+function closeLifeLightbox(){ $('lifeLightbox').classList.add('hidden'); }
+$('lifeLightbox').addEventListener('click',e=>{ if(e.target.id==='lifeLightbox') closeLifeLightbox(); });
+$('lifeLbClose').addEventListener('click',closeLifeLightbox);
+$('lifeLbPrev').addEventListener('click',()=>{ if(lifeLb.idx>0){ lifeLb.idx--; lifeLbShow(); } });
+$('lifeLbNext').addEventListener('click',()=>{ if(lifeLb.idx<lifeLb.urls.length-1){ lifeLb.idx++; lifeLbShow(); } });
+$('lifeLbDel').addEventListener('click',async()=>{ const id=lifeLb.recId; closeLifeLightbox(); if(id) await delLifeMemory(id); });
 function setLife(on){
   const f=$('viewFlights'), l=$('viewLife');
   if(!f||!l) return;
@@ -1699,14 +1875,6 @@ function initColors(){
   $('colorAttendant').addEventListener('input',e=>saveMyColor(e.target.value));
 }
 
-/* ===== 时间显示切换（本地持久化） ===== */
-function applyTimeMode(){
-  $('tmBj').classList.toggle('on', timeMode==='bj');
-  $('tmLocal').classList.toggle('on', timeMode==='local');
-}
-$('tmBj').addEventListener('click',()=>{ timeMode='bj'; localStorage.setItem('ourflights.timeMode','bj'); applyTimeMode(); renderFlights(); });
-$('tmLocal').addEventListener('click',()=>{ timeMode='local'; localStorage.setItem('ourflights.timeMode','local'); applyTimeMode(); renderFlights(); });
-
 /* ===== 当日天气（右上角 chip；定位只用于本次天气请求，不存坐标、不发给 Supabase、不写入航班） ===== */
 let wxAttempted=false, wxFetching=false;
 const WX_KEY='ourflights.weather';
@@ -1725,8 +1893,7 @@ function wxMap(code){
 }
 function wxChipText(d){
   const m=wxMap(d.code);
-  const city=d.city?'<span class="wx-city"> · '+esc(d.city)+'</span>':'';
-  return m.icon+' '+Math.round(d.temp)+'° '+m.label+city;
+  return '<span class="wx-ico">'+m.icon+'</span><span class="wx-tmp">'+Math.round(d.temp)+'°</span>';
 }
 function wxFromCache(){
   try{ const c=JSON.parse(localStorage.getItem(WX_KEY)||'null'); if(c&&c.ts&&(Date.now()-c.ts)<30*60000&&typeof c.temp==='number') return c; }catch(e){}
@@ -1754,10 +1921,10 @@ async function refreshWeather(force){
   if(!force&&wxAttempted) return; // 自动尝试只做一次，之后等用户点按重试
   wxAttempted=true; wxFetching=true;
   try{
-    el.textContent='⌛ 获取天气…';
+    el.innerHTML='<span class="wx-ico">⌛</span><span class="wx-tmp">…</span>';
     let pos;
     try{ pos=await getPosition(); }
-    catch(e){ el.textContent='📍 点我获取天气'; return; } // 定位被拒/不可用
+    catch(e){ el.innerHTML='<span class="wx-ico">📍</span><span class="wx-tmp">--°</span>'; return; } // 定位被拒/不可用
     try{
       const res=await fetchWithTimeout('https://api.open-meteo.com/v1/forecast?latitude='+pos.lat+'&longitude='+pos.lon+'&current=temperature_2m,weather_code&timezone=auto',10000);
       if(!res.ok) throw new Error('天气接口 HTTP '+res.status);
@@ -1771,12 +1938,12 @@ async function refreshWeather(force){
       const data={ts:Date.now(), temp:cur.temperature_2m, code:cur.weather_code, city};
       try{ localStorage.setItem(WX_KEY, JSON.stringify(data)); }catch(e){}
       el.innerHTML=wxChipText(data);
-    }catch(e){ el.textContent='天气暂不可用'; } // 接口失败，点按重试
+    }catch(e){ el.innerHTML='<span class="wx-ico">--</span><span class="wx-tmp">--°</span>'; } // 接口失败，点按重试
   }finally{ wxFetching=false; }
 }
 
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-17-14-batch-delete';
+const APP_VERSION='2026-10-18-15-life-polish';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
@@ -1898,7 +2065,7 @@ function initWcForm(){
 
 /* ===== 启动：先修配置，再决定进哪个视图（建客户端最多等 12 秒，超时也先出登录页，不白屏） ===== */
 async function boot(){
-  tickClock(); initWcForm(); initColors(); applyTimeMode();
+  tickClock(); initWcForm(); initColors();
   $('fDate').value=todayBj();
   show('viewLoading');
   loadDynamicAirports(); // 后台拉动态机场库，不阻塞首屏
