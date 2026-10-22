@@ -58,7 +58,7 @@ button:disabled{opacity:.55}
 .life-form input[type=text],.life-form input[type=date],.life-form textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:14px;background:#fff;box-sizing:border-box}
 .life-form textarea{min-height:56px;resize:vertical}
 .life-photo-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-.life-photo-thumb{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;background:#eef2f7}
+.life-photo-thumb{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;background:#eef2f7}
 .life-photo-thumb img{width:100%;height:100%;object-fit:cover}
 .life-photo-thumb button{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:12px;cursor:pointer}
 .life-wall{columns:2;column-gap:10px}
@@ -402,10 +402,26 @@ html[data-theme="day"] .cal-wd{color:#64748b}
 /* ===== 2026-10-22-22 相册：微信朋友圈式紧凑 3 列网格 ===== */
 .life-wall{display:flex;flex-direction:column;gap:10px;columns:auto}
 .life-wall-item{break-inside:avoid;margin-bottom:0}
-.life-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:2px 0 6px}
+.life-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:2px 0 6px;max-width:84%}
 .life-grid3 img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;cursor:zoom-in;display:block}
 .life-grid3.single{grid-template-columns:1fr;max-width:68%}
 .life-grid3.single img{aspect-ratio:auto;max-height:46vh;border-radius:14px}
+/* ===== 2026-10-22-29 生活页评论区 ===== */
+.life-cmt{margin-top:8px;border-top:1px dashed var(--line);padding-top:6px}
+.life-cmt-toggle{font-size:13px}
+.life-cmt-thread{margin-top:6px}
+.life-cmt-item{padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.life-cmt-item:last-child{border-bottom:none}
+.life-cmt-head{display:flex;align-items:center;gap:6px;font-size:12px}
+.life-cmt-head .life-meta{flex:1}
+.life-cmt-ops button{background:none;border:none;color:var(--sub);font-size:12px;cursor:pointer;padding:2px 4px}
+.life-cmt-ops button:hover{color:var(--ink)}
+.life-cmt-body{margin-top:2px;word-break:break-word}
+.life-cmt-inputrow{display:flex;gap:6px;margin-top:6px}
+.life-cmt-inputrow input{flex:1;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:14px;background:var(--bg,#fff);box-sizing:border-box;min-width:0}
+.life-cmt-err{color:#dc2626;font-size:12px;margin-top:4px}
+.life-cmt-editrow{display:flex;gap:6px;margin-top:4px}
+.life-cmt-editrow input{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:13px;min-width:0;box-sizing:border-box}
 /* ===== 2026-10-22-22 地址自动补全下拉 ===== */
 .geo-ac-wrap{position:relative}
 .geo-ac{position:absolute;top:100%;left:0;right:0;z-index:80;background:#0d1730;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 12px 32px rgba(2,8,20,.28);margin-top:4px;max-height:240px;overflow-y:auto}
@@ -974,6 +990,8 @@ function tickClock(){
   }
 }
 setInterval(tickClock,1000);
+/* 2026-10-22-29 hero 每 60 秒自动重算（航班起飞/落地时自动切换，无需刷新） */
+setInterval(function(){ try{ if(!$('viewMain').classList.contains('hidden')&&$('viewFlights')&&!$('viewFlights').classList.contains('hidden')) renderNextFlightHero(); }catch(e){} },60000);
 
 /* ===== 世界时钟（本地 localStorage 持久化） ===== */
 const WC_KEY='ourflights.worldClocks';
@@ -1068,27 +1086,65 @@ function overlapBadge(f){
 }
 let lastSeenMine=0;
 /* ===== 2026-10-22-24 即将起飞 hero + 飞行统计（纯本地计算，不编造数据） ===== */
-function nextUpcomingFlight(){
+/* ===== 2026-10-22-29 hero 实时化：只看自己；飞行中 > 即将起飞 > 最近飞行；60s 自动重算；点击跳转对应卡片 ===== */
+function heroFlight(){
+  const mine=(flights||[]).filter(f=>f&&flightStatsMine(f));
+  if(!mine.length) return null;
+  const now=new Date();
+  const rows=mine.map(f=>{
+    const dep=f.dep_time?new Date(f.dep_time):null, arr=f.arr_time?new Date(f.arr_time):null;
+    return {f:f, dep:(dep&&!isNaN(dep))?dep:null, arr:(arr&&!isNaN(arr))?arr:null};
+  });
+  const flying=rows.filter(x=>x.dep&&x.arr&&x.dep<=now&&now<=x.arr).sort((a,b)=>a.arr-b.arr);
+  if(flying.length) return {f:flying[0].f, state:'flying', dep:flying[0].dep, arr:flying[0].arr};
+  const upcoming=rows.filter(x=>x.dep&&x.dep>now).sort((a,b)=>a.dep-b.dep);
+  if(upcoming.length) return {f:upcoming[0].f, state:'soon', dep:upcoming[0].dep, arr:upcoming[0].arr};
   const today=todayBj();
-  const cands=(flights||[]).filter(f=>f&&f.flight_date&&f.flight_date>=today);
-  cands.sort((a,b)=>String(a.flight_date).localeCompare(String(b.flight_date))||String(a.dep_time||'').localeCompare(String(b.dep_time||'')));
-  return cands[0]||null;
+  const noTime=rows.filter(x=>!x.dep&&x.f.flight_date&&x.f.flight_date>=today).sort((a,b)=>String(a.f.flight_date).localeCompare(String(b.f.flight_date)));
+  if(noTime.length) return {f:noTime[0].f, state:'soon', dep:null, arr:null};
+  const past=rows.slice().sort((a,b)=>String(b.f.flight_date||'').localeCompare(String(a.f.flight_date||''))||String(b.f.dep_time||'').localeCompare(String(a.f.dep_time||'')));
+  return {f:past[0].f, state:'past', dep:past[0].dep, arr:past[0].arr};
+}
+function heroLiveText(h){
+  const now=new Date();
+  const dur=function(ms){ const m=Math.max(0,Math.floor(ms/60000)); const hh=Math.floor(m/60), mm=m%60, dd=Math.floor(hh/24); if(dd>0) return dd+'天'+(hh%24)+'小时'; if(hh>0) return hh+'小时'+mm+'分'; return mm+'分'; };
+  if(h.state==='flying'&&h.dep) return '已飞行 '+dur(now-h.dep);
+  if(h.state==='soon'&&h.dep) return '还有 '+dur(h.dep-now)+' 起飞';
+  return null;
 }
 function renderNextFlightHero(){
   const el=$('nextFlightHero'); if(!el) return;
-  const f=nextUpcomingFlight();
-  if(!f){ el.classList.add('hidden'); el.innerHTML=''; return; }
-  const st=flightStatus(f), cd=flightCountdown(f);
+  const h=heroFlight();
+  if(!h){ el.classList.add('hidden'); el.innerHTML=''; el.onclick=null; el.style.cursor=''; return; }
+  const f=h.f, st=flightStatus(f);
   const depCode=resolveCode(f.dep_code), arrCode=resolveCode(f.arr_code);
   const dep=displayTime(f.dep_time,depCode), arr=displayTime(f.arr_time,arrCode);
-  const who=ownerOf(f)==='pilot'?'👨🏿‍✈️ 他的':'👩🏻‍🦱 她的';
-  const cdCls=cd==='今天飞'?'today':cd==='明天飞'?'tomorrow':'future';
+  const kicker=h.state==='flying'?'🛫 飞行中':(h.state==='past'?'🛬 最近飞行':'✈️ 即将起飞');
+  const live=heroLiveText(h);
+  const cd=live||flightCountdown(f);
+  const cdCls=cd==='今天飞'?'today':(cd==='明天飞'?'tomorrow':((cd==='已过去'||h.state==='past')?'done':'future'));
   el.classList.remove('hidden');
-  el.innerHTML='<div class="hero-kicker">✈️ 即将起飞 · '+who+'</div>'
+  el.style.cursor='pointer'; el.title='点击定位到这张航班卡';
+  el.innerHTML='<div class="hero-kicker">'+kicker+'</div>'
     +'<div class="hero-fno">'+esc(f.flight_no||'')+' <span class="badge '+st.key+'">'+st.label+'</span></div>'
     +'<div class="hero-route">'+esc(depCode||'')+(arrCode?' → '+esc(arrCode):'')+'</div>'
     +'<div class="hero-times">'+esc(dep.t||'')+(arr.t?' → '+esc(arr.t):'')+(f.flight_date?' · '+esc(f.flight_date):'')+'</div>'
     +'<div class="hero-cd"><span class="count-pill '+cdCls+'">'+esc(cd)+'</span></div>';
+  el.onclick=function(){ heroJumpToFlight(); };
+}
+function heroJumpToFlight(){
+  const h=heroFlight(); if(!h) return;
+  const f=h.f, role=ownerOf(f);
+  setLife(false); // 确保在航班页
+  if(f.flight_date&&f.flight_date<todayBj()&&!pastExpanded[role]){ pastExpanded[role]=true; renderFlights(); }
+  setTimeout(function(){
+    const card=document.getElementById('flight-'+f.id);
+    if(!card) return;
+    card.scrollIntoView({behavior:'smooth',block:'center'});
+    card.classList.add('form-flash');
+    clearTimeout(card.__flashT);
+    card.__flashT=setTimeout(function(){ card.classList.remove('form-flash'); },1600);
+  },80);
 }
 function bjHourOf(iso){
   if(!iso) return null;
@@ -1221,6 +1277,8 @@ function bpEnd(code,city,t,tag,align){
   h+='</div>';
   return h;
 }
+/* ===== 2026-10-22-29 删除权限：只能删自己的航班；对方 added_by 的航班不渲染删除按钮/勾选框；legacy null 共同记录双方可删 ===== */
+function canDelFlight(f){ const a=f&&f.added_by; if(a==null) return true; return ownerOf(f)===myRole; }
 function flightCard(f){
   const st=flightStatus(f);
   const depCode=resolveCode(f.dep_code), arrCode=resolveCode(f.arr_code); // 渲染兜底：旧记录若存的是城市名，在此反查为码
@@ -1237,7 +1295,7 @@ function flightCard(f){
   if(f.aircraft) metaBits.push(esc(f.aircraft));
   if(dur) metaBits.push('飞行时长 '+esc(dur));
   return '<div class="flight'+(batchMode&&batchSelected.has(f.id)?' batch-selected':'')+'" id="flight-'+esc(f.id)+'" style="border-top-color:'+esc(roleColor)+'">'
-    +'<div>'+(batchMode?'<label class="batch-check"><input type="checkbox" data-batch-check="'+esc(f.id)+'"'+(batchSelected.has(f.id)?' checked':'')+' aria-label="选中这张航班卡"></label>':'')+'<span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+st.key+'">'+st.label+'</span>'+overlapBadge(f)+(isNew?'<span class="badge new">新</span>':'')+'</div>'
+    +'<div>'+(batchMode?(canDelFlight(f)?'<label class="batch-check"><input type="checkbox" data-batch-check="'+esc(f.id)+'"'+(batchSelected.has(f.id)?' checked':'')+' aria-label="选中这张航班卡"></label>':''):'')+'<span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+st.key+'">'+st.label+'</span>'+overlapBadge(f)+(isNew?'<span class="badge new">新</span>':'')+'</div>'
     +'<div class="flight-meta">'
     +(isPastCard?'<span class="card-date">'+esc(f.flight_date)+'</span>':'')
     +'<span class="count-pill '+cdCls+'">'+esc(cd)+'</span>'
@@ -1247,7 +1305,7 @@ function flightCard(f){
     +'<div class="bp-dash"><span>✈️</span></div>'
     +bpEnd(arrCode,arrCity,arr.t,arr.tag,true)+'</div>'
     +(f.note?'<div class="muted" style="margin-top:4px">备注：'+esc(f.note)+'</div>':'')
-    +'<div class="ops"><button class="ghost small" data-edit="'+esc(f.id)+'">编辑</button>'+(batchMode?'':'<button class="danger small" data-del="'+esc(f.id)+'">删除</button>')+'</div>'
+    +'<div class="ops"><button class="ghost small" data-edit="'+esc(f.id)+'">编辑</button>'+((!batchMode&&canDelFlight(f))?'<button class="danger small" data-del="'+esc(f.id)+'">删除</button>':'')+'</div>'
     +'</div>';
 }
 function scrollToForm(){
@@ -1278,14 +1336,18 @@ function exitBatchMode(render=true){
   $('btnBatchMode').textContent='🗑️ 批量删除';
   if(render) renderFlights();
 }
+function batchDeletable(){ return (flights||[]).filter(f=>canDelFlight(f)); } // 批量删除只针对可删的（自己的 + null 共同记录）
 function updateBatchBar(){
   $('batchCount').textContent=batchSelected.size;
   const del=$('btnBatchDel');
   del.textContent='删除所选 ('+batchSelected.size+')';
   del.disabled=batchSelected.size===0||batchDeleting;
-  $('btnBatchAll').textContent=(flights.length>0&&batchSelected.size===flights.length)?'取消全选':'全选';
+  const n=batchDeletable().length;
+  $('btnBatchAll').textContent=(n>0&&batchSelected.size===n)?'取消全选':'全选';
 }
 function toggleBatch(id){
+  const f=(flights||[]).find(x=>x.id===id);
+  if(f&&!canDelFlight(f)) return; // 对方的航班不可勾选（防御）
   if(batchSelected.has(id)) batchSelected.delete(id); else batchSelected.add(id);
   const card=document.getElementById('flight-'+id);
   if(card){
@@ -1296,8 +1358,9 @@ function toggleBatch(id){
   updateBatchBar();
 }
 function toggleBatchAll(){
-  if(flights.length>0&&batchSelected.size===flights.length) batchSelected.clear();
-  else flights.forEach(f=>batchSelected.add(f.id));
+  const ds=batchDeletable();
+  if(ds.length>0&&batchSelected.size===ds.length) batchSelected.clear();
+  else ds.forEach(f=>batchSelected.add(f.id));
   renderFlights();
   updateBatchBar();
 }
@@ -1306,7 +1369,8 @@ async function delBatch(){
   const n=batchSelected.size;
   if(!confirm('确定删除选中的 '+n+' 张航班卡吗？删除后无法恢复。')) return;
   batchDeleting=true; updateBatchBar();
-  const ids=[...batchSelected];
+  const ids=[...batchSelected].filter(id=>{ const f=(flights||[]).find(x=>x.id===id); return f&&canDelFlight(f); }); // 防御：只删可删的
+  if(!ids.length){ batchDeleting=false; exitBatchMode(false); await loadFlights(); return; }
   let ok=0, fail=0;
   for(const id of ids){
     const {error}=await primary('our_flights').delete().eq('id',id);
@@ -2101,7 +2165,9 @@ async function loadLifeMemories(){
   try{
     const {data,error}=await sbDb.from('life_memories').select('*').order('memory_date',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false});
     if(error) throw error;
-    lifeMemories=data||[]; lifeLoaded=true; await renderLifeAll();
+    lifeMemories=data||[]; lifeLoaded=true;
+    await loadLifeComments(); // 先拉评论（表不存在则静默失败，评论区隐藏）
+    await renderLifeAll();
   }catch(e){
     msg($('lifeMsg'),'生活记录暂未开通（数据库表还没建好，跑完 SQL 即可使用）：'+friendlyErr(e,'加载生活记录'));
   }
@@ -2152,13 +2218,159 @@ function lifeBindCardButtons(scope){
   scope.querySelectorAll('[data-travel-focus]').forEach(card=>card.addEventListener('click',e=>{ if(e.target.closest('button,a')) return; focusTravel(card.dataset.travelFocus); }));
 }
 function setLifeCount(id,txt){ const el=$(id); if(el) el.textContent=txt; }
+/* ===== 2026-10-22-29 生活页评论：life_comments 表；双方互见；只能删/改自己的评论 =====
+   注意：表需先在 Supabase SQL Editor 跑 life-comments-migration.sql 建好（含 RLS + 显式 GRANT）；
+   表不存在时评论区静默隐藏，不影响生活页其他功能。 */
+let lifeComments=[], lifeCommentsOk=false;
+const lifeCmtOpen=new Set(); // 展开中的评论区 entry_id
+function lifeCommentCounts(){ const m={}; for(const c of lifeComments){ const k=String(c.entry_id); m[k]=(m[k]||0)+1; } return m; }
+async function loadLifeComments(){
+  if(!sbDb) return;
+  const ids=lifeMemories.map(x=>x.id).filter(Boolean);
+  if(!ids.length){ lifeComments=[]; lifeCommentsOk=false; return; }
+  try{
+    const {data,error}=await sbDb.from('life_comments').select('id,module,entry_id,added_by,body,created_at').in('entry_id',ids).order('created_at',{ascending:true});
+    if(error) throw error;
+    lifeComments=data||[]; lifeCommentsOk=true;
+  }catch(e){ if(!lifeCommentsOk) lifeComments=[]; /* 表还没建或网络失败：保留已有数据，评论区静默不可用 */ }
+}
+function lifeCommentSecHtml(rec){
+  if(!lifeCommentsOk) return '';
+  return '<div class="life-cmt" data-life-cmtsec="'+esc(rec.id)+'"></div>';
+}
+function lifeCmtRoleName(a){ return a==='pilot'?'👨🏿‍✈️ 他':(a==='attendant'?'👩🏻‍🦱 她':'🤝'); }
+function lifeCommentListHtml(entryId){
+  const list=lifeComments.filter(c=>String(c.entry_id)===String(entryId));
+  if(!list.length) return '<div class="muted" style="font-size:12px;padding:4px 0">还没有评论，来抢沙发</div>';
+  return list.map(c=>{
+    const mine=c.added_by===myRole;
+    const ops=mine?'<span class="life-cmt-ops"><button type="button" data-cmt-edit="'+esc(c.id)+'">编辑</button><button type="button" data-cmt-del="'+esc(c.id)+'">删除</button></span>':'';
+    const when=c.created_at?esc(String(c.created_at).slice(0,16).replace('T',' ')):'';
+    return '<div class="life-cmt-item" data-cmt-id="'+esc(c.id)+'"><div class="life-cmt-head"><b>'+lifeCmtRoleName(c.added_by)+'</b><span class="life-meta">'+when+'</span>'+ops+'</div><div class="life-cmt-body">'+esc(c.body||'')+'</div></div>';
+  }).join('');
+}
+function renderLifeCommentSecs(scope){
+  const counts=lifeCommentCounts();
+  (scope||document).querySelectorAll('[data-life-cmtsec]').forEach(sec=>{
+    const id=sec.getAttribute('data-life-cmtsec');
+    const n=counts[id]||0, open=lifeCmtOpen.has(id);
+    sec.innerHTML='<button type="button" class="ghost small life-cmt-toggle">💬 评论'+(n?'（'+n+'）':'')+'</button>'
+      +'<div class="life-cmt-thread'+(open?'':' hidden')+'"><div class="life-cmt-list">'+lifeCommentListHtml(id)+'</div>'
+      +'<div class="life-cmt-err" style="display:none"></div>'
+      +'<div class="life-cmt-inputrow"><input type="text" maxlength="200" placeholder="写条评论…" aria-label="写条评论"><button type="button" class="ghost small">发送</button></div></div>';
+  });
+}
+function updateLifeCommentCounts(){
+  const counts=lifeCommentCounts();
+  document.querySelectorAll('[data-life-cmtsec]').forEach(sec=>{
+    const n=counts[sec.getAttribute('data-life-cmtsec')]||0;
+    const t=sec.querySelector('.life-cmt-toggle');
+    if(t) t.textContent='💬 评论'+(n?'（'+n+'）':'');
+  });
+}
+function refreshLifeCommentList(entryId){
+  document.querySelectorAll('[data-life-cmtsec]').forEach(sec=>{
+    if(sec.getAttribute('data-life-cmtsec')!==String(entryId)) return;
+    const list=sec.querySelector('.life-cmt-list');
+    if(list) list.innerHTML=lifeCommentListHtml(entryId);
+  });
+  updateLifeCommentCounts();
+}
+async function refreshLifeCommentsQuiet(){ // 打开生活页时静默刷新评论（对方新评论能及时看到）
+  if(!lifeLoaded||!sbDb) return;
+  await loadLifeComments();
+  if(!lifeCommentsOk) return;
+  document.querySelectorAll('[data-life-cmtsec]').forEach(sec=>{
+    const list=sec.querySelector('.life-cmt-list');
+    if(list) list.innerHTML=lifeCommentListHtml(sec.getAttribute('data-life-cmtsec'));
+  });
+  updateLifeCommentCounts();
+}
+function lifeCmtErr(sec,text){ const e=sec.querySelector('.life-cmt-err'); if(e){ e.textContent=text; e.style.display=text?'':'none'; } }
+async function sendLifeComment(sec){
+  const id=sec.getAttribute('data-life-cmtsec');
+  const inp=sec.querySelector('.life-cmt-inputrow input');
+  const body=(inp.value||'').trim();
+  if(!body) return;
+  lifeCmtErr(sec,'');
+  const btn=sec.querySelector('.life-cmt-inputrow button'); if(btn) btn.disabled=true;
+  try{
+    const rec=lifeMemories.find(x=>String(x.id)===String(id));
+    const {data,error}=await primary('life_comments').insert({module:rec?rec.type:'', entry_id:id, added_by:myRole, body:body}).select('id,module,entry_id,added_by,body,created_at');
+    if(error) throw error;
+    if(data&&data[0]) lifeComments.push(data[0]);
+    inp.value='';
+    lifeCmtOpen.add(id);
+    refreshLifeCommentList(id);
+  }catch(e){ lifeCmtErr(sec,'发送失败：'+friendlyErr(e,'发送评论')); }
+  if(btn) btn.disabled=false;
+}
+async function delLifeComment(cid,sec){
+  const c=lifeComments.find(x=>String(x.id)===String(cid));
+  if(!c||c.added_by!==myRole) return; // 只能删自己的（防御）
+  if(!confirm('删除这条评论？')) return;
+  try{
+    const {error}=await primary('life_comments').delete().eq('id',cid);
+    if(error) throw error;
+    lifeComments=lifeComments.filter(x=>String(x.id)!==String(cid));
+    refreshLifeCommentList(c.entry_id);
+  }catch(e){ lifeCmtErr(sec,'删除失败：'+friendlyErr(e,'删除评论')); }
+}
+function editLifeComment(cid,sec){
+  const c=lifeComments.find(x=>String(x.id)===String(cid));
+  if(!c||c.added_by!==myRole) return; // 只能改自己的（防御）
+  const item=sec.querySelector('[data-cmt-id="'+cid+'"]');
+  const bodyEl=item?item.querySelector('.life-cmt-body'):null;
+  if(!item||!bodyEl||item.querySelector('.life-cmt-editrow')) return;
+  const row=document.createElement('div');
+  row.className='life-cmt-editrow';
+  row.innerHTML='<input type="text" maxlength="200" aria-label="编辑评论"><button type="button" class="ghost small">保存</button><button type="button" class="ghost small">取消</button>';
+  const inp=row.querySelector('input'); inp.value=c.body||'';
+  bodyEl.style.display='none'; item.appendChild(row);
+  const btns=row.querySelectorAll('button');
+  btns[0].addEventListener('click',function(){
+    const v=inp.value.trim();
+    row.remove(); bodyEl.style.display='';
+    if(!v||v===c.body) return;
+    primary('life_comments').update({body:v}).eq('id',cid).then(function(r){
+      if(r.error){ lifeCmtErr(sec,'保存失败：'+friendlyErr(r.error,'编辑评论')); return; }
+      c.body=v; refreshLifeCommentList(c.entry_id);
+    });
+  });
+  btns[1].addEventListener('click',function(){ row.remove(); bodyEl.style.display=''; });
+  try{ inp.focus(); }catch(e){}
+}
+function lifeBindComments(scope){
+  (scope||document).querySelectorAll('[data-life-cmtsec]').forEach(sec=>{
+    if(sec.__cmtBound) return; sec.__cmtBound=true;
+    const id=sec.getAttribute('data-life-cmtsec');
+    sec.addEventListener('click',function(e){
+      const t=e.target;
+      const toggle=t.closest?t.closest('.life-cmt-toggle'):null;
+      if(toggle){
+        const th=sec.querySelector('.life-cmt-thread');
+        if(th){ const willOpen=th.classList.contains('hidden'); th.classList.toggle('hidden'); if(willOpen) lifeCmtOpen.add(id); else lifeCmtOpen.delete(id); }
+        return;
+      }
+      const sendBtn=t.closest?t.closest('.life-cmt-inputrow button'):null;
+      if(sendBtn){ sendLifeComment(sec); return; }
+      const ed=t.closest?t.closest('[data-cmt-edit]'):null;
+      if(ed){ editLifeComment(ed.getAttribute('data-cmt-edit'),sec); return; }
+      const dl=t.closest?t.closest('[data-cmt-del]'):null;
+      if(dl){ delLifeComment(dl.getAttribute('data-cmt-del'),sec); return; }
+    });
+    sec.addEventListener('keydown',function(e){
+      if(e.key==='Enter'&&e.target&&e.target.matches&&e.target.matches('.life-cmt-inputrow input')){ e.preventDefault(); sendLifeComment(sec); }
+    });
+  });
+}
 /* ===== 2026-10-22-24 朋友圈式紧凑照片网格（美食/足迹/时光轴共用，点击看大图） ===== */
 function lifePhotoGridHtml(rec,signed){
   const urls=rec.photo_urls||[];
   const paths=urls.filter(p=>signed&&signed[p]);
   if(!paths.length) return '';
   const cls=paths.length===1?'life-grid3 single':'life-grid3';
-  return '<div class="'+cls+'">'+paths.map(p=>'<img src="'+esc(signed[p])+'" alt="" data-life-photo="'+esc(rec.id)+'" data-life-photo-idx="'+urls.indexOf(p)+'">').join('')+'</div>';
+  return '<div class="'+cls+'">'+paths.map(p=>'<img loading="lazy" src="'+esc(signed[p])+'" alt="" data-life-photo="'+esc(rec.id)+'" data-life-photo-idx="'+urls.indexOf(p)+'">').join('')+'</div>';
 }
 function lifeBindPhotoLightbox(scope){
   (scope||document).querySelectorAll('[data-life-photo]').forEach(img=>{
@@ -2180,9 +2392,9 @@ async function renderLifeAll(){
       const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
       el.innerHTML='<div class="life-wall">'+items.map(rec=>{
         const paths=(rec.photo_urls||[]);
-        const imgs=paths.map((p,i)=>signed[p]?'<img src="'+esc(signed[p])+'" alt="" data-life-photo="'+esc(rec.id)+'" data-life-photo-idx="'+i+'" data-life-puzzle-path="'+esc(p)+'">':'').join('');
+        const imgs=paths.map((p,i)=>signed[p]?'<img loading="lazy" src="'+esc(signed[p])+'" alt="" data-life-photo="'+esc(rec.id)+'" data-life-photo-idx="'+i+'" data-life-puzzle-path="'+esc(p)+'">':'').join('');
         const gridCls=paths.length===1?'life-grid3 single':'life-grid3';
-        return '<div class="life-wall-item'+lifeOwnerClass(rec)+'"><div class="cap">'+lifeBadgeHtml(rec)+'<span class="life-meta">'+esc(rec.memory_date||'')+(rec.place_name?' · '+esc(rec.place_name):'')+'</span>'+(rec.note?'<div style="margin-top:4px">'+esc(rec.note)+'</div>':'')+'</div>'+(imgs?'<div class="'+gridCls+'">'+imgs+'</div>':'')+'<div class="cap">'+lifeCardButtons(rec)+'</div></div>';
+        return '<div class="life-wall-item'+lifeOwnerClass(rec)+'"><div class="cap">'+lifeBadgeHtml(rec)+'<span class="life-meta">'+esc(rec.memory_date||'')+(rec.place_name?' · '+esc(rec.place_name):'')+'</span>'+(rec.note?'<div style="margin-top:4px">'+esc(rec.note)+'</div>':'')+'</div>'+(imgs?'<div class="'+gridCls+'">'+imgs+'</div>':'')+'<div class="cap">'+lifeCardButtons(rec)+'</div>'+lifeCommentSecHtml(rec)+'</div>';
       }).join('')+'</div>';
     }
     lifeBindCardButtons(el);
@@ -2191,6 +2403,7 @@ async function renderLifeAll(){
       openLifeLightbox(img.dataset.lifePhoto,+img.dataset.lifePhotoIdx);
     }));
     markPuzzleSelected(el);
+    renderLifeCommentSecs(el); lifeBindComments(el);
   }
   // 美食擂台：按月分组 + 当月双人平均分最高者戴 👑 美食王皇冠
   {
@@ -2215,7 +2428,7 @@ async function renderLifeAll(){
             : '<div class="life-rate-cell is-other">'+inner+'</div>';
         };
         const avg=foodAvg(rec);
-        return '<div class="life-card'+lifeOwnerClass(rec)+'">'+lifeBadgeHtml(rec)+'<b>'+esc(rec.title||'')+'</b>'+(rec.id===kingId?'<span class="food-crown">👑 本月美食王</span>':'')+'<div class="life-meta">'+esc(rec.memory_date||'')+(avg>0?' · ⭐ 平均 '+avg.toFixed(1):'')+'</div>'+imgHtml+'<div class="life-rate-cols">'+rateCell('pilot',rec.rating_pilot)+rateCell('attendant',rec.rating_attendant)+'</div>'+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+'<div>'+navHtml+'</div>'+lifeCardButtons(rec)+'</div>';
+        return '<div class="life-card'+lifeOwnerClass(rec)+'">'+lifeBadgeHtml(rec)+'<b>'+esc(rec.title||'')+'</b>'+(rec.id===kingId?'<span class="food-crown">👑 本月美食王</span>':'')+'<div class="life-meta">'+esc(rec.memory_date||'')+(avg>0?' · ⭐ 平均 '+avg.toFixed(1):'')+'</div>'+imgHtml+'<div class="life-rate-cols">'+rateCell('pilot',rec.rating_pilot)+rateCell('attendant',rec.rating_attendant)+'</div>'+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+'<div>'+navHtml+'</div>'+lifeCardButtons(rec)+lifeCommentSecHtml(rec)+'</div>';
       };
       el.innerHTML=Object.keys(groups).sort().reverse().map(k=>{
         const label=k==='未标注日期'?'未标注日期':(k.slice(0,4)+'年'+(+k.slice(5,7))+'月');
@@ -2224,6 +2437,7 @@ async function renderLifeAll(){
     }
     lifeBindCardButtons(el);
     lifeBindPhotoLightbox(el);
+    renderLifeCommentSecs(el); lifeBindComments(el);
   }
   // 旅行足迹：列表 + 地图图钉 + 各地点按时间连成发光航线；点列表卡片地图定位到该点
   {
@@ -2240,11 +2454,12 @@ async function renderLifeAll(){
         const geoHint=noGeo
           ?'<div class="muted" style="font-size:12px;margin-top:4px">暂无坐标'+(lifeCanEdit(rec)?'，<button class="ghost small life-backfill-btn" type="button" data-travel-backfill="'+esc(rec.id)+'">📍 补坐标</button>':'')+'</div>'
           :'<div class="muted" style="font-size:12px;margin-top:4px">点卡片在地图上定位</div>';
-        return '<div class="life-card'+lifeOwnerClass(rec)+'" data-travel-focus="'+esc(rec.id)+'" style="cursor:pointer">'+lifeBadgeHtml(rec)+'<b>📍 '+esc(rec.place_name||rec.title||'')+'</b><div class="life-meta">'+esc(rec.memory_date||'')+'</div>'+imgHtml+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+geoHint+'<div>'+navHtml+'</div>'+lifeCardButtons(rec)+'</div>';
+        return '<div class="life-card'+lifeOwnerClass(rec)+'" data-travel-focus="'+esc(rec.id)+'" style="cursor:pointer">'+lifeBadgeHtml(rec)+'<b>📍 '+esc(rec.place_name||rec.title||'')+'</b><div class="life-meta">'+esc(rec.memory_date||'')+'</div>'+imgHtml+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+geoHint+'<div>'+navHtml+'</div>'+lifeCardButtons(rec)+lifeCommentSecHtml(rec)+'</div>';
       }).join('');
     }
     lifeBindCardButtons(el);
     lifeBindPhotoLightbox(el);
+    renderLifeCommentSecs(el); lifeBindComments(el);
     renderTravelMarkers();
   }
   // 双人时间线：两条并行色带（蓝=他，粉=她），事件按 added_by 落在各自色带上，一眼看出是谁的
@@ -2260,12 +2475,13 @@ async function renderLifeAll(){
       const bothItems=items.filter(x=>lifeOwnerOf(x)===null).sort(byDate);
       const mini=rec=>{
         const imgHtml=lifePhotoGridHtml(rec,signed);
-        return '<div class="life-card'+lifeOwnerClass(rec)+'" style="margin-bottom:8px"><div class="life-meta">'+esc(rec.memory_date||'')+(rec.place_name?' · 📍 '+esc(rec.place_name):'')+'</div><b>'+esc(rec.title||'')+'</b>'+(rec.note?'<div style="margin-top:4px;font-size:13px">'+esc(rec.note)+'</div>':'')+imgHtml+lifeCardButtons(rec)+'</div>';
+        return '<div class="life-card'+lifeOwnerClass(rec)+'" style="margin-bottom:8px"><div class="life-meta">'+esc(rec.memory_date||'')+(rec.place_name?' · 📍 '+esc(rec.place_name):'')+'</div><b>'+esc(rec.title||'')+'</b>'+(rec.note?'<div style="margin-top:4px;font-size:13px">'+esc(rec.note)+'</div>':'')+imgHtml+lifeCardButtons(rec)+lifeCommentSecHtml(rec)+'</div>';
       };
       el.innerHTML=(bothItems.length?'<div class="muted" style="font-weight:700;color:var(--ink);margin:6px 0">🤝 共同</div>'+bothItems.map(mini).join(''):'')+'<div class="tl-lanes"><div class="tl-lane pilot"><h4>👨🏿‍✈️ 他的时光</h4>'+(pilotItems.map(mini).join('')||'<div class="muted" style="font-size:12px">还没有</div>')+'</div><div class="tl-lane attendant"><h4>👩🏻‍🦱 她的时光</h4>'+(attItems.map(mini).join('')||'<div class="muted" style="font-size:12px">还没有</div>')+'</div></div>';
     }
     lifeBindCardButtons(el);
     lifeBindPhotoLightbox(el);
+    renderLifeCommentSecs(el); lifeBindComments(el);
   }
 }
 /* ===== 2026-10-22-26 坐标系：记录存的是 WGS-84（Nominatim 地理编码 / 旧地图点选），高德瓦片是 GCJ-02 =====
@@ -2436,6 +2652,7 @@ function setLife(on){
   }
   $('viewMain').classList.toggle('on-life', !!on);
   window.scrollTo(0,0);
+  if(on) refreshLifeCommentsQuiet(); // 打开生活页时静默刷新评论
 }
 function loadLeaflet(){
   return new Promise((res,rej)=>{
@@ -2613,6 +2830,7 @@ function startEdit(id){
 }
 async function delFlight(id){
   const f=flights.find(x=>x.id===id);
+  if(!f||!canDelFlight(f)) return; // 对方的航班不可删（防御：按钮已不渲染）
   if(!confirm('确认删除航班 '+(f?f.flight_no:'')+'？')) return;
   const {error}=await primary('our_flights').delete().eq('id',id);
   if(error){ msg($('listMsg'), friendlyErr(error,'删除航班')); return; }
@@ -2753,7 +2971,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-22-28-v28';
+const APP_VERSION='2026-10-22-29-v29';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
