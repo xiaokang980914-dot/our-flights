@@ -140,6 +140,12 @@ html[data-theme="day"] .life-rating-chip.on{border-color:#1e3a8a;background:#1e3
 .flight .ops{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .grid2>div{min-width:0}
+/* ===== 2026-10-22-28：添加航班表单紧凑化（仅 #formCard，纯视觉收紧；input 字号保持 16px 防 iOS 聚焦缩放） ===== */
+#formCard{padding:10px 12px}
+#formCard label{font-size:12px;margin:7px 0 3px}
+#formCard input{padding:7px 9px}
+#formCard .grid2{gap:6px}
+#formCard button{padding:8px 12px;font-size:14px}
 h2.view-title{font-size:22px;margin:6px 0 2px}
 /* 右上角图标区：天气 chip + 版本更新圆钮 + 同步圆钮（随顶栏吸顶，不再 fixed 覆盖时钟） */
 .top-icons{display:flex;align-items:center;gap:6px;flex:0 0 auto}
@@ -591,16 +597,16 @@ html.theming .life-fchip,html.theming .life-modal-box{transition:background-colo
     <input id="fNo" type="text" autocomplete="off" placeholder="如 CZ659" style="text-transform:uppercase">
     <label for="fDate">日期</label>
     <input id="fDate" type="date">
-    <button id="btnLookup" style="width:100%;margin-top:12px">查询并自动填充</button>
-    <div id="lookupMsg"></div>
-    <div class="row" style="margin-top:10px">
+    <div class="row" style="margin-top:8px">
+      <button id="btnLookup" class="grow">查询并自动填充</button>
       <button id="btnOcr" type="button" class="ghost grow">📷 截图识别</button>
       <input id="ocrFile" type="file" accept="image/*" class="hidden">
     </div>
+    <div id="lookupMsg"></div>
     <div id="ocrMsg"></div>
     <div id="ocrCandidates"></div>
-    <details id="ocrRawBox" class="hidden" style="margin-top:10px"><summary>识别原文（对照用，已去掉证件/签到等行）</summary><pre id="ocrRawText" style="white-space:pre-wrap;font-size:12px;color:#475569"></pre></details>
-    <div class="grid2">
+    <details id="ocrRawBox" class="hidden" style="margin-top:8px"><summary>识别原文（对照用，已去掉证件/签到等行）</summary><pre id="ocrRawText" style="white-space:pre-wrap;font-size:12px;color:#475569"></pre></details>
+    <div class="grid2" style="margin-top:8px">
       <div><label for="fDep">出发三字码</label><input id="fDep" type="text" maxlength="4" style="text-transform:uppercase" placeholder="CAN"></div>
       <div><label for="fArr">到达三字码</label><input id="fArr" type="text" maxlength="4" style="text-transform:uppercase" placeholder="SFO"></div>
       <div><label for="fDepT">出发时间（北京时间）</label><input id="fDepT" type="datetime-local"></div>
@@ -608,7 +614,7 @@ html.theming .life-fchip,html.theming .life-modal-box{transition:background-colo
       <div><label for="fAc">机型</label><input id="fAc" type="text" placeholder="如 B777"></div>
       <div><label for="fNote">备注</label><input id="fNote" type="text" placeholder="可空"></div>
     </div>
-    <div class="row" style="margin-top:12px">
+    <div class="row" style="margin-top:8px">
       <button id="btnSaveFlight" class="grow">保存航班</button>
       <button id="btnCancelEdit" class="ghost hidden">取消编辑</button>
     </div>
@@ -2747,7 +2753,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-22-27-v27';
+const APP_VERSION='2026-10-22-28-v28';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
