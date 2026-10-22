@@ -71,7 +71,6 @@ button:disabled{opacity:.55}
 .life-rating-tag{display:inline-block;border-radius:999px;padding:2px 8px;font-size:12px;margin-right:4px;color:#fff}
 .life-nav-btn{display:inline-block;border-radius:999px;padding:6px 12px;font-size:13px;margin:4px 6px 0 0;text-decoration:none;color:#fff}
 .life-nav-baidu{background:#16a34a}
-.life-wish-done{opacity:.55}.life-wish-done .wish-text{text-decoration:line-through}
 .life-timeline{border-left:3px solid #e2e8f0;margin-left:6px;padding-left:14px}
 .life-timeline .tl-item{position:relative;padding-bottom:14px}
 .life-timeline .tl-item:before{content:'';position:absolute;left:-21px;top:5px;width:10px;height:10px;border-radius:50%;background:#db2777;border:2px solid #fff;box-shadow:0 0 0 2px #e2e8f0}
@@ -250,8 +249,6 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 .life-empty-ico{font-size:34px;margin-bottom:8px}
 .life-rate-cols{display:flex;gap:10px;margin:6px 0}
 .life-rate-cols>div{flex:1;background:#f8fafc;border-radius:10px;padding:8px;min-width:0}
-.wish-bar{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin:6px 0}
-.wish-bar-fill{height:100%;background:linear-gradient(90deg,#f6c453,#f472b6);border-radius:4px}
 .life-lightbox{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
 .life-lightbox img{max-width:100%;max-height:78vh;border-radius:12px;object-fit:contain}
 .life-lightbox .lb-cap{color:#fff;font-size:13px;margin-top:10px;text-align:center}
@@ -312,7 +309,6 @@ button.ghost{background:#14224a;color:#9dbcff}
 .life-rate-cols>div{background:#0a1226}
 .card{box-shadow:0 1px 3px rgba(0,0,0,.35)}
 .card-date{color:#f2f6ff}
-.wish-bar{background:#22314f}
 .life-timeline{border-left-color:#22314f}
 .life-timeline .tl-item:before{border-color:#0d1730;box-shadow:0 0 0 2px #22314f}
 @media (prefers-reduced-motion:reduce){#splash{animation:none;opacity:0;visibility:hidden}.wx-ticker-track{animation:none}#bgFx .bg-aurora{animation:none}}
@@ -336,12 +332,45 @@ html[data-theme="day"] .past-stack-head{background:#eef2fb}
 html[data-theme="day"] .life-rate-cols>div{background:#f8fafc}
 html[data-theme="day"] .card{box-shadow:0 1px 3px rgba(20,40,80,.08)}
 html[data-theme="day"] .card-date{color:#111}
-html[data-theme="day"] .wish-bar{background:#e2e8f0}
 html[data-theme="day"] .life-timeline{border-left-color:#e2e8f0}
 html[data-theme="day"] .life-timeline .tl-item:before{border-color:#fff;box-shadow:0 0 0 2px #e2e8f0}
 html[data-theme="day"] .wx-ticker{background:rgba(255,255,255,.72);border-color:rgba(37,99,235,.22);box-shadow:inset 0 0 18px rgba(37,99,235,.06)}
 html[data-theme="day"] .wx-ticker-chunk{color:#33507e}
 html[data-theme="day"] .wx-ticker-chunk b{color:#16233f}
+/* ===== 2026-10-22-22 生活页顶部模块 tab：白天/夜间强制可读（显式色值，不依赖变量级联） ===== */
+.life-tabs .life-tab{background:#0d1730;color:#e9f0ff;border-color:#22314f;font-weight:500}
+.life-tabs .life-tab.on{background:#1e3a8a;border-color:#1e3a8a;color:#fff;font-weight:600}
+html[data-theme="day"] .life-tabs .life-tab{background:#fff;color:#16233f;border-color:#c9d8ef}
+html[data-theme="day"] .life-tabs .life-tab.on{background:#1e3a8a;border-color:#1e3a8a;color:#fff}
+/* ===== 2026-10-22-22 相册：微信朋友圈式紧凑 3 列网格 ===== */
+.life-wall{display:flex;flex-direction:column;gap:10px;columns:auto}
+.life-wall-item{break-inside:avoid;margin-bottom:0}
+.life-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:2px 0 6px}
+.life-grid3 img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;cursor:zoom-in;display:block}
+.life-grid3.single{grid-template-columns:1fr;max-width:68%}
+.life-grid3.single img{aspect-ratio:auto;max-height:46vh;border-radius:14px}
+/* ===== 2026-10-22-22 地址自动补全下拉 ===== */
+.geo-ac-wrap{position:relative}
+.geo-ac{position:absolute;top:100%;left:0;right:0;z-index:80;background:#0d1730;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 12px 32px rgba(2,8,20,.28);margin-top:4px;max-height:240px;overflow-y:auto}
+html[data-theme="day"] .geo-ac{background:#fff;box-shadow:0 12px 32px rgba(20,40,80,.14)}
+.geo-ac-item{padding:9px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--line);color:var(--ink)}
+.geo-ac-item:last-child{border-bottom:none}
+.geo-ac-item:active{background:rgba(37,99,235,.14)}
+.geo-ac-item .sub{display:block;font-size:11px;color:var(--sub);margin-top:2px}
+/* ===== 2026-10-22-22 美食评分：卡片上直接点评 ===== */
+.life-rate-cell{cursor:pointer;border-radius:8px}
+.life-rate-cell:active{transform:scale(.97)}
+.life-rate-hint{font-size:11px;color:var(--sub)}
+.life-rate-modal-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0}
+/* ===== 2026-10-22-22 足迹/时光轴：地图点选 picker ===== */
+.life-pickmap{height:220px;border-radius:12px;margin-top:8px;border:1px solid var(--line);z-index:1}
+.life-geo-status{font-size:12px;margin-top:6px;color:var(--sub)}
+.life-geo-status.ok{color:#16a34a}
+.life-geo-status.bad{color:#dc2626}
+.life-map-tools{position:absolute;top:10px;right:10px;z-index:500;display:flex;gap:6px}
+.life-map-tools button{background:rgba(13,23,48,.85);color:#e9f0ff;border:1px solid rgba(125,211,252,.3);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer}
+html[data-theme="day"] .life-map-tools button{background:rgba(255,255,255,.92);color:#16233f;border-color:rgba(37,99,235,.3)}
+.life-backfill-btn{margin-top:8px}
 /* ===== 主题切换悬浮按钮（左下角，不遮挡右下角＋按钮） ===== */
 .theme-toggle{position:fixed;left:16px;bottom:20px;z-index:60;width:44px;height:44px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1;background:rgba(13,23,48,.72);border:1px solid rgba(125,211,252,.28);box-shadow:0 4px 14px rgba(0,0,0,.35);backdrop-filter:blur(4px);cursor:pointer}
 .theme-toggle:active{transform:scale(.92)}
@@ -364,13 +393,7 @@ img.puzzle-sel{outline:3px solid #f6c453!important;outline-offset:-3px}
 .life-modal.hidden{display:none}
 .life-modal-box{background:#0d1730;border-radius:14px;padding:16px;max-width:440px;width:100%;max-height:88vh;overflow:auto}
 html[data-theme="day"] .life-modal-box{background:#fff}
-.gacha-stage{text-align:center;padding:22px 0}
-.gacha-ball{width:84px;height:84px;margin:0 auto;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fde68a,#f59e0b 55%,#b45309);box-shadow:0 8px 22px rgba(245,158,11,.45);animation:gachaShake .45s ease-in-out infinite}
-@keyframes gachaShake{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-9px) rotate(-14deg)}75%{transform:translateX(9px) rotate(14deg)}}
-.gacha-reveal{text-align:center;padding:8px 0}
-.gacha-wish{font-size:20px;font-weight:800;margin:10px 0}
 .food-crown{display:inline-block;background:linear-gradient(135deg,#f6c453,#f59e0b);color:#3a2a00;font-size:11px;font-weight:800;border-radius:999px;padding:2px 10px;margin-left:6px;vertical-align:middle}
-.wish-doing{display:inline-block;background:#7c3aed;color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;margin-left:6px;vertical-align:middle}
 .tl-lanes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
 .tl-lane{border-radius:12px;padding:8px;min-width:0;background:rgba(127,140,170,.07)}
 .tl-lane.pilot{border-top:3px solid #2563eb}
@@ -378,7 +401,7 @@ html[data-theme="day"] .life-modal-box{background:#fff}
 .tl-lane>h4{margin:2px 0 8px;font-size:13px}
 .route-anim{animation:routeDash 1.1s linear infinite}
 @keyframes routeDash{to{stroke-dashoffset:-36}}
-@media (prefers-reduced-motion:reduce){.gacha-ball,.route-anim{animation:none}}
+@media (prefers-reduced-motion:reduce){.route-anim{animation:none}}
 html.theming .life-fchip,html.theming .life-modal-box{transition:background-color .35s ease,color .35s ease,border-color .35s ease}
 </style>
 <!-- ===== 加载视图（默认先显示，避免组件没拉到时白屏） ===== -->
@@ -563,7 +586,6 @@ html.theming .life-fchip,html.theming .life-modal-box{transition:background-colo
   <button class="life-tab" type="button" data-life-tab="food">美食</button>
   <button class="life-tab" type="button" data-life-tab="travel">旅行足迹</button>
   <button class="life-tab" type="button" data-life-tab="timeline">时光轴</button>
-  <button class="life-tab" type="button" data-life-tab="wishlist">愿望单</button>
 </div>
 <div id="lifeMsg"></div>
 <div id="lifeFormCard" class="card hidden"></div>
@@ -598,13 +620,6 @@ html.theming .life-fchip,html.theming .life-modal-box{transition:background-colo
     <div id="lifeList-timeline"></div>
   </div>
 </div>
-<div class="life-panel hidden" data-life-panel="wishlist">
-  <div class="card">
-    <div class="row"><b>📝 愿望单 <span class="muted" id="lifeCount-wishlist" style="font-size:12px;font-weight:400"></span></b><span class="grow"></span><button class="ghost small" type="button" id="lifeGachaBtn">🎰 扭蛋抽一个</button><button class="ghost small" type="button" data-life-add="wishlist">＋ 添加</button></div>
-    <div class="life-filter" data-life-filter="wishlist"></div>
-    <div id="lifeList-wishlist"></div>
-  </div>
-</div>
 
   </div><!-- /viewLife -->
   <div id="roleOverlay" class="role-overlay hidden">
@@ -619,19 +634,30 @@ html.theming .life-fchip,html.theming .life-modal-box{transition:background-colo
   </div>
 </div>
 </div><!-- /wrap -->
-<div id="lifeGachaModal" class="life-modal hidden">
-  <div class="life-modal-box">
-    <h3 style="margin:0 0 8px;text-align:center">🎰 心愿扭蛋机</h3>
-    <div id="lifeGachaBody"></div>
-    <div class="row" style="gap:8px;margin-top:12px;justify-content:center"><button id="lifeGachaAgain" class="ghost" type="button">再抽一次</button><button id="lifeGachaClose" class="ghost" type="button">关闭</button></div>
-  </div>
-</div>
 <div id="lifePuzzleModal" class="life-modal hidden">
   <div class="life-modal-box">
     <h3 style="margin:0 0 8px;text-align:center">🧩 双人拼图</h3>
     <img id="lifePuzzlePreview" alt="" style="width:100%;border-radius:10px;display:block">
     <label style="display:block;font-size:13px;margin:10px 0 4px">配文</label><textarea id="lifePuzzleNote" style="width:100%;box-sizing:border-box"></textarea>
     <div class="row" style="gap:8px;margin-top:12px"><button id="lifePuzzleSave" class="ghost grow" type="button">保存为拼图记录</button><button id="lifePuzzleModalClose" class="ghost grow" type="button">取消</button></div>
+  </div>
+</div>
+<div id="lifeRateModal" class="life-modal hidden">
+  <div class="life-modal-box">
+    <h3 id="lifeRateModalTitle" style="margin:0 0 4px;text-align:center">打分</h3>
+    <div class="muted" style="text-align:center;font-size:12px">双方都可以打分，互不覆盖</div>
+    <div id="lifeRateModalList" class="life-rate-modal-list"></div>
+    <div class="row" style="gap:8px;margin-top:4px;justify-content:center"><button id="lifeRateModalClose" class="ghost" type="button">关闭</button></div>
+  </div>
+</div>
+<div id="lifeBackfillModal" class="life-modal hidden">
+  <div class="life-modal-box">
+    <h3 id="lifeBackfillTitle" style="margin:0 0 4px;text-align:center">补坐标</h3>
+    <div class="muted" style="text-align:center;font-size:12px">在地图上点一下这条足迹的位置</div>
+    <div id="lifeBackfillMap" class="life-pickmap"></div>
+    <div id="lifeBackfillStatus" class="life-geo-status"></div>
+    <div id="lifeBackfillMsg"></div>
+    <div class="row" style="gap:8px;margin-top:12px"><button id="lifeBackfillSave" class="ghost grow" type="button">保存坐标</button><button id="lifeBackfillClose" class="ghost grow" type="button">取消</button></div>
   </div>
 </div>
 <div id="lifeLightbox" class="life-lightbox hidden">
@@ -648,6 +674,8 @@ html.theming .life-fchip,html.theming .life-modal-box{transition:background-colo
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function msg(el,text,ok){ el.innerHTML=text?('<div class="'+(ok?'okmsg':'err')+'">'+esc(text)+'</div>'):''; }
+/* 2026-10-22-22 破图兜底：生活区图片加载失败时直接隐藏，不显示破图图标 */
+document.addEventListener('error',function(e){ const t=e.target; if(t&&t.tagName==='IMG'&&t.closest&&t.closest('#viewLife')){ t.style.display='none'; } },true);
 
 /* 粘贴进来的值常混入空格/换行/不可见字符，进请求头会直接网络层失败，先彻底清洗 */
 function clean(v){
@@ -1553,7 +1581,7 @@ async function handleOcrFile(file){
 /* ===== 生活页（翻转框架；与航班页共用登录态，不读写航班库） ===== */
 let lifeMapTried=false, lifeMap=null, lifeMarkers=null, lifeMarkerById={};
 let lifeMemories=[], lifeEditingId=null, lifeFormType=null, lifeFormFiles=[], lifeFormExisting=[], lifeFormRemoved=[], lifeFormRatings={pilot:null,attendant:null}, lifeSignedCache={}, lifeLoaded=false;
-const LIFE_TITLES={album:'日常相册',food:'美食',travel:'旅行足迹',timeline:'时光轴',wishlist:'愿望单'};
+const LIFE_TITLES={album:'日常相册',food:'美食',travel:'旅行足迹',timeline:'时光轴'};
 const RATING_TIERS=[{v:'拉完了',c:'#94a3b8'},{v:'npc',c:'#64748b'},{v:'人上人',c:'#16a34a'},{v:'顶级',c:'#ca8a04'},{v:'夯',c:'#c026d3'}];
 const ratingColor=v=>(RATING_TIERS.find(t=>t.v===v)||{}).c||'#64748b';
 function ratingTag(role,v){ if(!v) return ''; return '<span class="life-rating-tag" style="background:'+ratingColor(v)+'">'+(role==='pilot'?'👨🏿‍✈️ ':'👩🏻‍🦱 ')+esc(v)+'</span>'; }
@@ -1562,14 +1590,12 @@ function lifeOwnerOf(rec){ const a=rec&&rec.added_by; if(a==='pilot'||a==='atten
 function lifeCanEdit(rec){ const o=lifeOwnerOf(rec); return o===null||o===myRole; } // 对方上传的内容不可编辑/删除
 function lifeBadgeHtml(rec){ const o=lifeOwnerOf(rec); if(o==='pilot') return '<span class="life-badge pilot">👨🏿‍✈️ 他</span>'; if(o==='attendant') return '<span class="life-badge attendant">👩🏻‍🦱 她</span>'; return '<span class="life-badge both">🤝 共同</span>'; }
 function lifeOwnerClass(rec){ const o=lifeOwnerOf(rec); return o?(' owner-'+o):''; }
-let lifeFilter={album:'all',food:'all',travel:'all',timeline:'all',wishlist:'all'};
+let lifeFilter={album:'all',food:'all',travel:'all',timeline:'all'};
 const LIFE_FILTER_OPTS=[['all','全部'],['pilot','👨🏿‍✈️ 他的'],['attendant','👩🏻‍🦱 她的']];
 function lifePassFilter(t,rec){ const f=lifeFilter[t]||'all'; if(f==='all') return true; const o=lifeOwnerOf(rec); return o===null||o===f; }
 function renderLifeFilters(){ document.querySelectorAll('[data-life-filter]').forEach(box=>{ const t=box.getAttribute('data-life-filter'); box.innerHTML=LIFE_FILTER_OPTS.map(o=>'<button type="button" class="life-fchip'+(lifeFilter[t]===o[0]?' on':'')+'" data-fchip="'+t+':'+o[0]+'">'+o[1]+'</button>').join(''); }); }
 const FOOD_SCORE={'拉完了':1,'npc':2,'人上人':3,'顶级':4,'夯':5};
 function foodAvg(rec){ const vs=[rec.rating_pilot,rec.rating_attendant].map(v=>FOOD_SCORE[v]).filter(v=>v); if(!vs.length) return 0; return vs.reduce((a,b)=>a+b,0)/vs.length; }
-function getWishDoing(){ try{ const a=JSON.parse(localStorage.getItem('ourflights.wishdoing')||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
-function setWishDoing(a){ try{ localStorage.setItem('ourflights.wishdoing',JSON.stringify(a)); }catch(e){} }
 function buildNavLinks(name,addr){
   const kw=[String(name||'').trim(),String(addr||'').trim()].filter(Boolean).join(' ');
   if(!kw) return {baidu:''};
@@ -1608,6 +1634,92 @@ async function geocodePlace(name){
     return {lat:parseFloat(j[0].lat),lng:parseFloat(j[0].lon)};
   }catch(e){ return null; }
 }
+/* ===== 2026-10-22-22 地理模块：Nominatim 联想 + 地图点选 picker（美食/足迹/时光轴共用） ===== */
+let lifeFormGeo={lat:null,lng:null}; // 当前表单坐标：自动联想 / 地理编码 / 手动点选写入
+function lifeGeoReset(rec){ lifeFormGeo={lat:(rec&&rec.lat!=null)?+rec.lat:null,lng:(rec&&rec.lng!=null)?+rec.lng:null}; }
+function parseNominatim(j){
+  const out=[];
+  for(const it of (j||[])){
+    const lat=parseFloat(it.lat), lng=parseFloat(it.lon);
+    if(!isFinite(lat)||!isFinite(lng)) continue;
+    const full=String(it.display_name||'');
+    out.push({lat,lng,full,name:full.split(',').slice(0,2).join(',').trim()||full});
+  }
+  return out;
+}
+async function nominatimSearch(q,limit){
+  q=String(q||'').trim(); if(q.length<2) return [];
+  try{
+    const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),8000);
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit='+(limit||5)+'&accept-language=zh-CN&q='+encodeURIComponent(q),{signal:ctrl.signal,headers:{'Accept':'application/json'}});
+    clearTimeout(to); if(!r.ok) return [];
+    return parseNominatim(await r.json());
+  }catch(e){ return []; }
+}
+function lifeGeoStatus(txt,cls,elId){ const el=document.getElementById(elId||'lifeGeoStatus'); if(el){ el.textContent=txt||''; el.className='life-geo-status'+(cls?' '+cls:''); } }
+/* 输入框地址联想：防抖 450ms，点选后填值并回传坐标 */
+function attachGeoAutocomplete(input,opts){
+  if(!input||input.dataset.geoAc) return; input.dataset.geoAc='1';
+  opts=opts||{};
+  const wrap=document.createElement('div'); wrap.className='geo-ac-wrap';
+  input.parentNode.insertBefore(wrap,input); wrap.appendChild(input);
+  const box=document.createElement('div'); box.className='geo-ac'; box.style.display='none'; wrap.appendChild(box);
+  let timer=null, seq=0;
+  const hide=()=>{ box.style.display='none'; };
+  input.addEventListener('input',()=>{
+    clearTimeout(timer);
+    const q=input.value.trim();
+    if(q.length<2){ hide(); return; }
+    timer=setTimeout(async()=>{
+      const my=++seq;
+      const list=await nominatimSearch(q,5);
+      if(my!==seq) return;
+      if(!list.length){ hide(); return; }
+      box.innerHTML=list.map((it,i)=>'<div class="geo-ac-item" data-i="'+i+'">'+esc(it.name)+'<span class="sub">'+esc(it.full)+'</span></div>').join('');
+      box.style.display='block';
+      box.querySelectorAll('.geo-ac-item').forEach(el=>el.addEventListener('mousedown',e=>{
+        e.preventDefault();
+        const it=list[+el.dataset.i]; if(!it) return;
+        input.value=(opts.fillWith==='full')?it.full:it.name;
+        hide();
+        if(opts.onPick) opts.onPick(it,input);
+      }));
+    },450);
+  });
+  input.addEventListener('blur',()=>setTimeout(hide,220));
+  input.addEventListener('keydown',e=>{ if(e.key==='Escape') hide(); });
+}
+/* 表单内嵌小地图：点选/拖图钉定坐标；Leaflet 加载失败时降级为手动输入经纬度 */
+let lifePickMap=null, lifePickMarker=null, lifePickPlaceFn=null;
+async function initLifePickMap(mapElId,onMove){
+  const el=document.getElementById(mapElId||'lifePickMap'); if(!el) return null;
+  try{ await loadLeaflet(); }catch(e){ return null; }
+  if(!window.L) return null;
+  try{ if(lifePickMap){ lifePickMap.remove(); } }catch(e){}
+  lifePickMap=null; lifePickMarker=null;
+  const hasGeo=lifeFormGeo.lat!=null&&lifeFormGeo.lng!=null;
+  const m=L.map(el,{scrollWheelZoom:false}).setView(hasGeo?[lifeFormGeo.lat,lifeFormGeo.lng]:[23.129,113.264],hasGeo?14:5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(m);
+  const place=(lat,lng)=>{
+    if(lifePickMarker) lifePickMarker.setLatLng([lat,lng]);
+    else{ lifePickMarker=L.marker([lat,lng],{draggable:true}).addTo(m); lifePickMarker.on('dragend',e=>{ const p=e.target.getLatLng(); if(onMove) onMove(p.lat,p.lng); }); }
+    try{ m.setView([lat,lng],Math.max(m.getZoom(),13)); }catch(e){}
+    if(onMove) onMove(lat,lng);
+  };
+  m.on('click',e=>place(e.latlng.lat,e.latlng.lng));
+  if(hasGeo) place(lifeFormGeo.lat,lifeFormGeo.lng);
+  lifePickMap=m;
+  setTimeout(()=>{ try{ m.invalidateSize(); }catch(e){} },160);
+  return {place};
+}
+function lifePickMapFallback(mapElId,latId,lngId,statusId){
+  const el=document.getElementById(mapElId||'lifePickMap'); if(!el) return;
+  latId=latId||'lifeLatIn'; lngId=lngId||'lifeLngIn';
+  el.style.height='auto';
+  el.innerHTML='<div class="row" style="gap:8px"><input type="number" id="'+latId+'" step="any" placeholder="纬度 lat" style="flex:1" value="'+(lifeFormGeo.lat!=null?lifeFormGeo.lat:'')+'"><input type="number" id="'+lngId+'" step="any" placeholder="经度 lng" style="flex:1" value="'+(lifeFormGeo.lng!=null?lifeFormGeo.lng:'')+'"></div><div class="muted" style="font-size:12px;margin-top:4px">地图加载失败，可手动填写经纬度（在地图 App 里长按位置可查）。</div>';
+  const sync=()=>{ const a=parseFloat((document.getElementById(latId)||{}).value), b=parseFloat((document.getElementById(lngId)||{}).value); lifeFormGeo={lat:isFinite(a)?a:null,lng:isFinite(b)?b:null}; lifeGeoStatus(lifeFormGeo.lat!=null?'已手动填写坐标 ✓':'',lifeFormGeo.lat!=null?'ok':'',statusId||'lifeGeoStatus'); };
+  document.getElementById(latId).addEventListener('input',sync); document.getElementById(lngId).addEventListener('input',sync);
+}
 function lifeFormHtml(){
   const t=lifeFormType, rec=lifeMemories.find(x=>x.id===lifeEditingId)||null;
   const val=k=>(rec&&rec[k])||'';
@@ -1631,7 +1743,9 @@ function lifeFormHtml(){
     h+='<label>一句点评</label><textarea id="lifeNote">'+esc(val('note'))+'</textarea>';
     h+='<label>日期</label><input type="date" id="lifeDate" value="'+esc(dateVal)+'">';
   }else if(t==='travel'){
-    h+='<label>地点名称</label><input type="text" id="lifePlace" value="'+esc(val('place_name'))+'" placeholder="例如：大理古城">';
+    h+='<label>地点名称</label><input type="text" id="lifePlace" value="'+esc(val('place_name'))+'" placeholder="例如：大理古城（输入时会自动联想）">';
+    h+='<div id="lifeGeoStatus" class="life-geo-status"></div>';
+    h+='<label>地图点选（自动定位失败时点一下即可）</label><div id="lifePickMap" class="life-pickmap"></div>';
     h+='<label>日期</label><input type="date" id="lifeDate" value="'+esc(dateVal)+'">';
     h+='<label>照片</label><input type="file" id="lifePhotoInput" accept="image/*" multiple>';
     h+='<div id="lifePhotoPreview" class="life-photo-grid"></div>';
@@ -1639,14 +1753,14 @@ function lifeFormHtml(){
   }else if(t==='timeline'){
     h+='<label>日期</label><input type="date" id="lifeDate" value="'+esc(dateVal)+'">';
     h+='<label>标题</label><input type="text" id="lifeTitle" value="'+esc(val('title'))+'" placeholder="例如：第一次一起看海">';
+    h+='<label>地点（可选）</label><input type="text" id="lifePlace" value="'+esc(val('place_name'))+'" placeholder="例如：三亚 · 亚龙湾（输入时会自动联想）">';
+    h+='<div id="lifeGeoStatus" class="life-geo-status"></div>';
+    h+='<div id="lifePickMap" class="life-pickmap"></div>';
     h+='<label>一段文字</label><textarea id="lifeNote">'+esc(val('note'))+'</textarea>';
     h+='<label>照片（可选）</label><input type="file" id="lifePhotoInput" accept="image/*" multiple>';
     h+='<div id="lifePhotoPreview" class="life-photo-grid"></div>';
   }else{
-    h+='<label>愿望</label><input type="text" id="lifeTitle" value="'+esc(val('title'))+'" placeholder="例如：一起去冰岛看极光">';
-    h+='<label>照片（可选）</label><input type="file" id="lifePhotoInput" accept="image/*" multiple>';
-    h+='<div id="lifePhotoPreview" class="life-photo-grid"></div>';
-    h+='<label>日期（可选）</label><input type="date" id="lifeDate" value="'+esc(val('memory_date')||'')+'">';
+    h+='<div class="muted">未知类型</div>';
   }
   h+='<div class="row" style="gap:8px;margin-top:14px"><button id="lifeFormSave" class="ghost grow" type="button">保存</button><button id="lifeFormCancel" class="ghost grow" type="button">取消</button></div></div>';
   return h;
@@ -1691,6 +1805,33 @@ function openLifeForm(type,existingId){
   if(titleEl) titleEl.addEventListener('input',lifeUpdateNavPreview);
   if(addrEl) addrEl.addEventListener('input',lifeUpdateNavPreview);
   lifeUpdateNavPreview();
+  lifeGeoReset(rec); lifePickPlaceFn=null;
+  /* 地址联想 + 坐标：美食(名/址)、足迹、时光轴 */
+  if(type==='food'){
+    if(titleEl) attachGeoAutocomplete(titleEl,{fillWith:'name',onPick:(it)=>{ const a=$('lifeAddr'); if(a&&!a.value.trim()) a.value=it.full; lifeUpdateNavPreview(); }});
+    if(addrEl) attachGeoAutocomplete(addrEl,{fillWith:'full',onPick:()=>lifeUpdateNavPreview()});
+  }
+  if(type==='travel'||type==='timeline'){
+    const pEl=$('lifePlace');
+    if(pEl){
+      attachGeoAutocomplete(pEl,{fillWith:'name',onPick:(it)=>{ lifeFormGeo={lat:it.lat,lng:it.lng}; lifeGeoStatus('已定位 ✓','ok'); if(lifePickPlaceFn) lifePickPlaceFn(it.lat,it.lng); }});
+      if(type==='travel'){
+        let gT=null;
+        pEl.addEventListener('input',()=>{ lifeFormGeo={lat:null,lng:null}; lifeGeoStatus('正在定位…'); clearTimeout(gT); gT=setTimeout(async()=>{
+          const q=pEl.value.trim(); if(q.length<2){ lifeGeoStatus(''); return; }
+          const g=await geocodePlace(q);
+          if(lifeFormType!=='travel') return;
+          if(g){ lifeFormGeo={lat:g.lat,lng:g.lng}; lifeGeoStatus('自动定位成功 ✓','ok'); if(lifePickPlaceFn) lifePickPlaceFn(g.lat,g.lng); }
+          else lifeGeoStatus('没能自动定位，请在地图上点一下位置','bad');
+        },900); });
+      }
+      if(rec&&rec.lat!=null&&rec.lng!=null) lifeGeoStatus('已有坐标 ✓','ok');
+    }
+    initLifePickMap('lifePickMap',(lat,lng)=>{ lifeFormGeo={lat,lng}; lifeGeoStatus('已手动定位 ✓','ok'); }).then(api=>{
+      if(!api){ lifePickMapFallback(); return; }
+      lifePickPlaceFn=(lat,lng)=>{ try{ api.place(lat,lng); }catch(e){} };
+    });
+  }
   $('lifeFormCancel').addEventListener('click',closeLifeForm);
   $('lifeFormSave').addEventListener('click',saveLifeMemory);
   card.scrollIntoView({behavior:'smooth',block:'start'});
@@ -1704,8 +1845,8 @@ async function saveLifeMemory(){
   if(t==='album'&&!lifeFormFiles.length&&!lifeFormExisting.length&&!note) return msg(fm,'请至少选一张照片或写一句配文。');
   if(t==='food'&&!title) return msg(fm,'餐厅名称不能为空。');
   if(t==='travel'&&!place) return msg(fm,'地点名称不能为空。');
+  if(t==='travel'&&(lifeFormGeo.lat==null||lifeFormGeo.lng==null)) return msg(fm,'没能定位到这个地点：请点选一个联想地址，或在地图上点一下位置再保存。');
   if(t==='timeline'&&!title) return msg(fm,'标题不能为空。');
-  if(t==='wishlist'&&!title) return msg(fm,'愿望不能为空。');
   btn.disabled=true; btn.textContent='上传中…';
   try{
     const paths=[...lifeFormExisting];
@@ -1722,12 +1863,10 @@ async function saveLifeMemory(){
       if(myRole==='pilot') row.rating_pilot=lifeFormRatings.pilot;
       else if(myRole==='attendant') row.rating_attendant=lifeFormRatings.attendant;
     }
-    if(t==='travel'){ const g=await geocodePlace(place); if(g){ row.lat=g.lat; row.lng=g.lng; } }
-    if(t==='wishlist'){ row.done=false; }
+    if(t==='travel'||t==='timeline'){ row.lat=lifeFormGeo.lat; row.lng=lifeFormGeo.lng; }
     let saved=null;
     if(lifeEditingId){
       const prev=lifeMemories.find(x=>x.id===lifeEditingId);
-      if(prev) row.done=!!prev.done; // 编辑不重置愿望完成状态
       // 编辑时若新值为空，保留旧坐标/旧导航（地理编码失败时不把原有坐标清掉）
       if(prev&&row.lat==null){ row.lat=prev.lat; row.lng=prev.lng; }
       if(prev&&t!=='food'&&row.nav_baidu==null) row.nav_baidu=prev.nav_baidu;
@@ -1767,25 +1906,45 @@ async function delLifeMemory(id){
   if(rec.photo_urls&&rec.photo_urls.length){ try{ await sbDb.storage.from('life-photos').remove(rec.photo_urls); }catch(e){ msg($('lifeMsg'),'记录已删，但照片清理失败，可忽略。',true); } }
   await loadLifeMemories();
 }
-async function toggleLifeWish(id){
-  const rec=lifeMemories.find(x=>x.id===id); if(!rec) return;
-  const {error}=await sbDb.from('life_memories').update({done:!rec.done}).eq('id',id);
-  if(error){ msg($('lifeMsg'), friendlyErr(error,'更新愿望')); return; }
-  setWishDoing(getWishDoing().filter(x=>x!==id)); // 完成后移出"进行中"
-  await loadLifeMemories();
-}
 function lifeCardButtons(rec){ if(!lifeCanEdit(rec)) return ''; return '<div class="row" style="gap:8px;margin-top:8px"><button class="ghost small" type="button" data-life-edit="'+esc(rec.id)+'">编辑</button><button class="ghost small" type="button" data-life-del="'+esc(rec.id)+'" style="color:#dc2626">删除</button></div>'; }
+/* ===== 2026-10-22-22 美食评分：协作行为——双方可给任何条目打分（只写自己角色字段，绝不碰对方） ===== */
+let foodRateTarget={id:null,role:null};
+function openFoodRate(key){
+  const parts=String(key||'').split(':'); if(parts.length!==2) return;
+  const rec=lifeMemories.find(x=>x.id===parts[0]); if(!rec||rec.type!=='food') return;
+  const role=parts[1]; if(role!=='pilot'&&role!=='attendant') return;
+  foodRateTarget={id:rec.id,role};
+  const cur=role==='pilot'?rec.rating_pilot:rec.rating_attendant;
+  const box=$('lifeRateModal'); if(!box) return;
+  $('lifeRateModalTitle').textContent=(role==='pilot'?'👨🏿‍✈️ 他':'👩🏻‍🦱 她')+' 给「'+(rec.title||'')+'」打分';
+  $('lifeRateModalList').innerHTML=RATING_TIERS.map(t=>'<button type="button" class="life-rating-chip'+(cur===t.v?' on':'')+'" data-pick-rate="'+esc(t.v)+'">'+esc(t.v)+'</button>').join('')+'<button type="button" class="life-rating-chip" data-pick-rate="">清除评分</button>';
+  box.querySelectorAll('[data-pick-rate]').forEach(b=>b.addEventListener('click',()=>saveFoodRate(b.dataset.pickRate||null)));
+  box.classList.remove('hidden');
+}
+function closeFoodRate(){ const box=$('lifeRateModal'); if(box) box.classList.add('hidden'); foodRateTarget={id:null,role:null}; }
+async function saveFoodRate(v){
+  const id=foodRateTarget.id, role=foodRateTarget.role; if(!id||!role) return;
+  const patch={}; patch[role==='pilot'?'rating_pilot':'rating_attendant']=v; // 只写这一侧评分字段
+  patch.updated_at=new Date().toISOString();
+  try{
+    const {error}=await sbDb.from('life_memories').update(patch).eq('id',id);
+    if(error) throw error;
+    closeFoodRate(); await loadLifeMemories();
+    msg($('lifeMsg'),'评分已保存。',true);
+  }catch(e){ msg($('lifeMsg'),friendlyErr(e,'保存评分')); }
+}
 function lifeBindCardButtons(scope){
   scope.querySelectorAll('[data-life-edit]').forEach(b=>b.addEventListener('click',()=>openLifeForm(lifeMemories.find(x=>x.id===b.dataset.lifeEdit)?.type||'album',b.dataset.lifeEdit)));
   scope.querySelectorAll('[data-life-del]').forEach(b=>b.addEventListener('click',()=>delLifeMemory(b.dataset.lifeDel)));
-  scope.querySelectorAll('[data-life-wish]').forEach(b=>b.addEventListener('click',()=>toggleLifeWish(b.dataset.lifeWish)));
+  scope.querySelectorAll('[data-food-rate]').forEach(b=>b.addEventListener('click',()=>openFoodRate(b.dataset.foodRate)));
+  scope.querySelectorAll('[data-travel-backfill]').forEach(b=>b.addEventListener('click',()=>openTravelBackfill(b.dataset.travelBackfill)));
   scope.querySelectorAll('[data-travel-focus]').forEach(card=>card.addEventListener('click',e=>{ if(e.target.closest('button')) return; focusTravel(card.dataset.travelFocus); }));
 }
 function setLifeCount(id,txt){ const el=$(id); if(el) el.textContent=txt; }
 async function renderLifeAll(){
   const byType=t=>lifeMemories.filter(x=>x.type===t);
   renderLifeFilters();
-  const LIFE_EMPTY_TIP={album:['📸','还没有照片','把今天的日常拍下来，点 + 添加第一条'],food:['🍜','还没吃过一家','吃到好吃的就记下来，点 + 添加第一家'],travel:['🗺️','还没留下足迹','去过的地方点 + 记下来，地图上会落图钉'],timeline:['🕰️','还没有时光记录','值得记住的时刻，点 + 写下第一条'],wishlist:['📝','愿望单还是空的','想一起做的事，点 + 写下第一个愿望']};
+  const LIFE_EMPTY_TIP={album:['📸','还没有照片','把今天的日常拍下来，点 + 添加第一条'],food:['🍜','还没吃过一家','吃到好吃的就记下来，点 + 添加第一家'],travel:['🗺️','还没留下足迹','去过的地方点 + 记下来，地图上会落图钉'],timeline:['🕰️','还没有时光记录','值得记住的时刻，点 + 写下第一条']};
   const emptyHtml=t=>{ const e=LIFE_EMPTY_TIP[t]||['','还没有内容','点 + 添加第一条']; return '<div class="life-empty"><div class="life-empty-ico">'+e[0]+'</div><div>'+e[1]+'</div><div class="muted" style="margin-top:4px">'+e[2]+'</div></div>'; };
   // 相册：瀑布流 + 双人拼图（选两张照片拼成一张同框卡）
   {
@@ -1795,8 +1954,10 @@ async function renderLifeAll(){
     else{
       const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
       el.innerHTML='<div class="life-wall">'+items.map(rec=>{
-        const imgs=(rec.photo_urls||[]).map((p,i)=>signed[p]?'<img src="'+esc(signed[p])+'" alt="" data-life-photo="'+esc(rec.id)+'" data-life-photo-idx="'+i+'" data-life-puzzle-path="'+esc(p)+'" style="cursor:zoom-in">':'').join('');
-        return '<div class="life-wall-item'+lifeOwnerClass(rec)+'">'+imgs+'<div class="cap">'+lifeBadgeHtml(rec)+(rec.note?esc(rec.note)+'<br>':'')+'<span class="life-meta">'+esc(rec.memory_date||'')+(rec.place_name?' · '+esc(rec.place_name):'')+'</span>'+lifeCardButtons(rec)+'</div></div>';
+        const paths=(rec.photo_urls||[]);
+        const imgs=paths.map((p,i)=>signed[p]?'<img src="'+esc(signed[p])+'" alt="" data-life-photo="'+esc(rec.id)+'" data-life-photo-idx="'+i+'" data-life-puzzle-path="'+esc(p)+'">':'').join('');
+        const gridCls=paths.length===1?'life-grid3 single':'life-grid3';
+        return '<div class="life-wall-item'+lifeOwnerClass(rec)+'"><div class="cap">'+lifeBadgeHtml(rec)+'<span class="life-meta">'+esc(rec.memory_date||'')+(rec.place_name?' · '+esc(rec.place_name):'')+'</span>'+(rec.note?'<div style="margin-top:4px">'+esc(rec.note)+'</div>':'')+'</div>'+(imgs?'<div class="'+gridCls+'">'+imgs+'</div>':'')+'<div class="cap">'+lifeCardButtons(rec)+'</div></div>';
       }).join('')+'</div>';
     }
     lifeBindCardButtons(el);
@@ -1820,7 +1981,7 @@ async function renderLifeAll(){
       const cardHtml=rec=>{
         const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
         const navHtml=(rec.nav_baidu?'<a class="life-nav-btn life-nav-baidu" href="'+esc(rec.nav_baidu)+'" target="_blank" rel="noopener">百度导航</a>':'');
-        const rateCell=(role,v)=>'<div><div class="life-meta">'+(role==='pilot'?'👨🏿‍✈️ 评分':'👩🏻‍🦱 评分')+'</div><div style="margin-top:4px">'+(v?ratingTag(role,v):'<span class="muted" style="font-size:12px">未评分</span>')+'</div></div>';
+        const rateCell=(role,v)=>'<div class="life-rate-cell" data-food-rate="'+esc(rec.id)+':'+role+'" title="点我打分"><div class="life-meta">'+(role==='pilot'?'👨🏿‍✈️ 评分':'👩🏻‍🦱 评分')+'</div><div style="margin-top:4px">'+(v?ratingTag(role,v):'<span class="life-rate-hint">未评分 · 点我打分 ›</span>')+'</div></div>';
         const avg=foodAvg(rec);
         return '<div class="life-card'+lifeOwnerClass(rec)+'">'+lifeBadgeHtml(rec)+'<b>'+esc(rec.title||'')+'</b>'+(rec.id===kingId?'<span class="food-crown">👑 本月美食王</span>':'')+'<div class="life-meta">'+esc(rec.memory_date||'')+(avg>0?' · ⭐ 平均 '+avg.toFixed(1):'')+'</div>'+imgHtml+'<div class="life-rate-cols">'+rateCell('pilot',rec.rating_pilot)+rateCell('attendant',rec.rating_attendant)+'</div>'+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+'<div>'+navHtml+'</div>'+lifeCardButtons(rec)+'</div>';
       };
@@ -1840,7 +2001,11 @@ async function renderLifeAll(){
       const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
       el.innerHTML=items.map(rec=>{
         const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
-        return '<div class="life-card'+lifeOwnerClass(rec)+'" data-travel-focus="'+esc(rec.id)+'" style="cursor:pointer">'+lifeBadgeHtml(rec)+'<b>📍 '+esc(rec.place_name||rec.title||'')+'</b><div class="life-meta">'+esc(rec.memory_date||'')+'</div>'+imgHtml+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+'<div class="muted" style="font-size:12px;margin-top:4px">点卡片在地图上定位</div>'+lifeCardButtons(rec)+'</div>';
+        const noGeo=rec.lat==null||rec.lng==null;
+        const geoHint=noGeo
+          ?'<div class="muted" style="font-size:12px;margin-top:4px">暂无坐标'+(lifeCanEdit(rec)?'，<button class="ghost small life-backfill-btn" type="button" data-travel-backfill="'+esc(rec.id)+'">📍 补坐标</button>':'')+'</div>'
+          :'<div class="muted" style="font-size:12px;margin-top:4px">点卡片在地图上定位</div>';
+        return '<div class="life-card'+lifeOwnerClass(rec)+'" data-travel-focus="'+esc(rec.id)+'" style="cursor:pointer">'+lifeBadgeHtml(rec)+'<b>📍 '+esc(rec.place_name||rec.title||'')+'</b><div class="life-meta">'+esc(rec.memory_date||'')+'</div>'+imgHtml+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+geoHint+lifeCardButtons(rec)+'</div>';
       }).join('');
     }
     lifeBindCardButtons(el);
@@ -1859,26 +2024,9 @@ async function renderLifeAll(){
       const bothItems=items.filter(x=>lifeOwnerOf(x)===null).sort(byDate);
       const mini=rec=>{
         const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
-        return '<div class="life-card'+lifeOwnerClass(rec)+'" style="margin-bottom:8px"><div class="life-meta">'+esc(rec.memory_date||'')+'</div><b>'+esc(rec.title||'')+'</b>'+(rec.note?'<div style="margin-top:4px;font-size:13px">'+esc(rec.note)+'</div>':'')+imgHtml+lifeCardButtons(rec)+'</div>';
+        return '<div class="life-card'+lifeOwnerClass(rec)+'" style="margin-bottom:8px"><div class="life-meta">'+esc(rec.memory_date||'')+(rec.place_name?' · 📍 '+esc(rec.place_name):'')+'</div><b>'+esc(rec.title||'')+'</b>'+(rec.note?'<div style="margin-top:4px;font-size:13px">'+esc(rec.note)+'</div>':'')+imgHtml+lifeCardButtons(rec)+'</div>';
       };
       el.innerHTML=(bothItems.length?'<div class="muted" style="font-weight:700;color:var(--ink);margin:6px 0">🤝 共同</div>'+bothItems.map(mini).join(''):'')+'<div class="tl-lanes"><div class="tl-lane pilot"><h4>👨🏿‍✈️ 他的时光</h4>'+(pilotItems.map(mini).join('')||'<div class="muted" style="font-size:12px">还没有</div>')+'</div><div class="tl-lane attendant"><h4>👩🏻‍🦱 她的时光</h4>'+(attItems.map(mini).join('')||'<div class="muted" style="font-size:12px">还没有</div>')+'</div></div>';
-    }
-    lifeBindCardButtons(el);
-  }
-  // 心愿扭蛋机：顶部扭蛋随机抽未完成愿望 + 完成进度条
-  {
-    const el=$('lifeList-wishlist'), items=byType('wishlist').filter(r=>lifePassFilter('wishlist',r));
-    setLifeCount('lifeCount-wishlist', items.length?('共 '+items.length+' 个愿望'):'');
-    if(!items.length){ el.innerHTML=emptyHtml('wishlist'); }
-    else{
-      const doneCount=items.filter(x=>x.done).length;
-      const pct=items.length?Math.round(doneCount/items.length*100):0;
-      const doing=getWishDoing();
-      const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
-      el.innerHTML='<div class="life-meta">已完成 '+doneCount+' / '+items.length+' · '+pct+'%</div><div class="wish-bar"><div class="wish-bar-fill" style="width:'+pct+'%"></div></div>'+items.map(rec=>{
-        const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
-        return '<div class="life-card'+lifeOwnerClass(rec)+(rec.done?' life-wish-done':'')+'" data-wish-card="'+esc(rec.id)+'">'+lifeBadgeHtml(rec)+'<span class="wish-text">'+esc(rec.title||'')+'</span>'+(doing.indexOf(rec.id)>=0&&!rec.done?'<span class="wish-doing">🚀 进行中</span>':'')+imgHtml+'<div class="row" style="gap:8px;margin-top:8px"><button class="ghost" type="button" style="padding:8px 14px;font-weight:700" data-life-wish="'+esc(rec.id)+'">'+(rec.done?'✓ 已完成，点按取消':'○ 标记完成')+'</button></div>'+lifeCardButtons(rec)+'</div>';
-      }).join('');
     }
     lifeBindCardButtons(el);
   }
@@ -1919,6 +2067,33 @@ function focusTravel(id){
   if(rec.lat==null||rec.lng==null){ msg($('lifeMsg'),'这条足迹没有坐标，无法在地图上定位。'); return; }
   if(!lifeMap){ if(!lifeMapTried){ lifeMapTried=true; initLifeMap(); } msg($('lifeMsg'),'地图加载中，加载完再点一次即可定位。',true); return; }
   try{ lifeMap.setView([rec.lat,rec.lng],13); const mk=lifeMarkerById[id]; if(mk) mk.openPopup(); }catch(e){ msg($('lifeMsg'),'地图定位失败。'); }
+}
+/* ===== 2026-10-22-22 老足迹补坐标：只更新 lat/lng，不动其他字段 ===== */
+let backfillTarget=null;
+function openTravelBackfill(id){
+  const rec=lifeMemories.find(x=>x.id===id); if(!rec||!lifeCanEdit(rec)) return;
+  backfillTarget=id; lifeGeoReset(rec);
+  const box=$('lifeBackfillModal'); if(!box) return;
+  $('lifeBackfillTitle').textContent='给「'+(rec.place_name||rec.title||'足迹')+'」补坐标';
+  $('lifeBackfillMsg').innerHTML='';
+  lifeGeoStatus(rec.lat!=null?'已有坐标，可重新点选':'在地图上点一下位置','', 'lifeBackfillStatus');
+  box.classList.remove('hidden');
+  initLifePickMap('lifeBackfillMap',(lat,lng)=>{ lifeFormGeo={lat,lng}; lifeGeoStatus('已选定 ✓','ok','lifeBackfillStatus'); }).then(api=>{
+    if(!api) lifePickMapFallback('lifeBackfillMap','lifeBackfillLat','lifeBackfillLng','lifeBackfillStatus');
+  });
+}
+function closeTravelBackfill(){ const box=$('lifeBackfillModal'); if(box) box.classList.add('hidden'); backfillTarget=null; }
+async function saveTravelBackfill(){
+  if(!backfillTarget) return;
+  if(lifeFormGeo.lat==null||lifeFormGeo.lng==null){ msg($('lifeBackfillMsg'),'请先在地图上点一下位置。'); return; }
+  const btn=$('lifeBackfillSave'); btn.disabled=true;
+  try{
+    const {error}=await sbDb.from('life_memories').update({lat:lifeFormGeo.lat,lng:lifeFormGeo.lng,updated_at:new Date().toISOString()}).eq('id',backfillTarget);
+    if(error) throw error;
+    closeTravelBackfill(); await loadLifeMemories();
+    msg($('lifeMsg'),'坐标已补上，地图上可以看到图钉了。',true);
+  }catch(e){ msg($('lifeBackfillMsg'),friendlyErr(e,'补坐标')); }
+  finally{ btn.disabled=false; }
 }
 /* 相册灯箱：点图放大，点空白关闭，可删 */
 let lifeLb={recId:null,idx:0,urls:[]};
@@ -1991,7 +2166,10 @@ async function initLifeMap(){
     await loadLeaflet();
     if(!window.L) throw new Error('no L');
     lifeMap=L.map('lifeMap').setView([23.129,113.264],5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(lifeMap);
+    const streetTiles=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
+    const satTiles=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri, Maxar, Earthstar Geographics'});
+    streetTiles.addTo(lifeMap);
+    L.control.layers({'🗺️ 街道':streetTiles,'🛰️ 卫星':satTiles},null,{position:'topright'}).addTo(lifeMap);
     renderTravelMarkers();
     setTimeout(()=>{ try{ lifeMap.invalidateSize(); }catch(e){} },200);
   }catch(e){
@@ -2062,37 +2240,17 @@ async function lifePuzzleSave(){
   }catch(e){ msg($('lifeMsg'),friendlyErr(e,'保存拼图')); }
   finally{ btn.disabled=false; btn.textContent='保存为拼图记录'; }
 }
-let lifeGachaPick=null;
-function openGacha(){
-  const pool=lifeMemories.filter(x=>x.type==='wishlist'&&!x.done);
-  if(!pool.length){ msg($('lifeMsg'),'愿望都实现了，太厉害了！先去添加新愿望吧。',true); return; }
-  $('lifeGachaModal').classList.remove('hidden'); gachaDraw(pool);
-}
-function gachaDraw(pool){
-  const body=$('lifeGachaBody'); const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  lifeGachaPick=pool[Math.floor(Math.random()*pool.length)];
-  if(reduced){ body.innerHTML=gachaRevealHtml(); return; }
-  body.innerHTML='<div class="gacha-stage"><div class="gacha-ball"></div><div class="muted" style="margin-top:12px">扭蛋摇晃中…</div></div>';
-  setTimeout(()=>{ if(!$('lifeGachaModal').classList.contains('hidden')) body.innerHTML=gachaRevealHtml(); },900);
-}
-function gachaRevealHtml(){ const rec=lifeGachaPick; return '<div class="gacha-reveal"><div style="font-size:34px">🎉</div><div class="gacha-wish">'+esc((rec&&(rec.title||''))||'')+'</div><div class="muted">命运选中了这条愿望</div><div class="row" style="gap:8px;justify-content:center;margin-top:12px"><button class="ghost" type="button" id="lifeGachaGo">🚀 就去实现它</button></div></div>'; }
-function gachaGo(){
-  const id=lifeGachaPick&&lifeGachaPick.id; if(!id) return;
-  const arr=getWishDoing(); if(arr.indexOf(id)<0) arr.push(id); setWishDoing(arr);
-  $('lifeGachaModal').classList.add('hidden');
-  renderLifeAll().then(()=>{ const el=document.querySelector('[data-wish-card="'+id+'"]'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); });
-}
 $('lifePuzzleBtn').addEventListener('click',()=>togglePuzzleMode(true));
 $('lifePuzzleCancel').addEventListener('click',()=>togglePuzzleMode(false));
 $('lifePuzzleGo').addEventListener('click',lifePuzzleMerge);
 $('lifePuzzleSave').addEventListener('click',lifePuzzleSave);
 $('lifePuzzleModalClose').addEventListener('click',()=>$('lifePuzzleModal').classList.add('hidden'));
 $('lifePuzzleModal').addEventListener('click',e=>{ if(e.target.id==='lifePuzzleModal') $('lifePuzzleModal').classList.add('hidden'); });
-$('lifeGachaBtn').addEventListener('click',openGacha);
-$('lifeGachaClose').addEventListener('click',()=>$('lifeGachaModal').classList.add('hidden'));
-$('lifeGachaAgain').addEventListener('click',()=>{ const pool=lifeMemories.filter(x=>x.type==='wishlist'&&!x.done); if(pool.length) gachaDraw(pool); else msg($('lifeMsg'),'愿望都实现了，太厉害了！',true); });
-$('lifeGachaBody').addEventListener('click',e=>{ if(e.target.closest('#lifeGachaGo')) gachaGo(); });
-$('lifeGachaModal').addEventListener('click',e=>{ if(e.target.id==='lifeGachaModal') $('lifeGachaModal').classList.add('hidden'); });
+$('lifeRateModalClose').addEventListener('click',closeFoodRate);
+$('lifeRateModal').addEventListener('click',e=>{ if(e.target.id==='lifeRateModal') closeFoodRate(); });
+$('lifeBackfillSave').addEventListener('click',saveTravelBackfill);
+$('lifeBackfillClose').addEventListener('click',closeTravelBackfill);
+$('lifeBackfillModal').addEventListener('click',e=>{ if(e.target.id==='lifeBackfillModal') closeTravelBackfill(); });
 
 /* ===== 保存（新增 / 更新） ===== */
 function collectForm(){
@@ -2290,7 +2448,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-18-21-life-creative';
+const APP_VERSION='2026-10-22-22-life-fix';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
