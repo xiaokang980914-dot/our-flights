@@ -51,8 +51,8 @@ button:disabled{opacity:.55}
 @keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .skel-line{height:14px;border-radius:7px;background:#eef2f7;margin:8px 0}
 .life-map{height:320px;border-radius:12px;background:#e8eef5;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:13px}
-/* 2026-10-22-25：Esri 街道图夜间主题暗色滤镜（tile 容器级，不引入新图源） */
-.esri-night{filter:brightness(.72) invert(1) contrast(.92) hue-rotate(180deg) saturate(.35)}
+/* 2026-10-22-26：高德街道图夜间主题暗色滤镜（tile 容器级，不引入新图源） */
+.amap-night{filter:brightness(.72) invert(1) contrast(.92) hue-rotate(180deg) saturate(.35)}
 /* ===== 生活页上传（瀑布流照片墙 / 评级 / 导航，参考 Between 相册分类 + Polarsteps 地图日记 + Savor 菜品级评分） ===== */
 .life-form label{display:block;font-size:13px;color:#475569;margin:10px 0 4px}
 .life-form input[type=text],.life-form input[type=date],.life-form textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:14px;background:#fff;box-sizing:border-box}
@@ -1087,22 +1087,40 @@ function bjHourOf(iso){
     return isFinite(n)?n:null;
   }catch(e){ return null; }
 }
-/* ===== 2026-10-22-25 飞行统计三指标（各自独立，纯本地计算）：本月段数 / 常飞目的地 / 晚22点后落地 ===== */
+/* ===== 2026-10-22-26 飞行统计三指标：只算当前登录人；常飞目的地排除驻地 CAN；并列全列出 ===== */
+function flightStatsMine(f){
+  const a=f&&f.added_by;
+  if(a==null) return true; // 老记录（共同）两边都算
+  if(myRole==='pilot') return a!=='attendant'&&a!=='partner';
+  return a==='attendant'||a==='partner';
+}
+function isHomeBase(raw){
+  const s=String(raw||'').trim(); if(!s) return false;
+  if(s.toUpperCase()==='CAN') return true;
+  if(s.indexOf('广州')>=0) return true;
+  return resolveCode(s)==='CAN';
+}
 function flightStatsCalc(list,monthKey){
-  const mf=(list||[]).filter(f=>f&&String(f.flight_date||'').slice(0,7)===monthKey);
+  const mf=(list||[]).filter(f=>f&&flightStatsMine(f)&&String(f.flight_date||'').slice(0,7)===monthKey);
   const dests={};
-  for(const f of mf){ const c=resolveCode(f.arr_code); if(!c) continue; dests[c]=(dests[c]||0)+1; }
-  let topDest='—',topDestN=0;
-  for(const k in dests){ if(dests[k]>topDestN){ topDestN=dests[k]; topDest=k; } }
+  for(const f of mf){ if(isHomeBase(f.arr_code)) continue; const c=resolveCode(f.arr_code); if(!c) continue; dests[c]=(dests[c]||0)+1; }
+  let topDestN=0; const topDests=[];
+  for(const k in dests){
+    if(dests[k]>topDestN){ topDestN=dests[k]; topDests.length=0; topDests.push(k); }
+    else if(dests[k]===topDestN){ topDests.push(k); }
+  }
+  topDests.sort();
   let late=0;
   for(const f of mf){ const h=bjHourOf(f.arr_time); if(h!=null&&h>=22) late++; }
-  return {segs:mf.length, topDest:topDest, topDestN:topDestN, late:late};
+  return {segs:mf.length, topDests:topDests, topDestN:topDestN, late:late};
 }
 function renderFlightStats(){
   const el=$('flightStats'); if(!el) return;
   const s=flightStatsCalc(flights,todayBj().slice(0,7));
+  const destTxt=s.topDests.length?s.topDests.join('、'):'—';
+  const destSize=s.topDests.length>2?'12px':(s.topDests.length>1?'13px':'15px');
   el.innerHTML='<div class="stat"><div class="stat-num">'+s.segs+'</div><div class="stat-label">本月飞行段数</div></div>'
-    +'<div class="stat"><div class="stat-num" style="font-size:15px;line-height:27px">'+esc(s.topDest)+'</div><div class="stat-label">常飞目的地'+(s.topDestN>0?' · '+s.topDestN+' 次':'')+'</div></div>'
+    +'<div class="stat"><div class="stat-num" style="font-size:'+destSize+';line-height:1.6">'+esc(destTxt)+'</div><div class="stat-label">常飞目的地'+(s.topDestN>0?' · '+s.topDestN+' 次':'')+'</div></div>'
     +'<div class="stat"><div class="stat-num">'+s.late+'</div><div class="stat-label">晚十点后落地</div></div>';
 }
 function renderFlights(){
@@ -1727,7 +1745,7 @@ function lifePassFilter(t,rec){ const f=lifeFilter[t]||'all'; if(f==='all') retu
 function renderLifeFilters(){ document.querySelectorAll('[data-life-filter]').forEach(box=>{ const t=box.getAttribute('data-life-filter'); box.innerHTML=LIFE_FILTER_OPTS.map(o=>'<button type="button" class="life-fchip'+(lifeFilter[t]===o[0]?' on':'')+'" data-fchip="'+t+':'+o[0]+'">'+o[1]+'</button>').join(''); }); }
 const FOOD_SCORE={'拉完了':1,'npc':2,'人上人':3,'顶级':4,'夯':5};
 function foodAvg(rec){ const vs=[rec.rating_pilot,rec.rating_attendant].map(v=>FOOD_SCORE[v]).filter(v=>v); if(!vs.length) return 0; return vs.reduce((a,b)=>a+b,0)/vs.length; }
-/* ===== 2026-10-22-25 百度导航 URL 统一：有坐标→marker 标注页，仅地址→geocoder 解析页，都没有→无链接（按钮置灰） ===== */
+/* ===== 2026-10-22-26 百度导航 URL：有坐标→marker 标注页；无坐标→用地址/店名走 geocoder 解析页；全空才无链接 ===== */
 function navBaiduUrl(o){
   o=o||{};
   const title=String(o.title||'').trim(), addr=String(o.addr||'').trim();
@@ -1735,8 +1753,9 @@ function navBaiduUrl(o){
   if(lat!=null&&lng!=null){
     return 'https://api.map.baidu.com/marker?location='+lat+','+lng+'&title='+encodeURIComponent(title||addr||'地点')+'&content='+encodeURIComponent(addr||'')+'&output=html&src=ourflights';
   }
-  if(addr){
-    return 'https://api.map.baidu.com/geocoder?address='+encodeURIComponent(addr)+'&output=html&src=ourflights';
+  const kw=addr||title;
+  if(kw){
+    return 'https://api.map.baidu.com/geocoder?address='+encodeURIComponent(kw)+'&output=html&src=ourflights';
   }
   return '';
 }
@@ -1833,7 +1852,7 @@ function attachGeoAutocomplete(input,opts){
   input.addEventListener('blur',()=>setTimeout(hide,220));
   input.addEventListener('keydown',e=>{ if(e.key==='Escape') hide(); });
 }
-/* 表单内嵌小地图：点选/拖图钉定坐标；Leaflet 加载失败时降级为手动输入经纬度 */
+/* 表单内嵌小地图：点选/拖图钉定坐标；底图是高德（GCJ-02），点选结果逆变换回 WGS-84 再存；Leaflet 加载失败时降级为手动输入经纬度 */
 let lifePickMap=null, lifePickMarker=null, lifePickPlaceFn=null;
 async function initLifePickMap(mapElId,onMove){
   const el=document.getElementById(mapElId||'lifePickMap'); if(!el) return null;
@@ -1842,16 +1861,19 @@ async function initLifePickMap(mapElId,onMove){
   try{ if(lifePickMap){ lifePickMap.remove(); } }catch(e){}
   lifePickMap=null; lifePickMarker=null;
   const hasGeo=lifeFormGeo.lat!=null&&lifeFormGeo.lng!=null;
-  const m=L.map(el,{scrollWheelZoom:false}).setView(hasGeo?[lifeFormGeo.lat,lifeFormGeo.lng]:[23.129,113.264],hasGeo?14:5);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Powered by Esri'}).addTo(m);
+  const startGcj=hasGeo?wgs84ToGcj02(lifeFormGeo.lat,lifeFormGeo.lng):null;
+  const m=L.map(el,{scrollWheelZoom:false}).setView(startGcj?[startGcj.lat,startGcj.lng]:[23.129,113.264],hasGeo?14:5);
+  L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{subdomains:['1','2','3','4'],maxZoom:18,attribution:'© 高德地图 AutoNavi'}).addTo(m);
   const place=(lat,lng)=>{
+    // lat,lng 是高德图上的 GCJ-02 坐标：图钉落 GCJ 点，存 WGS-84
+    const w=gcj02ToWgs84(lat,lng)||{lat:lat,lng:lng};
     if(lifePickMarker) lifePickMarker.setLatLng([lat,lng]);
-    else{ lifePickMarker=L.marker([lat,lng],{draggable:true}).addTo(m); lifePickMarker.on('dragend',e=>{ const p=e.target.getLatLng(); if(onMove) onMove(p.lat,p.lng); }); }
+    else{ lifePickMarker=L.marker([lat,lng],{draggable:true}).addTo(m); lifePickMarker.on('dragend',e=>{ const p=e.target.getLatLng(); const ww=gcj02ToWgs84(p.lat,p.lng)||{lat:p.lat,lng:p.lng}; if(onMove) onMove(ww.lat,ww.lng); }); }
     try{ m.setView([lat,lng],Math.max(m.getZoom(),13)); }catch(e){}
-    if(onMove) onMove(lat,lng);
+    if(onMove) onMove(w.lat,w.lng);
   };
   m.on('click',e=>place(e.latlng.lat,e.latlng.lng));
-  if(hasGeo) place(lifeFormGeo.lat,lifeFormGeo.lng);
+  if(hasGeo&&startGcj) place(startGcj.lat,startGcj.lng);
   lifePickMap=m;
   setTimeout(()=>{ try{ m.invalidateSize(); }catch(e){} },160);
   return {place};
@@ -2083,7 +2105,7 @@ function lifeBindCardButtons(scope){
   scope.querySelectorAll('[data-life-del]').forEach(b=>b.addEventListener('click',()=>delLifeMemory(b.dataset.lifeDel)));
   scope.querySelectorAll('[data-food-rate]').forEach(b=>b.addEventListener('click',()=>openFoodRate(b.dataset.foodRate)));
   scope.querySelectorAll('[data-travel-backfill]').forEach(b=>b.addEventListener('click',()=>openTravelBackfill(b.dataset.travelBackfill)));
-  scope.querySelectorAll('[data-travel-focus]').forEach(card=>card.addEventListener('click',e=>{ if(e.target.closest('button')) return; focusTravel(card.dataset.travelFocus); }));
+  scope.querySelectorAll('[data-travel-focus]').forEach(card=>card.addEventListener('click',e=>{ if(e.target.closest('button,a')) return; focusTravel(card.dataset.travelFocus); }));
 }
 function setLifeCount(id,txt){ const el=$(id); if(el) el.textContent=txt; }
 /* ===== 2026-10-22-24 朋友圈式紧凑照片网格（美食/足迹/时光轴共用，点击看大图） ===== */
@@ -2169,10 +2191,12 @@ async function renderLifeAll(){
       el.innerHTML=items.map(rec=>{
         const imgHtml=lifePhotoGridHtml(rec,signed);
         const noGeo=rec.lat==null||rec.lng==null;
+        const g=recGcjLatLng(rec);
+        const navHtml=navBaiduBtn({title:rec.place_name||rec.title,addr:rec.place_name,lat:g?g[0]:null,lng:g?g[1]:null});
         const geoHint=noGeo
           ?'<div class="muted" style="font-size:12px;margin-top:4px">暂无坐标'+(lifeCanEdit(rec)?'，<button class="ghost small life-backfill-btn" type="button" data-travel-backfill="'+esc(rec.id)+'">📍 补坐标</button>':'')+'</div>'
           :'<div class="muted" style="font-size:12px;margin-top:4px">点卡片在地图上定位</div>';
-        return '<div class="life-card'+lifeOwnerClass(rec)+'" data-travel-focus="'+esc(rec.id)+'" style="cursor:pointer">'+lifeBadgeHtml(rec)+'<b>📍 '+esc(rec.place_name||rec.title||'')+'</b><div class="life-meta">'+esc(rec.memory_date||'')+'</div>'+imgHtml+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+geoHint+lifeCardButtons(rec)+'</div>';
+        return '<div class="life-card'+lifeOwnerClass(rec)+'" data-travel-focus="'+esc(rec.id)+'" style="cursor:pointer">'+lifeBadgeHtml(rec)+'<b>📍 '+esc(rec.place_name||rec.title||'')+'</b><div class="life-meta">'+esc(rec.memory_date||'')+'</div>'+imgHtml+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+geoHint+'<div>'+navHtml+'</div>'+lifeCardButtons(rec)+'</div>';
       }).join('');
     }
     lifeBindCardButtons(el);
@@ -2200,6 +2224,48 @@ async function renderLifeAll(){
     lifeBindPhotoLightbox(el);
   }
 }
+/* ===== 2026-10-22-26 坐标系：记录存的是 WGS-84（Nominatim 地理编码 / 旧地图点选），高德瓦片是 GCJ-02 =====
+   落图钉 / fitBounds / 航线 / 弹窗导航全部用转换后坐标；表单点选地图是高德（GCJ），点选结果逆变换回 WGS-84 再存 */
+function _gcjInChina(lat,lng){ return lng>73.66&&lng<135.05&&lat>3.86&&lat<53.55; }
+function _gcjTLat(lng,lat){
+  let r=-100+2*lng+3*lat+0.2*lat*lat+0.1*lng*lat+0.2*Math.sqrt(Math.abs(lng));
+  r+=(20*Math.sin(6*lng*Math.PI)+20*Math.sin(2*lng*Math.PI))*2/3;
+  r+=(20*Math.sin(lat*Math.PI)+40*Math.sin(lat/3*Math.PI))*2/3;
+  r+=(160*Math.sin(lat/12*Math.PI)+320*Math.sin(lat*Math.PI/30))*2/3;
+  return r;
+}
+function _gcjTLng(lng,lat){
+  let r=300+lng+2*lat+0.1*lng*lng+0.1*lng*lat+0.1*Math.sqrt(Math.abs(lng));
+  r+=(20*Math.sin(6*lng*Math.PI)+20*Math.sin(2*lng*Math.PI))*2/3;
+  r+=(20*Math.sin(lng*Math.PI)+40*Math.sin(lng/3*Math.PI))*2/3;
+  r+=(150*Math.sin(lng/12*Math.PI)+300*Math.sin(lng*Math.PI/30))*2/3;
+  return r;
+}
+function wgs84ToGcj02(lat,lng){
+  lat=+lat; lng=+lng;
+  if(!isFinite(lat)||!isFinite(lng)) return null;
+  if(!_gcjInChina(lat,lng)) return {lat:lat,lng:lng};
+  let dLat=_gcjTLat(lng-105,lat-35), dLng=_gcjTLng(lng-105,lat-35);
+  const radLat=lat/180*Math.PI, ee=0.00669342162296594323, a=6378245;
+  let magic=Math.sin(radLat); magic=1-ee*magic*magic;
+  const sqrtMagic=Math.sqrt(magic);
+  dLat=(dLat*180)/((a*(1-ee))/(magic*sqrtMagic)*Math.PI);
+  dLng=(dLng*180)/((a/sqrtMagic)*Math.cos(radLat)*Math.PI);
+  return {lat:lat+dLat,lng:lng+dLng};
+}
+function gcj02ToWgs84(lat,lng){
+  lat=+lat; lng=+lng;
+  if(!isFinite(lat)||!isFinite(lng)) return null;
+  if(!_gcjInChina(lat,lng)) return {lat:lat,lng:lng};
+  const g=wgs84ToGcj02(lat,lng);
+  return {lat:lat*2-g.lat,lng:lng*2-g.lng};
+}
+/* 记录（WGS-84）→ 高德图上用的 [lat,lng]（GCJ-02）；无坐标返回 null */
+function recGcjLatLng(rec){
+  if(!rec||rec.lat==null||rec.lng==null) return null;
+  const c=wgs84ToGcj02(+rec.lat,+rec.lng);
+  return c?[c.lat,c.lng]:null;
+}
 /* 足迹图钉：发光自定义图钉，角色色区分（他蓝/她粉），点击弹出地点卡片 */
 function travelPinIcon(rec){
   const color=lifeOwnerOf(rec)==='attendant'?'#ec4899':'#3b82f6';
@@ -2210,13 +2276,16 @@ async function renderTravelMarkers(){
   try{
     if(!lifeMarkers){ lifeMarkers=L.layerGroup().addTo(lifeMap); } else { lifeMarkers.clearLayers(); lifeMarkerById={}; }
     const items=lifeMemories.filter(x=>x.type==='travel'&&x.lat!=null&&x.lng!=null);
+    const pts=[];
     for(const rec of items){
+      const g=recGcjLatLng(rec); if(!g) continue; pts.push(g);
       const img=(rec.photo_urls||[])[0]; const signedImg=img?await signLifeUrl(img):'';
-      const popup='<div class="travel-pop"><b>'+esc(rec.place_name||rec.title||'')+'</b><div class="muted">'+esc(rec.memory_date||'')+'</div>'+(signedImg?'<img src="'+esc(signedImg)+'">':'')+'</div>';
-      const mk=L.marker([rec.lat,rec.lng],{icon:travelPinIcon(rec)}).bindPopup(popup).addTo(lifeMarkers);
+      const navUrl=navBaiduUrl({title:rec.place_name||rec.title,addr:rec.place_name,lat:g[0],lng:g[1]});
+      const popup='<div class="travel-pop"><b>'+esc(rec.place_name||rec.title||'')+'</b><div class="muted">'+esc(rec.memory_date||'')+'</div>'+(signedImg?'<img src="'+esc(signedImg)+'">':'')+'<div style="margin-top:8px">'+(navUrl?'<a class="life-nav-btn life-nav-baidu" href="'+esc(navUrl)+'" target="_blank" rel="noopener">🧭 一键导航</a>':'')+'</div></div>';
+      const mk=L.marker(g,{icon:travelPinIcon(rec)}).bindPopup(popup).addTo(lifeMarkers);
       lifeMarkerById[rec.id]=mk;
     }
-    if(items.length){ try{ lifeMap.fitBounds(L.latLngBounds(items.map(x=>[x.lat,x.lng])).pad(0.4)); }catch(e){} }
+    if(pts.length){ try{ lifeMap.fitBounds(L.latLngBounds(pts).pad(0.4)); }catch(e){} }
     renderTravelRoute();
   }catch(e){ /* 地图图钉失败不阻塞列表 */ }
 }
@@ -2226,7 +2295,7 @@ function renderTravelRoute(){
   if(!lifeMap||!window.L) return;
   try{
     if(lifeRouteLine){ lifeMap.removeLayer(lifeRouteLine); lifeRouteLine=null; }
-    const pts=lifeMemories.filter(x=>x.type==='travel'&&x.lat!=null&&x.lng!=null&&lifePassFilter('travel',x)).sort((a,b)=>String(a.memory_date||'').localeCompare(String(b.memory_date||''))).map(x=>[x.lat,x.lng]);
+    const pts=lifeMemories.filter(x=>x.type==='travel'&&x.lat!=null&&x.lng!=null&&lifePassFilter('travel',x)).sort((a,b)=>String(a.memory_date||'').localeCompare(String(b.memory_date||''))).map(x=>recGcjLatLng(x)).filter(function(p){ return !!p; });
     if(pts.length>=2){
       const glow=L.polyline(pts,{color:'#38bdf8',weight:9,opacity:0.22,interactive:false});
       const line=L.polyline(pts,{color:'#a5e3ff',weight:3,opacity:0.95,dashArray:'10 8',className:'route-anim',interactive:false});
@@ -2240,7 +2309,8 @@ function focusTravel(id){
   const mapEl=$('lifeMap'); if(mapEl) mapEl.scrollIntoView({behavior:'smooth',block:'center'});
   if(rec.lat==null||rec.lng==null){ msg($('lifeMsg'),'这条足迹没有坐标，无法在地图上定位。'); return; }
   if(!lifeMap){ if(!lifeMapTried){ lifeMapTried=true; initLifeMap(); } msg($('lifeMsg'),'地图加载中，加载完再点一次即可定位。',true); return; }
-  try{ lifeMap.setView([rec.lat,rec.lng],13); const mk=lifeMarkerById[id]; if(mk) mk.openPopup(); }catch(e){ msg($('lifeMsg'),'地图定位失败。'); }
+  const g=recGcjLatLng(rec);
+  try{ if(g) lifeMap.setView(g,13); const mk=lifeMarkerById[id]; if(mk) mk.openPopup(); }catch(e){ msg($('lifeMsg'),'地图定位失败。'); }
 }
 /* ===== 2026-10-22-22 老足迹补坐标：只更新 lat/lng，不动其他字段 ===== */
 let backfillTarget=null;
@@ -2333,7 +2403,7 @@ function loadLeaflet(){
     document.head.appendChild(s);
   });
 }
-/* ===== 2026-10-22-25 足迹地图底图：Esri World_Street_Map（免 key）+ 暗夜滤镜 + Esri 卫星 ===== */
+/* ===== 2026-10-22-26 足迹地图底图：高德（大陆可达，免 key）+ 暗夜滤镜 + 高德卫星 ===== */
 let lifeBaseLayers=null;
 async function initLifeMap(){
   const el=$('lifeMap'); if(!el) return;
@@ -2341,11 +2411,12 @@ async function initLifeMap(){
   try{
     await loadLeaflet();
     if(!window.L) throw new Error('no L');
-    lifeMap=L.map('lifeMap').setView([23.129,113.264],5);
-    const esriUrl='https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
-    const street=L.tileLayer(esriUrl,{maxZoom:19,attribution:'Powered by Esri'});
-    const streetNight=L.tileLayer(esriUrl,{maxZoom:19,className:'esri-night',attribution:'Powered by Esri'});
-    const satTiles=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri, Maxar, Earthstar Geographics'});
+    const gz=wgs84ToGcj02(23.129,113.264);
+    lifeMap=L.map('lifeMap').setView(gz?[gz.lat,gz.lng]:[23.129,113.264],5);
+    const amapUrl='https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}';
+    const street=L.tileLayer(amapUrl,{subdomains:['1','2','3','4'],maxZoom:18,attribution:'© 高德地图 AutoNavi'});
+    const streetNight=L.tileLayer(amapUrl,{subdomains:['1','2','3','4'],maxZoom:18,className:'amap-night',attribution:'© 高德地图 AutoNavi'});
+    const satTiles=L.tileLayer('https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',{subdomains:['1','2','3','4'],maxZoom:18,attribution:'© 高德地图 AutoNavi'});
     lifeBaseLayers={day:street,night:streetNight,sat:satTiles};
     (document.documentElement.getAttribute('data-theme')==='day'?street:streetNight).addTo(lifeMap);
     L.control.layers({'🗺️ 街道':street,'🌙 暗夜':streetNight,'🛰️ 卫星':satTiles},null,{position:'topright'}).addTo(lifeMap);
@@ -2638,7 +2709,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-22-25-v25';
+const APP_VERSION='2026-10-22-26-v26';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
