@@ -68,6 +68,8 @@ button:disabled{opacity:.55}
 .life-rating-row{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
 .life-rating-chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 10px;font-size:12px;cursor:pointer}
 .life-rating-chip.on{border-color:#1e3a8a;background:#1e3a8a;color:#fff}
+/* 白天主题下选中态必须显式压过 day 背景覆盖（特异性：html[data-theme=day] .life-rating-chip 会吃掉 .on 的背景，导致白字白底） */
+html[data-theme="day"] .life-rating-chip.on{border-color:#1e3a8a;background:#1e3a8a;color:#fff}
 .life-rating-tag{display:inline-block;border-radius:999px;padding:2px 8px;font-size:12px;margin-right:4px;color:#fff}
 .life-nav-btn{display:inline-block;border-radius:999px;padding:6px 12px;font-size:13px;margin:4px 6px 0 0;text-decoration:none;color:#fff}
 .life-nav-baidu{background:#16a34a}
@@ -200,11 +202,27 @@ h2.view-title{font-size:22px;margin:6px 0 2px}
 @media (max-width:480px){ .clock-big{font-size:30px} .clock-wrap{min-width:0} }
 /* 2. 顶部四圆图标：同尺寸圆 + 下方 2 字标签，等距排列 */
 .top-icons{align-items:flex-start}
-.top-icon-item{display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 auto}
+.top-icon-item{display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 auto;position:relative}
+/* ===== 2026-10-22-24 新版红点：version.json 有新版时显示 ===== */
+.update-new{position:absolute;top:-4px;right:0;background:#dc2626;color:#fff;font-size:9px;font-weight:800;line-height:1;padding:4px 6px;border-radius:999px;box-shadow:0 0 10px rgba(220,38,38,.9);animation:newBlink 1.6s ease-in-out infinite;pointer-events:none}
+@keyframes newBlink{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.update-new{animation:none}}
 .top-icon-item .icon-circle{width:52px;height:52px;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;line-height:1.15;cursor:pointer;border:none}
 @media (max-width:400px){ .top-icon-item .icon-circle{width:44px;height:44px} }
 .top-icon-item .icon-circle:active{transform:scale(.92)}
 .top-icon-item .icon-label{font-size:10px;color:var(--sub);line-height:1}
+/* ===== 2026-10-22-24 即将起飞 hero + 飞行统计 ===== */
+.hero-card{background:linear-gradient(135deg,rgba(37,99,235,.16),rgba(56,189,248,.07));border:1px solid rgba(56,189,248,.35);border-radius:16px}
+html[data-theme="day"] .hero-card{background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(56,189,248,.05));border-color:rgba(37,99,235,.25)}
+.hero-kicker{font-size:11px;color:var(--sub);letter-spacing:.1em;font-weight:700}
+.hero-fno{font-size:26px;font-weight:800;margin:6px 0 2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hero-route{font-size:15px;font-weight:600}
+.hero-times{color:var(--sub);font-size:13px;margin-top:3px}
+.hero-cd{margin-top:10px}
+.stats-row{display:flex;gap:10px}
+.stat{flex:1;background:rgba(148,163,184,.12);border-radius:12px;padding:10px 6px;text-align:center;min-width:0}
+.stat-num{font-size:20px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat-label{font-size:11px;color:var(--sub);margin-top:3px}
 .wx-circle{background:#fff;border:1px solid var(--line);color:var(--ink);box-shadow:0 1px 3px rgba(20,40,80,.06)}
 .wx-circle .wx-ico{font-size:16px;line-height:1}
 .wx-circle .wx-tmp{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
@@ -389,8 +407,10 @@ html[data-theme="day"] .geo-ac{background:#fff;box-shadow:0 12px 32px rgba(20,40
 .geo-ac-item:active{background:rgba(37,99,235,.14)}
 .geo-ac-item .sub{display:block;font-size:11px;color:var(--sub);margin-top:2px}
 /* ===== 2026-10-22-22 美食评分：卡片上直接点评 ===== */
-.life-rate-cell{cursor:pointer;border-radius:8px}
-.life-rate-cell:active{transform:scale(.97)}
+.life-rate-cell{border-radius:8px}
+.life-rate-cell.is-mine{cursor:pointer}
+.life-rate-cell.is-mine:active{transform:scale(.97)}
+.life-rate-cell.is-other{cursor:default}
 .life-rate-hint{font-size:11px;color:var(--sub)}
 .life-rate-modal-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0}
 /* ===== 2026-10-22-22 足迹/时光轴：地图点选 picker ===== */
@@ -433,6 +453,16 @@ html[data-theme="day"] .life-modal-box{background:#fff}
 .route-anim{animation:routeDash 1.1s linear infinite}
 @keyframes routeDash{to{stroke-dashoffset:-36}}
 @media (prefers-reduced-motion:reduce){.route-anim{animation:none}}
+/* ===== 2026-10-22-24 足迹地图：自定义发光图钉（角色色区分） ===== */
+.travel-pin-wrap{background:none;border:none}
+.travel-pin{width:18px;height:18px;border-radius:50%;background:var(--pin,#3b82f6);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35),0 0 14px var(--pin,#3b82f6);position:relative}
+.travel-pin::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--pin,#3b82f6);opacity:.6;animation:pinPulse 2.2s ease-out infinite}
+@keyframes pinPulse{0%{transform:scale(.55);opacity:.7}100%{transform:scale(1.45);opacity:0}}
+@media (prefers-reduced-motion:reduce){.travel-pin::after{animation:none}}
+.travel-pop{min-width:150px;max-width:220px}
+.travel-pop b{font-size:14px}
+.travel-pop .muted{font-size:12px;color:#64748b;margin-top:2px}
+.travel-pop img{width:150px;border-radius:10px;margin-top:6px;display:block}
 html.theming .life-fchip,html.theming .life-modal-box{transition:background-color .35s ease,color .35s ease,border-color .35s ease}
 </style>
 <!-- ===== 加载视图（默认先显示，避免组件没拉到时白屏） ===== -->
@@ -509,6 +539,13 @@ html.theming .life-fchip,html.theming .life-modal-box{transition:background-colo
       <button id="btnSetup2" class="ghost small">连接设置</button>
     </div>
     <div class="muted" style="margin-top:4px">版本 <span id="appVersion">-</span> · 点右上角 ⬆️ 获取最新版，不用重登</div>
+  </div>
+
+  <!-- ===== 2026-10-22-24 即将起飞 hero + 飞行统计 ===== -->
+  <div class="card hero-card hidden" id="nextFlightHero" aria-live="polite"></div>
+  <div class="card" id="flightStatsCard">
+    <b>📊 飞行统计</b>
+    <div class="stats-row" id="flightStats" style="margin-top:8px"></div>
   </div>
 
   <div class="card">
@@ -676,7 +713,7 @@ html.theming .life-fchip,html.theming .life-modal-box{transition:background-colo
 <div id="lifeRateModal" class="life-modal hidden">
   <div class="life-modal-box">
     <h3 id="lifeRateModalTitle" style="margin:0 0 4px;text-align:center">打分</h3>
-    <div class="muted" style="text-align:center;font-size:12px">双方都可以打分，互不覆盖</div>
+    <div class="muted" style="text-align:center;font-size:12px">每人只能给自己打分</div>
     <div id="lifeRateModalList" class="life-rate-modal-list"></div>
     <div class="row" style="gap:8px;margin-top:4px;justify-content:center"><button id="lifeRateModalClose" class="ghost" type="button">关闭</button></div>
   </div>
@@ -1017,6 +1054,41 @@ function overlapBadge(f){
   return same?'<span class="badge same">同一班 · 一起飞</span>':'<span class="badge sameday">同一天都在飞</span>';
 }
 let lastSeenMine=0;
+/* ===== 2026-10-22-24 即将起飞 hero + 飞行统计（纯本地计算，不编造数据） ===== */
+function nextUpcomingFlight(){
+  const today=todayBj();
+  const cands=(flights||[]).filter(f=>f&&f.flight_date&&f.flight_date>=today);
+  cands.sort((a,b)=>String(a.flight_date).localeCompare(String(b.flight_date))||String(a.dep_time||'').localeCompare(String(b.dep_time||'')));
+  return cands[0]||null;
+}
+function renderNextFlightHero(){
+  const el=$('nextFlightHero'); if(!el) return;
+  const f=nextUpcomingFlight();
+  if(!f){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  const st=flightStatus(f), cd=flightCountdown(f);
+  const depCode=resolveCode(f.dep_code), arrCode=resolveCode(f.arr_code);
+  const dep=displayTime(f.dep_time,depCode), arr=displayTime(f.arr_time,arrCode);
+  const who=ownerOf(f)==='pilot'?'👨🏿‍✈️ 他的':'👩🏻‍🦱 她的';
+  const cdCls=cd==='今天飞'?'today':cd==='明天飞'?'tomorrow':'future';
+  el.classList.remove('hidden');
+  el.innerHTML='<div class="hero-kicker">✈️ 即将起飞 · '+who+'</div>'
+    +'<div class="hero-fno">'+esc(f.flight_no||'')+' <span class="badge '+st.key+'">'+st.label+'</span></div>'
+    +'<div class="hero-route">'+esc(depCode||'')+(arrCode?' → '+esc(arrCode):'')+'</div>'
+    +'<div class="hero-times">'+esc(dep.t||'')+(arr.t?' → '+esc(arr.t):'')+(f.flight_date?' · '+esc(f.flight_date):'')+'</div>'
+    +'<div class="hero-cd"><span class="count-pill '+cdCls+'">'+esc(cd)+'</span></div>';
+}
+function renderFlightStats(){
+  const el=$('flightStats'); if(!el) return;
+  const mk=todayBj().slice(0,7);
+  const mf=(flights||[]).filter(f=>f&&String(f.flight_date||'').slice(0,7)===mk);
+  const pairs={};
+  for(const f of mf){ const k=(resolveCode(f.dep_code)||'?')+'→'+(resolveCode(f.arr_code)||'?'); pairs[k]=(pairs[k]||0)+1; }
+  let top='—',topN=0;
+  for(const k in pairs){ if(pairs[k]>topN){ topN=pairs[k]; top=k; } }
+  el.innerHTML='<div class="stat"><div class="stat-num">'+mf.length+'</div><div class="stat-label">本月飞行</div></div>'
+    +'<div class="stat"><div class="stat-num" style="font-size:15px;line-height:27px">'+esc(top)+'</div><div class="stat-label">最常飞航线'+(topN>0?' · '+topN+' 次':'')+'</div></div>'
+    +'<div class="stat"><div class="stat-num">'+(flights||[]).length+'</div><div class="stat-label">累计航班</div></div>';
+}
 function renderFlights(){
   $('meRole').textContent=ROLE_LABEL[myRole]||'-';
   // “新”角标：只标对方在你上次查看之后新增的航班；第一次打开不标（先把基准记下来）
@@ -1025,6 +1097,7 @@ function renderFlights(){
   if(!lastSeenMine){ lastSeenMine=Date.now(); localStorage.setItem(seenKey,String(lastSeenMine)); }
   $('listPilot').innerHTML=renderRoleList(flights.filter(f=>ownerOf(f)==='pilot'),'pilot');
   $('listAttendant').innerHTML=renderRoleList(flights.filter(f=>ownerOf(f)==='attendant'),'attendant');
+  renderNextFlightHero(); renderFlightStats();
   // 看过即记：这次渲染完，对方再新增的才算“新”
   localStorage.setItem(seenKey,String(Date.now()));
   document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.edit)));
@@ -1741,7 +1814,7 @@ async function initLifePickMap(mapElId,onMove){
   lifePickMap=null; lifePickMarker=null;
   const hasGeo=lifeFormGeo.lat!=null&&lifeFormGeo.lng!=null;
   const m=L.map(el,{scrollWheelZoom:false}).setView(hasGeo?[lifeFormGeo.lat,lifeFormGeo.lng]:[23.129,113.264],hasGeo?14:5);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(m);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:20,subdomains:'abcd',attribution:'© OpenStreetMap contributors © CARTO'}).addTo(m);
   const place=(lat,lng)=>{
     if(lifePickMarker) lifePickMarker.setLatLng([lat,lng]);
     else{ lifePickMarker=L.marker([lat,lng],{draggable:true}).addTo(m); lifePickMarker.on('dragend',e=>{ const p=e.target.getLatLng(); if(onMove) onMove(p.lat,p.lng); }); }
@@ -1950,11 +2023,12 @@ async function delLifeMemory(id){
 }
 function lifeCardButtons(rec){ if(!lifeCanEdit(rec)) return ''; return '<div class="row" style="gap:8px;margin-top:8px"><button class="ghost small" type="button" data-life-edit="'+esc(rec.id)+'">编辑</button><button class="ghost small" type="button" data-life-del="'+esc(rec.id)+'" style="color:#dc2626">删除</button></div>'; }
 /* ===== 2026-10-22-22 美食评分：协作行为——双方可给任何条目打分（只写自己角色字段，绝不碰对方） ===== */
+/* ===== 2026-10-22-24 修正：每人只能给自己打分——弹窗标题=当前登录角色，保存只写自己字段；对方格子纯展示不可点 ===== */
 let foodRateTarget={id:null,role:null};
 function openFoodRate(key){
-  const parts=String(key||'').split(':'); if(parts.length!==2) return;
-  const rec=lifeMemories.find(x=>x.id===parts[0]); if(!rec||rec.type!=='food') return;
-  const role=parts[1]; if(role!=='pilot'&&role!=='attendant') return;
+  const id=String(key||'').split(':')[0]; if(!id) return;
+  const rec=lifeMemories.find(x=>String(x.id)===id); if(!rec||rec.type!=='food') return;
+  const role=myRole; if(role!=='pilot'&&role!=='attendant') return;
   foodRateTarget={id:rec.id,role};
   const cur=role==='pilot'?rec.rating_pilot:rec.rating_attendant;
   const box=$('lifeRateModal'); if(!box) return;
@@ -1983,6 +2057,20 @@ function lifeBindCardButtons(scope){
   scope.querySelectorAll('[data-travel-focus]').forEach(card=>card.addEventListener('click',e=>{ if(e.target.closest('button')) return; focusTravel(card.dataset.travelFocus); }));
 }
 function setLifeCount(id,txt){ const el=$(id); if(el) el.textContent=txt; }
+/* ===== 2026-10-22-24 朋友圈式紧凑照片网格（美食/足迹/时光轴共用，点击看大图） ===== */
+function lifePhotoGridHtml(rec,signed){
+  const urls=rec.photo_urls||[];
+  const paths=urls.filter(p=>signed&&signed[p]);
+  if(!paths.length) return '';
+  const cls=paths.length===1?'life-grid3 single':'life-grid3';
+  return '<div class="'+cls+'">'+paths.map(p=>'<img src="'+esc(signed[p])+'" alt="" data-life-photo="'+esc(rec.id)+'" data-life-photo-idx="'+urls.indexOf(p)+'">').join('')+'</div>';
+}
+function lifeBindPhotoLightbox(scope){
+  (scope||document).querySelectorAll('[data-life-photo]').forEach(img=>{
+    if(img.__lbBound) return; img.__lbBound=true;
+    img.addEventListener('click',()=>openLifeLightbox(img.dataset.lifePhoto,+img.dataset.lifePhotoIdx||0));
+  });
+}
 async function renderLifeAll(){
   const byType=t=>lifeMemories.filter(x=>x.type===t);
   renderLifeFilters();
@@ -2021,9 +2109,16 @@ async function renderLifeAll(){
       let kingId=null;
       if(groups[curMonth]){ let best=-1; for(const rec of groups[curMonth]){ const a=foodAvg(rec); if(a>best){ best=a; kingId=rec.id; } } if(best<=0) kingId=null; }
       const cardHtml=rec=>{
-        const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
+        const imgHtml=lifePhotoGridHtml(rec,signed);
         const navHtml=(rec.nav_baidu?'<a class="life-nav-btn life-nav-baidu" href="'+esc(rec.nav_baidu)+'" target="_blank" rel="noopener">百度导航</a>':'');
-        const rateCell=(role,v)=>'<div class="life-rate-cell" data-food-rate="'+esc(rec.id)+':'+role+'" title="点我打分"><div class="life-meta">'+(role==='pilot'?'👨🏿‍✈️ 评分':'👩🏻‍🦱 评分')+'</div><div style="margin-top:4px">'+(v?ratingTag(role,v):'<span class="life-rate-hint">未评分 · 点我打分 ›</span>')+'</div></div>';
+        /* ===== 2026-10-22-24 每人只能给自己打分：自己的格子可点，对方格子纯展示 ===== */
+        const rateCell=(role,v)=>{
+          const mine=role===myRole;
+          const inner='<div class="life-meta">'+(role==='pilot'?'👨🏿‍✈️ 评分':'👩🏻‍🦱 评分')+'</div><div style="margin-top:4px">'+(v?ratingTag(role,v):(mine?'<span class="life-rate-hint">未评分 · 点我打分 ›</span>':'<span class="life-meta">未评分</span>'))+'</div>';
+          return mine
+            ? '<div class="life-rate-cell is-mine" data-food-rate="'+esc(rec.id)+'" title="点我打分">'+inner+'</div>'
+            : '<div class="life-rate-cell is-other">'+inner+'</div>';
+        };
         const avg=foodAvg(rec);
         return '<div class="life-card'+lifeOwnerClass(rec)+'">'+lifeBadgeHtml(rec)+'<b>'+esc(rec.title||'')+'</b>'+(rec.id===kingId?'<span class="food-crown">👑 本月美食王</span>':'')+'<div class="life-meta">'+esc(rec.memory_date||'')+(avg>0?' · ⭐ 平均 '+avg.toFixed(1):'')+'</div>'+imgHtml+'<div class="life-rate-cols">'+rateCell('pilot',rec.rating_pilot)+rateCell('attendant',rec.rating_attendant)+'</div>'+(rec.note?'<div style="margin-top:6px">'+esc(rec.note)+'</div>':'')+'<div>'+navHtml+'</div>'+lifeCardButtons(rec)+'</div>';
       };
@@ -2033,6 +2128,7 @@ async function renderLifeAll(){
       }).join('');
     }
     lifeBindCardButtons(el);
+    lifeBindPhotoLightbox(el);
   }
   // 旅行足迹：列表 + 地图图钉 + 各地点按时间连成发光航线；点列表卡片地图定位到该点
   {
@@ -2042,7 +2138,7 @@ async function renderLifeAll(){
     else{
       const allPaths=[...new Set(items.flatMap(x=>x.photo_urls||[]))]; const signed=await signLifeUrls(allPaths);
       el.innerHTML=items.map(rec=>{
-        const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
+        const imgHtml=lifePhotoGridHtml(rec,signed);
         const noGeo=rec.lat==null||rec.lng==null;
         const geoHint=noGeo
           ?'<div class="muted" style="font-size:12px;margin-top:4px">暂无坐标'+(lifeCanEdit(rec)?'，<button class="ghost small life-backfill-btn" type="button" data-travel-backfill="'+esc(rec.id)+'">📍 补坐标</button>':'')+'</div>'
@@ -2051,6 +2147,7 @@ async function renderLifeAll(){
       }).join('');
     }
     lifeBindCardButtons(el);
+    lifeBindPhotoLightbox(el);
     renderTravelMarkers();
   }
   // 双人时间线：两条并行色带（蓝=他，粉=她），事件按 added_by 落在各自色带上，一眼看出是谁的
@@ -2065,13 +2162,19 @@ async function renderLifeAll(){
       const attItems=items.filter(x=>lifeOwnerOf(x)==='attendant').sort(byDate);
       const bothItems=items.filter(x=>lifeOwnerOf(x)===null).sort(byDate);
       const mini=rec=>{
-        const img=(rec.photo_urls||[])[0]; const imgHtml=img&&signed[img]?'<img class="main" src="'+esc(signed[img])+'" alt="">':'';
+        const imgHtml=lifePhotoGridHtml(rec,signed);
         return '<div class="life-card'+lifeOwnerClass(rec)+'" style="margin-bottom:8px"><div class="life-meta">'+esc(rec.memory_date||'')+(rec.place_name?' · 📍 '+esc(rec.place_name):'')+'</div><b>'+esc(rec.title||'')+'</b>'+(rec.note?'<div style="margin-top:4px;font-size:13px">'+esc(rec.note)+'</div>':'')+imgHtml+lifeCardButtons(rec)+'</div>';
       };
       el.innerHTML=(bothItems.length?'<div class="muted" style="font-weight:700;color:var(--ink);margin:6px 0">🤝 共同</div>'+bothItems.map(mini).join(''):'')+'<div class="tl-lanes"><div class="tl-lane pilot"><h4>👨🏿‍✈️ 他的时光</h4>'+(pilotItems.map(mini).join('')||'<div class="muted" style="font-size:12px">还没有</div>')+'</div><div class="tl-lane attendant"><h4>👩🏻‍🦱 她的时光</h4>'+(attItems.map(mini).join('')||'<div class="muted" style="font-size:12px">还没有</div>')+'</div></div>';
     }
     lifeBindCardButtons(el);
+    lifeBindPhotoLightbox(el);
   }
+}
+/* 足迹图钉：发光自定义图钉，角色色区分（他蓝/她粉），点击弹出地点卡片 */
+function travelPinIcon(rec){
+  const color=lifeOwnerOf(rec)==='attendant'?'#ec4899':'#3b82f6';
+  return L.divIcon({className:'travel-pin-wrap',html:'<div class="travel-pin" style="--pin:'+color+'"></div>',iconSize:[20,20],iconAnchor:[10,10],popupAnchor:[0,-12]});
 }
 async function renderTravelMarkers(){
   if(!lifeMap||!window.L) return;
@@ -2080,8 +2183,8 @@ async function renderTravelMarkers(){
     const items=lifeMemories.filter(x=>x.type==='travel'&&x.lat!=null&&x.lng!=null);
     for(const rec of items){
       const img=(rec.photo_urls||[])[0]; const signedImg=img?await signLifeUrl(img):'';
-      const popup='<b>'+esc(rec.place_name||rec.title||'')+'</b><br>'+esc(rec.memory_date||'')+(signedImg?'<br><img src="'+esc(signedImg)+'" style="width:120px;border-radius:8px;margin-top:4px">':'');
-      const mk=L.marker([rec.lat,rec.lng]).bindPopup(popup).addTo(lifeMarkers);
+      const popup='<div class="travel-pop"><b>'+esc(rec.place_name||rec.title||'')+'</b><div class="muted">'+esc(rec.memory_date||'')+'</div>'+(signedImg?'<img src="'+esc(signedImg)+'">':'')+'</div>';
+      const mk=L.marker([rec.lat,rec.lng],{icon:travelPinIcon(rec)}).bindPopup(popup).addTo(lifeMarkers);
       lifeMarkerById[rec.id]=mk;
     }
     if(items.length){ try{ lifeMap.fitBounds(L.latLngBounds(items.map(x=>[x.lat,x.lng])).pad(0.4)); }catch(e){} }
@@ -2201,6 +2304,8 @@ function loadLeaflet(){
     document.head.appendChild(s);
   });
 }
+/* ===== 2026-10-22-24 足迹地图重做：CartoDB 高级感底图（白天 Voyager / 夜间 DarkMatter）+ 卫星 ===== */
+let lifeBaseLayers=null;
 async function initLifeMap(){
   const el=$('lifeMap'); if(!el) return;
   if(lifeMap){ try{ lifeMap.invalidateSize(); }catch(e){} return; }
@@ -2208,10 +2313,12 @@ async function initLifeMap(){
     await loadLeaflet();
     if(!window.L) throw new Error('no L');
     lifeMap=L.map('lifeMap').setView([23.129,113.264],5);
-    const streetTiles=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'});
+    const voyager=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:20,subdomains:'abcd',attribution:'© OpenStreetMap contributors © CARTO'});
+    const darkMatter=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:20,subdomains:'abcd',attribution:'© OpenStreetMap contributors © CARTO'});
     const satTiles=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri, Maxar, Earthstar Geographics'});
-    streetTiles.addTo(lifeMap);
-    L.control.layers({'🗺️ 街道':streetTiles,'🛰️ 卫星':satTiles},null,{position:'topright'}).addTo(lifeMap);
+    lifeBaseLayers={day:voyager,night:darkMatter,sat:satTiles};
+    (document.documentElement.getAttribute('data-theme')==='day'?voyager:darkMatter).addTo(lifeMap);
+    L.control.layers({'🗺️ 街道':voyager,'🌙 暗夜':darkMatter,'🛰️ 卫星':satTiles},null,{position:'topright'}).addTo(lifeMap);
     renderTravelMarkers();
     setTimeout(()=>{ try{ lifeMap.invalidateSize(); }catch(e){} },200);
   }catch(e){
@@ -2220,6 +2327,17 @@ async function initLifeMap(){
     el.onclick=()=>{ el.textContent='地图加载中…'; el.onclick=null; lifeMapTried=false; initLifeMap(); };
   }
 }
+/* 主题切换时跟随换底图（用户手动选了卫星则不动） */
+window.__onThemeChange=function(t){
+  if(!lifeMap||!window.L||!lifeBaseLayers) return;
+  try{
+    if(lifeMap.hasLayer(lifeBaseLayers.sat)) return;
+    const want=t==='day'?lifeBaseLayers.day:lifeBaseLayers.night;
+    if(lifeMap.hasLayer(want)) return;
+    lifeMap.removeLayer(lifeBaseLayers.day); lifeMap.removeLayer(lifeBaseLayers.night);
+    want.addTo(lifeMap);
+  }catch(e){}
+};
 $('btnLife').addEventListener('click',()=>{ setLife(true); loadLifeMemories(); });
 $('btnBackFlights').addEventListener('click',()=>setLife(false));
 document.querySelectorAll('[data-life-tab]').forEach(b=>b.addEventListener('click',()=>{
@@ -2490,7 +2608,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-23-23-flights-ui';
+const APP_VERSION='2026-10-22-24-v24';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
@@ -2498,6 +2616,22 @@ function checkForUpdate(){
   // 登录状态存在同源 localStorage 里，换 ?v 不会丢，不用重登。
   location.href=location.pathname+'?v='+Date.now();
 }
+/* ===== 2026-10-22-24 新版提醒：启动时比对 version.json，有新版就在更新按钮上挂 NEW 红点（失败静默） ===== */
+async function checkRemoteVersion(){
+  try{
+    const r=await fetch('version.json?v='+Date.now(),{cache:'no-store'});
+    if(!r.ok) return;
+    const j=await r.json();
+    if(j&&j.version&&j.version!==APP_VERSION){
+      const btn=$('btnCheckUpdate'); const wrap=btn?btn.closest('.top-icon-item'):null;
+      if(wrap&&!wrap.querySelector('.update-new')){
+        const s=document.createElement('span'); s.className='update-new'; s.textContent='NEW';
+        wrap.appendChild(s);
+      }
+    }
+  }catch(e){ /* 离线或取不到就当没这回事 */ }
+}
+setTimeout(checkRemoteVersion,2500);
 
 /* ===== 退出登录并清除（会要求重登，误点前先确认） ===== */
 function clearAuthCache(){
@@ -2675,6 +2809,7 @@ async function boot(){
     root.setAttribute('data-theme',t);
     try{localStorage.setItem(KEY,t);}catch(e){}
     paint();
+    try{if(window.__onThemeChange)window.__onThemeChange(t);}catch(e){} // 足迹地图跟随换底图
     setTimeout(function(){root.classList.remove('theming');},450);
   }
   if(btn) btn.addEventListener('click',function(){apply(cur()==='day'?'night':'day');});
