@@ -546,7 +546,12 @@ html.theming .life-fchip,html.theming .life-modal-box{transition:background-colo
   <!-- ===== 2026-10-22-24 即将起飞 hero + 飞行统计 ===== -->
   <div class="card hero-card hidden" id="nextFlightHero" aria-live="polite"></div>
   <div class="card" id="flightStatsCard">
-    <b>📊 飞行统计</b>
+    <div class="row" style="align-items:center">
+      <b class="grow">📊 飞行统计</b>
+      <button id="statPrevM" class="ghost small" aria-label="上个月">◀</button>
+      <span id="statMonthTitle" style="font-weight:700;min-width:92px;text-align:center;font-size:14px"></span>
+      <button id="statNextM" class="ghost small" aria-label="下个月">▶</button>
+    </div>
     <div class="stats-row" id="flightStats" style="margin-top:8px"></div>
   </div>
 
@@ -1088,6 +1093,34 @@ function bjHourOf(iso){
   }catch(e){ return null; }
 }
 /* ===== 2026-10-22-26 飞行统计三指标：只算当前登录人；常飞目的地排除驻地 CAN；并列全列出 ===== */
+/* ===== 2026-10-22-27：月份切换器 + 跨天红眼计入晚十点后落地 ===== */
+let statsMonth=todayBj().slice(0,7); // 当前统计月份 YYYY-MM，默认本月
+function shiftMonthKey(key,d){
+  let y=+key.slice(0,4), m=+key.slice(5,7)+d;
+  while(m<1){ m+=12; y--; } while(m>12){ m-=12; y++; }
+  return y+'-'+String(m).padStart(2,'0');
+}
+function statsMonthTitle(key){ return +key.slice(0,4)+'年'+(+key.slice(5,7))+'月'; }
+function bjDateOf(iso){
+  if(!iso) return null;
+  try{
+    const p={};
+    new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(iso)).forEach(x=>p[x.type]=x.value);
+    if(!p.year||!p.month||!p.day) return null;
+    return p.year+'-'+p.month+'-'+p.day;
+  }catch(e){ return null; }
+}
+/* 晚十点后落地：到达时刻≥22:00，或跨天到达（红眼）；缺到达时间不计入 */
+function isLateLanding(f){
+  if(!f) return false;
+  const h=bjHourOf(f.arr_time);
+  if(h==null) return false;
+  if(h>=22) return true;
+  const ad=bjDateOf(f.arr_time), dd=bjDateOf(f.dep_time)||String(f.flight_date||'').slice(0,10);
+  if(ad&&dd&&ad>dd) return true;                 // 跨天到达
+  if(f.dep_time&&String(f.arr_time)<String(f.dep_time)) return true; // 无日期字段时的跨天推断
+  return false;
+}
 function flightStatsMine(f){
   const a=f&&f.added_by;
   if(a==null) return true; // 老记录（共同）两边都算
@@ -1101,7 +1134,7 @@ function isHomeBase(raw){
   return resolveCode(s)==='CAN';
 }
 function flightStatsCalc(list,monthKey){
-  const mf=(list||[]).filter(f=>f&&flightStatsMine(f)&&String(f.flight_date||'').slice(0,7)===monthKey);
+  const mf=(list||[]).filter(f=>f&&flightStatsMine(f)&&(String(f.flight_date||'').slice(0,7)===monthKey));
   const dests={};
   for(const f of mf){ if(isHomeBase(f.arr_code)) continue; const c=resolveCode(f.arr_code); if(!c) continue; dests[c]=(dests[c]||0)+1; }
   let topDestN=0; const topDests=[];
@@ -1111,15 +1144,20 @@ function flightStatsCalc(list,monthKey){
   }
   topDests.sort();
   let late=0;
-  for(const f of mf){ const h=bjHourOf(f.arr_time); if(h!=null&&h>=22) late++; }
+  for(const f of mf){ if(isLateLanding(f)) late++; }
   return {segs:mf.length, topDests:topDests, topDestN:topDestN, late:late};
 }
 function renderFlightStats(){
   const el=$('flightStats'); if(!el) return;
-  const s=flightStatsCalc(flights,todayBj().slice(0,7));
+  const cur=todayBj().slice(0,7), isCur=statsMonth===cur;
+  const s=flightStatsCalc(flights,statsMonth);
+  const mt=$('statMonthTitle');
+  if(mt) mt.innerHTML=esc(statsMonthTitle(statsMonth))+(isCur?' <span class="badge">本月</span>':'');
+  const mNum=+statsMonth.slice(5,7);
+  const segsLabel=isCur?'本月飞行段数':mNum+'月飞行段数';
   const destTxt=s.topDests.length?s.topDests.join('、'):'—';
   const destSize=s.topDests.length>2?'12px':(s.topDests.length>1?'13px':'15px');
-  el.innerHTML='<div class="stat"><div class="stat-num">'+s.segs+'</div><div class="stat-label">本月飞行段数</div></div>'
+  el.innerHTML='<div class="stat"><div class="stat-num">'+s.segs+'</div><div class="stat-label">'+esc(segsLabel)+'</div></div>'
     +'<div class="stat"><div class="stat-num" style="font-size:'+destSize+';line-height:1.6">'+esc(destTxt)+'</div><div class="stat-label">常飞目的地'+(s.topDestN>0?' · '+s.topDestN+' 次':'')+'</div></div>'
     +'<div class="stat"><div class="stat-num">'+s.late+'</div><div class="stat-label">晚十点后落地</div></div>';
 }
@@ -2709,7 +2747,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-22-26-v26';
+const APP_VERSION='2026-10-22-27-v27';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
@@ -2830,6 +2868,10 @@ $('btnCalNext').addEventListener('click',()=>calGo(1));
 $('btnCalToday').addEventListener('click',()=>{ const t=todayBj().split('-'); calYear=+t[0]; calMonth=+t[1]-1; renderCalendar(); });
 $('btnSaveFlight').addEventListener('click',saveFlight);
 $('btnCancelEdit').addEventListener('click',resetForm);
+
+/* ===== 2026-10-22-27 飞行统计月份切换器 ===== */
+if($('statPrevM')) $('statPrevM').addEventListener('click',()=>{ statsMonth=shiftMonthKey(statsMonth,-1); renderFlightStats(); });
+if($('statNextM')) $('statNextM').addEventListener('click',()=>{ statsMonth=shiftMonthKey(statsMonth,1); renderFlightStats(); });
 
 /* ===== 世界时钟表单 ===== */
 function initWcForm(){
