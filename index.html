@@ -342,6 +342,37 @@ html[data-theme="day"] .wx-ticker-chunk b{color:#16233f}
 .life-tabs .life-tab.on{background:#1e3a8a;border-color:#1e3a8a;color:#fff;font-weight:600}
 html[data-theme="day"] .life-tabs .life-tab{background:#fff;color:#16233f;border-color:#c9d8ef}
 html[data-theme="day"] .life-tabs .life-tab.on{background:#1e3a8a;border-color:#1e3a8a;color:#fff}
+/* ===== 2026-10-23-23-flights-ui：航班页视觉简化（Apple 式降噪 + 倒计时强调 + 日历轻量化） ===== */
+/* 1. 卡片 meta 行：替代原来又长又吵的 muted 一行（日期只在"已飞过"卡上保留，上方已有日期分组头） */
+.flight-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:3px}
+.meta-quiet{color:var(--sub);font-size:12.5px}
+/* 2. 倒计时 pill：按紧急度着色，"今天飞"带柔光呼吸 */
+.count-pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;font-variant-numeric:tabular-nums}
+.count-pill.today{background:#fee2e2;color:#b91c1c;animation:countPulse 2.4s ease-in-out infinite}
+.count-pill.tomorrow{background:#fef3c7;color:#92400e}
+.count-pill.future{background:#e0e9ff;color:#1d4ed8}
+.count-pill.done{background:transparent;color:var(--sub);font-weight:400;padding:3px 0}
+@keyframes countPulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.30)}50%{box-shadow:0 0 0 6px rgba(220,38,38,0)}}
+/* 3. 状态徽章加粗，"飞行中"配呼吸圆点 */
+.badge{font-size:12px;font-weight:700;padding:3px 10px}
+.badge.flying::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#1d4ed8;margin-right:5px;animation:flyDot 1.6s ease-in-out infinite}
+@keyframes flyDot{0%,100%{opacity:1}50%{opacity:.25}}
+/* 4. 卡片轻按压回弹（Apple 式触感） */
+.flight{transition:transform .12s ease}
+.flight:active{transform:scale(.985)}
+/* 5. 日历轻量化：更矮的格子、更小的辅助字、更安静的图例 */
+.cal-cell{min-height:62px;padding:3px}
+.cal-wd{font-size:9px}
+.cal-hol{font-size:9px;padding:0 3px}
+.cal-bar{font-size:10.5px;padding:1px 4px}
+.cal-legend{font-size:11px;gap:10px}
+/* 6. 动效偏好：关闭呼吸/闪烁类动效 */
+@media (prefers-reduced-motion:reduce){.count-pill.today,.badge.flying::before{animation:none}}
+/* 7. 对比度修复（WCAG ≥4.5:1）：加深原来过浅的徽章/日历辅助文字 */
+.badge.soon{color:#047857}
+html[data-theme="day"] .badge.soon{color:#166534}
+.badge.past{color:#475569}
+html[data-theme="day"] .cal-wd{color:#64748b}
 /* ===== 2026-10-22-22 相册：微信朋友圈式紧凑 3 列网格 ===== */
 .life-wall{display:flex;flex-direction:column;gap:10px;columns:auto}
 .life-wall-item{break-inside:avoid;margin-bottom:0}
@@ -1047,9 +1078,20 @@ function flightCard(f){
   const dur=flightDuration(f);
   const isNew=ownerOf(f)!==myRole&&f.created_at&&new Date(f.created_at).getTime()>lastSeenMine;
   const roleColor=(typeof sectionColors!=='undefined'&&sectionColors[ownerOf(f)])||DEFAULT_COLORS[ownerOf(f)]||'#2563eb';
+  /* v23 卡片 meta 行简化：日期只在"已飞过"卡保留（上方已有日期分组头）；倒计时做成按紧急度着色的 pill；去掉冗余的"添加人"（已在分区标题里） */
+  const cd=flightCountdown(f);
+  const cdCls=cd==='今天飞'?'today':cd==='明天飞'?'tomorrow':cd==='已过去'?'done':'future';
+  const isPastCard=f.flight_date<todayBj();
+  const metaBits=[];
+  if(f.aircraft) metaBits.push(esc(f.aircraft));
+  if(dur) metaBits.push('飞行时长 '+esc(dur));
   return '<div class="flight'+(batchMode&&batchSelected.has(f.id)?' batch-selected':'')+'" id="flight-'+esc(f.id)+'" style="border-top-color:'+esc(roleColor)+'">'
     +'<div>'+(batchMode?'<label class="batch-check"><input type="checkbox" data-batch-check="'+esc(f.id)+'"'+(batchSelected.has(f.id)?' checked':'')+' aria-label="选中这张航班卡"></label>':'')+'<span class="fno">'+esc(f.flight_no)+'</span><span class="badge '+st.key+'">'+st.label+'</span>'+overlapBadge(f)+(isNew?'<span class="badge new">新</span>':'')+'</div>'
-    +'<div class="muted"><span class="card-date">'+esc(f.flight_date)+'</span> · <span class="card-count'+(f.flight_date<todayBj()?' past':'')+'">'+esc(flightCountdown(f))+'</span>'+(f.aircraft?' · '+esc(f.aircraft):'')+(dur?' · 飞行时长 '+dur:'')+' · 添加人 '+(ownerOf(f)==='attendant'?'👩🏻‍🦱 乘务员':'👨🏿‍✈️ 飞行员')+'</div>'
+    +'<div class="flight-meta">'
+    +(isPastCard?'<span class="card-date">'+esc(f.flight_date)+'</span>':'')
+    +'<span class="count-pill '+cdCls+'">'+esc(cd)+'</span>'
+    +(metaBits.length?'<span class="meta-quiet">'+metaBits.join(' · ')+'</span>':'')
+    +'</div>'
     +'<div class="bp-route">'+bpEnd(depCode,depCity,dep.t,dep.tag,false)
     +'<div class="bp-dash"><span>✈️</span></div>'
     +bpEnd(arrCode,arrCity,arr.t,arr.tag,true)+'</div>'
@@ -2448,7 +2490,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-22-22-life-fix';
+const APP_VERSION='2026-10-23-23-flights-ui';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
