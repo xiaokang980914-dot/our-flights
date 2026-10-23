@@ -1577,7 +1577,7 @@ function loadTesseract(){
   })();
   return _tesseractPromise;
 }
-function ocrNormDigits(s){ return String(s||'').replace(/[Oo]/g,'0'); }
+function ocrNormDigits(s){ return String(s||'').replace(/[Oo]/g,'0').replace(/[lI|]/g,'1'); }
 function ocrNormTime(h,m){ return pad2(ocrNormDigits(h))+':'+pad2(ocrNormDigits(m)); }
 /* OCR 文本归一化：全角转半角、中文之间空格去掉（“马 尼 拉”→“马尼拉”）、时间里的空格去掉 */
 function ocrNormalizeText(s){
@@ -1622,28 +1622,34 @@ function ocrResolveCityFrag(frag){
   }
   return best;
 }
-/* 时间 token 归一化：小时 0-23、分钟 0-59 才有效 */
+/* 时间 token 归一化：小时 0-23、分钟 0-59 才有效。容忍数字内空格（"1 7"→17）、l/I/| 误读作 1 */
 function ocrNormTimeTok(h,m){
-  const hh=ocrNormDigits(h), mm=ocrNormDigits(m);
+  const hh=ocrNormDigits(h).replace(/\s+/g,''), mm=ocrNormDigits(m).replace(/\s+/g,'');
   if(hh===''||mm==='') return '';
   const H=+hh, M=+mm; if(H>23||M>59) return '';
   return pad2(hh)+':'+pad2(mm);
 }
-/* 在一段文本里提取起飞/到达时间。容忍：分隔符 : ; . ： ； 。、分隔符 - – — ~ 至 _ 及杂字、冒号丢失（1646）、o/O 读作 0（22:3o） */
+/* 在一段文本里提取起飞/到达时间。容忍：分隔符 : ; . ： ； 。、分隔符 - – — ~ 至 _ 及杂字、冒号丢失（1646）、o/O 读作 0（22:3o）、数字内空格（"1 7:40"→17:40）、l/I/| 误读作 1。小时前必须是非数字边界，避免把航班号末位吞进时间（"CZ397 7:40" 不得读成 77:40） */
 function ocrExtractTimes(seg){
   const s=String(seg||'');
+  const D='[0-9oOlI|]';
+  const H='('+D+'(?: ?'+D+')?)';       /* 小时 1~2 位，允许 "1 7" */
+  const M='('+D+' ?'+D+')';            /* 分钟 2 位，允许 "4 0" */
+  const D4='('+D+'(?: ?'+D+'){3})';    /* 4 位连写，允许 "16 46" */
+  const B='(?<!'+D+')';                /* 小时前的非数字边界 */
   const SEP='[:;:.：；。]';
   const GAP='[\\-–—~至_ ]+';
+  const tok4=g=>{ const t=String(g||'').replace(/\s+/g,''); return [t.slice(0,2),t.slice(2)]; };
   let m;
-  m=s.match(new RegExp('([0-9oO]{1,2})'+SEP+'([0-9oO]{2})\\s*'+GAP+'\\s*([0-9oO]{1,2})'+SEP+'([0-9oO]{2})'));
+  m=s.match(new RegExp(B+H+SEP+M+'\\s*'+GAP+'\\s*'+H+SEP+M));
   if(m){ const a=ocrNormTimeTok(m[1],m[2]), b=ocrNormTimeTok(m[3],m[4]); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
-  m=s.match(new RegExp('([0-9oO]{1,2})'+SEP+'([0-9oO]{2})\\s*'+GAP+'\\s*([0-9oO]{4})(?!\\d)'));
-  if(m){ const a=ocrNormTimeTok(m[1],m[2]), b=ocrNormTimeTok(m[3].slice(0,2),m[3].slice(2)); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
-  m=s.match(new RegExp('([0-9oO]{4})(?!\\d)\\s*'+GAP+'\\s*([0-9oO]{1,2})'+SEP+'([0-9oO]{2})'));
-  if(m){ const a=ocrNormTimeTok(m[1].slice(0,2),m[1].slice(2)), b=ocrNormTimeTok(m[2],m[3]); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
-  m=s.match(/([0-9oO]{4})(?!\d)\s*[\-–—~至_ ]+\s*([0-9oO]{4})(?!\d)/);
-  if(m){ const a=ocrNormTimeTok(m[1].slice(0,2),m[1].slice(2)), b=ocrNormTimeTok(m[2].slice(0,2),m[2].slice(2)); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
-  const all=[...s.matchAll(new RegExp('([0-9oO]{1,2})'+SEP+'([0-9oO]{2})','g'))].map(x=>ocrNormTimeTok(x[1],x[2])).filter(Boolean);
+  m=s.match(new RegExp(B+H+SEP+M+'\\s*'+GAP+'\\s*'+D4+'(?!\\d)'));
+  if(m){ const p=tok4(m[3]); const a=ocrNormTimeTok(m[1],m[2]), b=ocrNormTimeTok(p[0],p[1]); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
+  m=s.match(new RegExp(B+D4+'(?!\\d)\\s*'+GAP+'\\s*'+H+SEP+M));
+  if(m){ const p=tok4(m[1]); const a=ocrNormTimeTok(p[0],p[1]), b=ocrNormTimeTok(m[2],m[3]); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
+  m=s.match(new RegExp(B+D4+'(?!\\d)\\s*[\\-–—~至_ ]+\\s*'+D4+'(?!\\d)'));
+  if(m){ const p=tok4(m[1]), q=tok4(m[2]); const a=ocrNormTimeTok(p[0],p[1]), b=ocrNormTimeTok(q[0],q[1]); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
+  const all=[...s.matchAll(new RegExp(B+H+SEP+M,'g'))].map(x=>ocrNormTimeTok(x[1],x[2])).filter(Boolean);
   if(all.length>=2) return {dep:all[0],arr:all[1],idx:0,end:0};
   return {dep:'',arr:'',idx:-1,end:-1};
 }
@@ -1687,7 +1693,7 @@ function parseOcrFlights(text){
     if(tr.dep){ depTime=tr.dep; arrTime=tr.arr; tIdx=tr.idx; tEnd=tr.end; }
     if(!depTime&&!arrTime){
       /* 兜底：只剩一个时间时，按它在破折号前/后来定是起飞还是到达 */
-      const sm=body.match(/([0-9oO]{1,2})[:;:.：；。]([0-9oO]{2})/);
+      const sm=body.match(/(?<![0-9oOlI|])([0-9oOlI|](?: ?[0-9oOlI|])?)[:;:.：；。]([0-9oOlI|] ?[0-9oOlI|])/);
       if(sm){
         const t=ocrNormTimeTok(sm[1],sm[2]);
         if(t){
@@ -3067,7 +3073,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-22-30-v30';
+const APP_VERSION='2026-10-23-31-v31';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
