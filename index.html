@@ -1649,8 +1649,13 @@ function ocrExtractTimes(seg){
   if(m){ const p=tok4(m[1]); const a=ocrNormTimeTok(p[0],p[1]), b=ocrNormTimeTok(m[2],m[3]); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
   m=s.match(new RegExp(B+D4+'(?!\\d)\\s*[\\-–—~至_ ]+\\s*'+D4+'(?!\\d)'));
   if(m){ const p=tok4(m[1]), q=tok4(m[2]); const a=ocrNormTimeTok(p[0],p[1]), b=ocrNormTimeTok(q[0],q[1]); if(a&&b) return {dep:a,arr:b,idx:m.index,end:m.index+m[0].length}; }
-  const all=[...s.matchAll(new RegExp(B+H+SEP+M,'g'))].map(x=>ocrNormTimeTok(x[1],x[2])).filter(Boolean);
-  if(all.length>=2) return {dep:all[0],arr:all[1],idx:0,end:0};
+  const found=[...s.matchAll(new RegExp(B+H+SEP+M,'g'))];
+  const valid=[];
+  for(const x of found){ const t=ocrNormTimeTok(x[1],x[2]); if(t) valid.push({t:t,i:x.index}); }
+  /* 兜底配对时要求两时间在文本里相邻（间隔≤12字符），避免把"计划签到 08:10"这类杂散时间配成起降时间；配不上就返回空，走下游的单时间+时长反推 */
+  for(let k=0;k+1<valid.length;k++){
+    if(valid[k+1].i-(valid[k].i+5)<=12) return {dep:valid[k].t,arr:valid[k+1].t,idx:valid[k].i,end:0};
+  }
   return {dep:'',arr:'',idx:-1,end:-1};
 }
 /* 识别原文过滤：去掉含个人信息的行（证件/签到关键词、6 位以上连续数字），只留航班字段对照 */
@@ -1728,7 +1733,13 @@ function parseOcrFlights(text){
       else if(depTime&&arrTime&&dur>0){
         const exp=(toMin(depTime)+dur)%1440; const got=toMin(arrTime);
         let diff=Math.abs(got-exp); if(diff>720) diff=1440-diff;
-        if(diff>0) timeWarn='时间与时长差'+diff+'分钟，请核对';
+        if(diff>0){
+          /* "(14:05" 常被 OCR 读成 "04:05"（"1" 丢了）：起飞+时长≠到达时，若其中一端+10h 能让等式成立，则自动修复（数学上唯一，不会误伤） */
+          const depPlus10=fromMin(toMin(depTime)+600), arrPlus10=fromMin(toMin(arrTime)+600);
+          if((toMin(depPlus10)+dur)%1440===got){ depTime=depPlus10; timeWarn='起飞时间已按飞行时长自动修正为 '+depTime+'，请核对'; }
+          else if((toMin(depTime)+dur)%1440===toMin(arrPlus10)){ arrTime=arrPlus10; timeWarn='到达时间已按飞行时长自动修正为 '+arrTime+'，请核对'; }
+          else timeWarn='时间与时长差'+diff+'分钟，请核对';
+        }
       }
     }
     if(!depCode&&!depCity&&!arrCode&&!arrCity&&!depTime&&!arrTime&&!aircraft) continue;
@@ -1818,6 +1829,23 @@ async function saveAllOcr(){
   await loadFlights();
   }finally{ ocrSavingAll=false; }
 }
+/* OCR 预处理：小图放大再识别。排班截图里的蓝色小字（日期 10.28、时间里的 "(1"）在原图尺寸下常被误读（"(14:05"→"04:05"、"10.28"直接丢失）；放大到长边 ~4000px 后可稳定读出。失败时回退原图 */
+async function ocrUpscale(file){
+  try{
+    const bmp=await createImageBitmap(file).catch(()=>null);
+    if(!bmp) return file;
+    const w0=bmp.width||0, h0=bmp.height||0;
+    if(!w0||!h0){ bmp.close(); return file; }
+    const scale=Math.min(3, 4000/Math.max(w0,h0));
+    if(scale<=1.05){ bmp.close(); return file; }
+    const cv=document.createElement('canvas');
+    cv.width=Math.round(w0*scale); cv.height=Math.round(h0*scale);
+    cv.getContext('2d').drawImage(bmp,0,0,cv.width,cv.height);
+    bmp.close();
+    const blob=await new Promise(res=>cv.toBlob(res,'image/jpeg',0.92));
+    return blob||file;
+  }catch(e){ return file; }
+}
 async function handleOcrFile(file){
   if(!file) return;
   if(ocrBusy){ msg($('ocrMsg'),'正在识别中，请稍等…',true); return; }
@@ -1832,7 +1860,8 @@ async function handleOcrFile(file){
   msg($('ocrMsg'),'正在识别截图…',true);
   try{
     await loadTesseract();
-    const res=await window.Tesseract.recognize(file,'chi_sim+eng');
+    const ocrInput=await ocrUpscale(file);
+    const res=await window.Tesseract.recognize(ocrInput,'chi_sim+eng');
     const text=(res&&res.data&&res.data.text)||(res&&res.text)||'';
     ocrCandidates=parseOcrFlights(text);
     if(ocrCandidates.length) ocrLastSig=sig;
@@ -3073,7 +3102,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-23-31-v31';
+const APP_VERSION='2026-10-23-32-v32';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
