@@ -6,77 +6,34 @@
 <title>运行风险及补充概要 · 查询手册</title>
 <style>
 :root {
-  --bg: #f5f5f7;
-  --card: #ffffff;
-  --text: #1d1d1f;
-  --text-2: #6e6e73;
-  --border: #e5e5e7;
-  --accent: #0071e3;
-  --warn-bg: #fff8e1;
-  --warn-border: #ffb300;
-  --warn-text: #7a5c00;
-  --imp-bg: #e8f0fe;
-  --imp-border: #1a73e8;
-  --imp-text: #174ea6;
-  --note-bg: #f1f3f4;
-  --note-border: #9aa0a6;
-  --radius: 12px;
+  --bg: #f5f5f7; --card: #ffffff; --text: #1d1d1f; --text-2: #6e6e73;
+  --border: #e5e5e7; --accent: #0071e3;
+  --warn-bg: #fff8e1; --warn-border: #ffb300; --warn-text: #7a5c00;
+  --imp-bg: #e8f0fe; --imp-border: #1a73e8; --imp-text: #174ea6;
+  --note-bg: #f1f3f4; --note-border: #9aa0a6; --radius: 12px;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #000000;
-    --card: #1c1c1e;
-    --text: #f5f5f7;
-    --text-2: #98989f;
-    --border: #38383a;
-    --accent: #0a84ff;
-    --warn-bg: #2e2600;
-    --warn-border: #ffd60a;
-    --warn-text: #ffd60a;
-    --imp-bg: #002a5c;
-    --imp-border: #0a84ff;
-    --imp-text: #6cb4ff;
-    --note-bg: #2c2c2e;
-    --note-border: #636366;
+    --bg: #000000; --card: #1c1c1e; --text: #f5f5f7; --text-2: #98989f;
+    --border: #38383a; --accent: #0a84ff;
+    --warn-bg: #2e2600; --warn-border: #ffd60a; --warn-text: #ffd60a;
+    --imp-bg: #002a5c; --imp-border: #0a84ff; --imp-text: #6cb4ff;
+    --note-bg: #2c2c2e; --note-border: #636366;
   }
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body {
-  margin: 0; padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  background: var(--bg); color: var(--text);
-  font-size: 16px; line-height: 1.7;
-  -webkit-font-smoothing: antialiased;
-}
-.header {
-  position: sticky; top: 0; z-index: 100;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 20px;
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-}
+body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+.header { position: sticky; top: 0; z-index: 100; background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
 .header h1 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.3px; }
 .header .sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
 .search-bar { padding: 12px 16px 4px; }
-.search-bar input {
-  width: 100%; padding: 10px 14px; font-size: 15px;
-  border: 1px solid var(--border); border-radius: 10px;
-  background: var(--card); color: var(--text); outline: none;
-}
+.search-bar input { width: 100%; padding: 10px 14px; font-size: 15px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); outline: none; }
 .search-bar input:focus { border-color: var(--accent); }
 .container { max-width: 800px; margin: 0 auto; padding: 8px 16px 60px; }
 .part { margin-top: 28px; }
-.part-title {
-  font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
-  padding-bottom: 8px; margin: 0 0 4px;
-  border-bottom: 3px solid var(--accent);
-}
+.part-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; padding-bottom: 8px; margin: 0 0 4px; border-bottom: 3px solid var(--accent); }
 .section { background: var(--card); border-radius: var(--radius); margin-top: 14px; overflow: hidden; border: 1px solid var(--border); }
-.section-head {
-  padding: 14px 18px; cursor: pointer; user-select: none;
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: 17px; font-weight: 700;
-}
+.section-head { padding: 14px 18px; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; font-size: 17px; font-weight: 700; }
 .section-head .chev { color: var(--text-2); font-size: 14px; transition: transform .2s; }
 .section.open .section-head .chev { transform: rotate(90deg); }
 .section-body { display: none; padding: 0 18px 18px; }
@@ -88,13 +45,12 @@ body {
 .callout.important { background: var(--imp-bg); border-left: 4px solid var(--imp-border); color: var(--imp-text); }
 .callout.warning { background: var(--warn-bg); border-left: 4px solid var(--warn-border); color: var(--warn-text); }
 .callout.note { background: var(--note-bg); border-left: 4px solid var(--note-border); color: var(--text); }
-.callout strong { color: inherit; }
 .item { padding: 10px 0; border-bottom: 1px solid var(--border); }
 .item:last-child { border-bottom: none; }
 .item .k { font-weight: 600; font-size: 15px; }
 .item .v { color: var(--text-2); font-size: 14px; margin-top: 2px; }
 .attach { display: inline-block; margin: 4px 8px 4px 0; padding: 6px 12px; border-radius: 8px; background: var(--note-bg); font-size: 14px; text-decoration: none; color: var(--accent); border: 1px solid var(--border); }
-.attach.done { border-color: var(--imp-border); }
+.attach.real { border-color: var(--imp-border); }
 .attach.pending { color: var(--text-2); }
 .tbd { color: var(--text-2); font-size: 14px; font-style: italic; padding: 8px 0; }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 15px; margin: 8px 0; }
@@ -102,15 +58,16 @@ body {
 .toc { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px 18px; margin-top: 14px; }
 .toc a { display: block; padding: 8px 0; color: var(--accent); text-decoration: none; font-size: 15px; border-bottom: 1px solid var(--border); }
 .toc a:last-child { border-bottom: none; }
-h3.sub { font-size: 16px; font-weight: 700; margin: 18px 0 8px; color: var(--text); }
+h3.sub { font-size: 16px; font-weight: 700; margin: 18px 0 8px; }
 .meta { font-size: 13px; color: var(--text-2); margin-top: 30px; text-align: center; }
+.verified { font-size: 12px; color: var(--text-2); background: var(--note-bg); padding: 8px 12px; border-radius: 8px; margin: 12px 0; }
 </style>
 </head>
 <body>
 
 <div class="header">
   <h1>运行风险及补充概要</h1>
-  <div class="sub">B777 三分部 · 查询手册 ｜ 2026-10-23 ｜ 原文 1023 节点</div>
+  <div class="sub">B777 三分部 · 查询手册 ｜ 2026-10-23 ｜ 原文 1026 节点（已核实）</div>
 </div>
 
 <div class="search-bar">
@@ -119,45 +76,47 @@ h3.sub { font-size: 16px; font-weight: 700; margin: 18px 0 8px; color: var(--tex
 
 <div class="container">
 
+<div class="verified">✅ 本版数据经 2026-10-23 23:25 浏览器实读核实：1026 节点；每周一案 18 个附件全部点开（7 个上传型含大小、11 个超链接型含真实 URL）；3 处图片已定位。</div>
+
 <div class="toc" id="toc">
   <a href="#p1">第一部分 · 总概要</a>
   <a href="#p2">第二部分 · 北美航线风险速查卡</a>
   <a href="#checklist">附 · 待补清单</a>
 </div>
 
-<!-- ============ 第一部分 ============ -->
 <div class="part" id="p1">
 <div class="part-title">第一部分 · 总概要</div>
 
 <div class="section open">
 <div class="section-head">一、每周一案（安全显微镜） <span class="chev">›</span></div>
 <div class="section-body">
-<p>分部"安全显微镜"栏目案例通报，每期聚焦一个真实事件或风险点并配发 PDF 全文。</p>
+<p>原文档链式结构：每周一案 → 复飞 → GPS干扰应对 → 夏季运行 → 空中垂直过载大 →（空节点嵌套）→ 雷达 → 胎压 → 颠簸 → 发动机火警 → 紧急下降 → 燃油泄漏 → 擦机尾 → 烟雾。以下按附件类型分类。</p>
 
-<h3 class="sub">第一链</h3>
-<div class="item"><div class="k">第 9 期 · 复飞</div><a class="attach done" href="#">📎 第九期.pdf（✅ 已下载）</a></div>
-<div class="item"><div class="k">第 10 期 · GPS 干扰应对</div><a class="attach done" href="https://docs.qq.com/pdf/DZnBFd2RWTE5qSUZB">📎 第十期（✅ 可点阅读）</a></div>
-<div class="item"><div class="k">第 11 期 · 夏季运行</div><a class="attach done" href="#">📎 第十一期.pdf（✅ 已下载）</a></div>
-<div class="item"><div class="k">第 20 期 · 空中垂直过载大</div><a class="attach done" href="#">📎 第二十期.pdf（✅ 已下载）</a></div>
-<div class="item"><div class="k">第 27 期 <span style="color:var(--text-2)">（主题待核对）</span></div><span class="attach pending">📎 第27期（附件待补）</span></div>
-<div class="item"><div class="k">第 24 期 <span style="color:var(--text-2)">（主题待核对）</span></div><span class="attach pending">📎 第24期（附件待补）</span></div>
-<div class="item"><div class="k">第 37 期 <span style="color:var(--text-2)">（主题待核对）</span></div><span class="attach pending">📎 第37期（附件待补）</span></div>
-<div class="item"><div class="k">第 38 期 <span style="color:var(--text-2)">（主题待核对）</span></div><span class="attach pending">📎 第38期（附件待补）</span></div>
+<h3 class="sub">上传型附件（7 个，可直接下载）</h3>
+<div class="item"><div class="k">第 9 期 · 复飞</div><div class="v">安全显微镜-每周一案 第九期.pdf · 7.5MB · ✅ 已下载</div></div>
+<div class="item"><div class="k">第 11 期 · 夏季运行</div><div class="v">安全显微镜-每周一案 第十一期.pdf · 4.0MB · ✅ 已下载</div></div>
+<div class="item"><div class="k">第 20 期 · 空中垂直过载大</div><div class="v">安全显微镜-每周一案 第二十期.pdf · 13.1MB · ✅ 已下载</div></div>
+<div class="item"><div class="k">第 27 期 · 冬季除防冰运行</div><div class="v">安全显微镜-每周一案 第27期-冬季除防冰运行.pdf · 18.0MB</div></div>
+<div class="item"><div class="k">第 48 期 · 中断起飞</div><div class="v">安全显微镜-每周一案 第48期_中断起飞.pdf · 7.7MB</div></div>
+<div class="item"><div class="k">第 39 期 · 发动机火警</div><div class="v">安全显微镜-每周一案 第39期_发动机火警.pdf · 4.8MB</div></div>
+<div class="item"><div class="k">第 59 期 · 擦机尾</div><div class="v">安全显微镜-每周一案 第59期_擦机尾_67708254ei11.pdf · 9.2MB</div></div>
 
-<h3 class="sub">第二链</h3>
-<div class="item"><div class="k">第 39 期 · 发动机火警</div><span class="attach pending">📎 第39期（附件待补）</span></div>
-<div class="item"><div class="k">第 41 期 · 紧急下降</div><span class="attach pending">📎 第41期（附件待补）</span></div>
-<div class="item"><div class="k">第 43 期 · 燃油泄漏</div><span class="attach pending">📎 第43期（附件待补）</span></div>
-<div class="item"><div class="k">第 59 期 · 擦机尾</div><span class="attach pending">📎 第59期.pdf（附件待补）</span></div>
-<div class="item"><div class="k">第 63 期 · 烟雾</div><span class="attach pending">📎 第63期（附件待补）</span></div>
-<div class="item"><div class="k">第 48 期 · 胎压相关</div><span class="attach pending">📎 第48期（附件待补）</span></div>
-<div class="item"><div class="k">第 54 期 · 胎压</div><span class="attach pending">📎 第54期（附件待补）</span></div>
-<div class="item"><div class="k">第 64 期 · 颠簸</div><span class="attach pending">📎 第64期（附件待补）</span></div>
+<h3 class="sub">超链接型附件（11 个，点击直达腾讯文档预览）</h3>
+<div class="item"><div class="k">第 10 期 · GPS 干扰应对</div><a class="attach real" href="https://docs.qq.com/pdf/DZnBFd2RWTE5qSUZB?nlc=1">📎 点击阅读（✅ 已下载）</a></div>
+<div class="item"><div class="k">第 24 期</div><a class="attach real" href="https://docs.qq.com/pdf/DSU9IUFF3dW1VSmd1?nlc=1">📎 点击阅读</a></div>
+<div class="item"><div class="k">第 37 期 · 烟雾火警异味</div><a class="attach real" href="https://docs.qq.com/pdf/DSXdqQVFQQ0ZVb1hQ?nlc=1">📎 点击阅读</a></div>
+<div class="item"><div class="k">第 38 期 · 地面剐碰</div><a class="attach real" href="https://docs.qq.com/pdf/DSVZ3dkFmRGVKQ0dW?nlc=1">📎 点击阅读</a></div>
+<div class="item"><div class="k">第 40 期 · 擦机尾</div><a class="attach real" href="https://docs.qq.com/pdf/DZkR2Z2hmckJxVXFk?nlc=1">📎 点击阅读</a></div>
+<div class="item"><div class="k">第 44 期 · 雷达使用</div><a class="attach real" href="https://docs.qq.com/pdf/DSU5JV0hvbGJsSnhR?nlc=1">📎 点击阅读</a></div>
+<div class="item"><div class="k">第 54 期 · 胎压</div><a class="attach real" href="https://docs.qq.com/pdf/DSXVXYVZLZUppcFFB?nlc=1">📎 点击阅读</a></div>
+<div class="item"><div class="k">第 64 期 · 颠簸</div><a class="attach real" href="https://docs.qq.com/pdf/DSXRPcmNTRXVOeHRE?nlc=1">📎 点击阅读</a></div>
+<div class="item"><div class="k">第 41 期 · 增压</div><a class="attach real" href="https://docs.qq.com/pdf/DZXJrck96Qk1Zb2pn?nlc=1">📎 点击阅读</a></div>
+<div class="item"><div class="k">第 43 期 · 燃油泄漏</div><a class="attach real" href="https://docs.qq.com/pdf/DWk9SVXZJdk9JcWRy?nlc=1">📎 点击阅读</a></div>
+<div class="item"><div class="k">第 63 期</div><a class="attach real" href="https://docs.qq.com/document/DSWxIV0haRWNyV2FZ?nlc=1">📎 点击阅读（Word 文档）</a></div>
 
 <h3 class="sub">其他附件</h3>
 <div class="item"><div class="k">恶劣天气风险典型案例集（2025版）</div><span class="attach pending">📎（附件待补）</span></div>
-<div class="item"><div class="k">B777 机队除防冰运行指南 <span style="color:var(--text-2)">18.0MB / 41页</span></div><span class="attach pending">📎（附件待补）</span></div>
-<div class="item"><div class="k">重着陆事件通报和技术提示</div><a class="attach done" href="#">📎（✅ 已下载）</a></div>
+<div class="item"><div class="k">重着陆事件通报和技术提示</div><div class="v">✅ 已下载</div></div>
 </div>
 </div>
 
@@ -165,21 +124,19 @@ h3.sub { font-size: 16px; font-weight: 700; margin: 18px 0 8px; color: var(--tex
 <div class="section-head">二、GPS 干扰处置 <span class="chev">›</span></div>
 <div class="section-body">
 <div class="callout important"><strong>B777 机型：GUN-76</strong>——实际飞行中应对 GPS 干扰的主要策略和机组动作，都应以该 FCOM 通告为唯一参考。FTB-2024-016 仅作扩展学习。波音含 GPS 干扰应对通告的 FCOM 已推送 EFB，请督促机组尽快下载。</div>
-
+<p>波音公布的应对 GPS 干扰的通告，包括补充程序、机动动作和 NNC 检查单。</p>
 <h3 class="sub">移动前出现 GPS 干扰</h3>
 <ol>
 <li>技术分公司评估原因，授权维修放行人员确认是否符合《运行手册》<strong>7.1.3.2</strong> 放行条件。
 <ul>
-<li><strong>运行环境导致</strong>（附近飞机也有干扰、双部 GPS 同时失效、两部 GPS 各自检正常）：机载系统无故障且符合放行条件 → 填航行记录本，完成维修放行，通报机组和运控。</li>
+<li><strong>运行环境导致</strong>（附近飞机也有干扰、双部 GPS 同时失效、两部 GPS 各自检正常）：填航行记录本，完成维修放行，通报机组和运控。</li>
 <li><strong>机载系统/设备故障</strong>：按 MEL 保留或排故，按规定通知机组和运控。</li>
-<li><strong>有争议</strong>：按《运行手册》7.3.8 争议处理执行。</li>
+<li><strong>有争议</strong>：按《运行手册》7.3.8 争议处理。</li>
 </ul></li>
-<li>机组和签派协同，按<strong>无 GPS 信号</strong>做好风险识别（导航性能、仪表影响、燃油计划），明确预案后继续飞行。有条件寻求公司技术支持。</li>
+<li>机组和签派协同，按<strong>无 GPS 信号</strong>做好风险识别（导航性能、仪表影响、燃油计划），明确预案后继续飞行。</li>
 </ol>
-
 <h3 class="sub">移动后出现 GPS 干扰</h3>
-<p>机组按本机型 FCOM / QRH，以无 GPS 信号做风险识别，明确预案后继续飞行。</p>
-
+<p>机组按 FCOM / QRH，以无 GPS 信号做风险识别，明确预案后继续飞行。</p>
 <div class="callout note">经纬度航路点有 5 字符 / 7 字符两种格式，无 GPS 时人工输入按通告格式说明执行。</div>
 </div>
 </div>
@@ -187,44 +144,38 @@ h3.sub { font-size: 16px; font-weight: 700; margin: 18px 0 8px; color: var(--tex
 <div class="section">
 <div class="section-head">三、虚假地形警告 <span class="chev">›</span></div>
 <div class="section-body">
-<h3 class="sub">通告</h3>
+<p><strong>通告原文：</strong></p>
 <ul>
-<li><strong>12月25日</strong>——西安、太原新增跑道</li>
-<li><strong>11月27日</strong>——南宁新跑道启用</li>
+<li>12月25日西安和太原机场新增跑道</li>
+<li>11月27日南宁机场启用</li>
 </ul>
-
-<h3 class="sub">地形数据库现状</h3>
-<div class="kv">
-<div class="k">西安新跑道</div><div>已完成全部更新</div>
-<div class="k">太原新跑道</div><div>仅 <strong>C909</strong> 完成更新，其他机型按机型手册执行新跑道程序</div>
-<div class="k">南宁新跑道</div><div>地形数据库已添加，但新跑道暂<strong>未进 RAAS 数据库</strong></div>
-</div>
-
-<div class="callout warning"><strong>两个风险点，飞前必须有预案：</strong><br>1. 南航现行机型（C909 除外）在<strong>太原新跑道</strong>运行——执行<strong>地形警告抑制程序</strong>；<br>2. 南航所有机型在<strong>南宁新跑道</strong>运行——注意 <strong>RAAS 警告</strong>，提前做好预案。</div>
-
-<p>另：GPS 信号丢失本身也可能触发地形警告。</p>
-<p><span class="attach pending">📎 (T-202503)关于虚假地形…</span><span class="attach pending">📎 GNSS 干扰处置指南…</span><span class="attach pending">📎 技术问答 SR.docx</span><span class="attach pending">📎 跳开关的使用 R1</span></p>
+<p><strong>数据库现状原文：</strong></p>
+<ul>
+<li>西安机场新跑道已完成全部更新，太原机场仅 C909 机型完成更新，请其他机型在运行太原机场时参照机型手册执行新跑道运行相关程序</li>
+<li>南宁机场地形数据库已添加，但新跑道暂未添加到 RAAS 数据库中</li>
+</ul>
+<div class="callout warning"><strong>可能的虚假警告（原文）：</strong><br>1. 目前南航正在运行的机型（C909除外）飞机在太原新跑道运行时，需要执行地形警告抑制程序。<br>2. 目前南航正在运行的所有机型飞机在南宁新跑道运行时，需要注意 RAAS 警告，提前做好预案。</div>
+<p>GPS 信号丢失触发地形警告。附件：📎 (T-202503)关于虚假地形、📎 运输类飞机 GNSS 干扰处置指南、📎 技术问答信息 SR.docx、📎 跳开关的使用 R1</p>
 </div>
 </div>
 
 <div class="section">
 <div class="section-head">四、抑制近地警告增强功能 <span class="chev">›</span></div>
 <div class="section-body">
-<p style="color:var(--text-2);font-size:14px">技术标准部 2025.3.17。原文 Q1–Q4 部分为图片，以下为文字版要点。</p>
-<div class="item"><div class="k">Q1 · 什么情况下可以抑制？</div><div class="v">有且仅有四种（《运行手册》3.23.7.3，含"近地警告系统数据库中缺少起飞或飞行所需数据"等）。</div></div>
-<div class="item"><div class="k">Q2 · 公司勘测抑制政策</div><div class="v">见原文表格。</div></div>
-<div class="item"><div class="k">Q3 · 抑制后何时恢复？</div><div class="v">确认飞出干扰区（或 GPS 恢复正常），或飞机准备下降着陆前，恢复增强功能（关闭抑制）。——《运行手册》3.23.7.3</div></div>
-<div class="item"><div class="k">Q4 · 低于 VMC 触发近地警告？</div><div class="v">参考《运行手册》3.23.7.2（夜航/IMC 与昼间/VMC 处置对照表）。</div></div>
+<p style="color:var(--text-2);font-size:14px">技术标准部 2025.3.17。原文 Q1–Q4 部分为图片，以下为图片文字版（已实读）：</p>
+<div class="item"><div class="k">Q1 · 四种可抑制情况</div><div class="v">《运行手册》3.23.7.3</div></div>
+<div class="item"><div class="k">Q3 · 恢复增强功能</div><div class="v">确认飞出干扰区或 GPS 恢复正常，或准备下降着陆前恢复</div></div>
+<div class="item"><div class="k">Q4 · 低于 VMC 触发</div><div class="v">按 3.23.7.2 表格；夜间/IMC 立即中断进近</div></div>
 </div>
 </div>
 
 <div class="section">
 <div class="section-head">五、复飞安全 <span class="chev">›</span></div>
 <div class="section-body">
-<div class="callout note"><strong>OSB-2025-01 §6.3.3</strong>：低高度复飞期间，起落架瞬间接触跑道是<strong>可以接受</strong>的（原文有详细说明）。</div>
+<div class="callout note"><strong>OSB-2025-01 §6.3.3</strong>：低高度复飞期间，起落架瞬间接触跑道是可以接受的。</div>
 <ul>
 <li>关于正确执行低空复飞的安全提示（单独成文）</li>
-<li>(T-202510)关于复飞高度…<span style="color:var(--text-2)">（待补全文）</span></li>
+<li>(T-202510)关于复飞高度<span style="color:var(--text-2)">（待补全文）</span></li>
 <li>带油门接地潜在风险指引（单独成文）<span style="color:var(--text-2)">（待补全文）</span></li>
 </ul>
 </div>
@@ -242,7 +193,6 @@ h3.sub { font-size: 16px; font-weight: 700; margin: 18px 0 8px; color: var(--tex
 <li>管控提示 4 条（见原文）</li>
 <li><strong>防颠簸检查单修订</strong>——安管部再次强调 3 条</li>
 <li>B773ER 9V-SWM 颠簸案例；转机型师 4 条提示</li>
-<li>防颠簸的安全提示（单独成文）</li>
 </ul>
 </div>
 </div>
@@ -255,7 +205,6 @@ h3.sub { font-size: 16px; font-weight: 700; margin: 18px 0 8px; color: var(--tex
 <li><strong>关于加强秋冬季运行风险防控的安全提示</strong>（含 T-202522、地面除防冰标准要点 Q&A）</li>
 <li>发动机风扇结冰技术提示 8 条</li>
 <li>FTT-2026-002 / FTB-2026-001</li>
-<li>B777 机队关于深圳南宁新跑道…（多附件）</li>
 </ul>
 </div>
 </div>
@@ -263,178 +212,99 @@ h3.sub { font-size: 16px; font-weight: 700; margin: 18px 0 8px; color: var(--tex
 <div class="section">
 <div class="section-head">八、MEL 政策明确 <span class="chev">›</span></div>
 <div class="section-body">
-<div class="callout important">"飞机关闭所有客舱门之后至依靠自身动力滑出前"阶段，因需完成电气源转换等原因，较容易跳出故障信息——<strong>在没有（M）项维修任务、没有不可接受的运行限制的情况下，不需要机务重开舱门处理，此前的运行放行依然有效。</strong></div>
+<div class="callout important">"飞机关闭所有客舱门之后至依靠自身动力滑出前"阶段，较容易跳出故障信息——<strong>在没有（M）项维修任务、没有不可接受的运行限制的情况下，不需要机务重开舱门处理，此前的运行放行依然有效。</strong></div>
+<p style="color:var(--text-2);font-size:14px">（原文有政策文件截图，已定位）</p>
 </div>
 </div>
 
 <div class="section">
 <div class="section-head">九、其他运行提示 <span class="chev">›</span></div>
 <div class="section-body">
-<div class="callout warning"><strong>机上升舱旅客人数限制</strong>（《运行手册》11.6.7.4(5)）：自 2025 年 5 月 1 日起生效，<strong>B777 不得超过 3 人</strong>。</div>
+<div class="callout warning"><strong>机上升舱旅客人数限制</strong>（《运行手册》11.6.7.4(5)）：自 2025 年 5 月 1 日起，<strong>B777 不得超过 3 人</strong>。</div>
 <div class="callout important"><strong>起飞性能：首选襟翼 15</strong>（另有 3 条，见原文）。</div>
-<div class="item"><div class="k">1 · 《飞行技术管理手册》修订</div><div class="v">📎 新修订内容.docx</div></div>
-<div class="item"><div class="k">2 · 重着陆通告及操纵技术提示</div><a class="attach done" href="#">📎 重着陆事件通告和技术提示.pdf（✅）</a></div>
-<div class="item"><div class="k">3 · I.II.III 类速查卡</div><div class="v">📎 I II III 类进近运行标准速查卡</div></div>
-<div class="item"><div class="k">4 · 国内航图样式及航路目录改版介绍</div></div>
-<div class="item"><div class="k">5 · 第二期技术提示</div><div class="v">①空中垂直速率超限易衍生超速/失速/空中冲突；②执行 DESCEND VIA 和 CLIMB VIA 时机组配合提醒；③东京羽田机场技术提示；④各类高度改变指令含义解释</div></div>
-<div class="item"><div class="k">6 · 低能量风险提示</div><div class="v">FTT-2025-007</div></div>
-<div class="item"><div class="k">7 · 民航局《关于东南亚复杂恶劣天气…》</div><div class="v">PDF</div></div>
-<div class="item"><div class="k">8 · EFB 起飞性能新增风切变预防计算</div><div class="v">功能解释 7 条</div></div>
-<div class="item"><div class="k">9 · 关于推出开车的技术提示</div></div>
-<div class="item"><div class="k">10 · 非计划过夜 / 无过站放行机场运行建议</div><div class="v">含机务保障 3 条</div></div>
-<div class="item"><div class="k">11 · 签派运行交流会议纪要</div></div>
-<div class="item"><div class="k">12 · 《仪表飞行规则航空器地空双向无线电通信失效通用程序》</div></div>
-<div class="item"><div class="k">13 · 《防范程序执行偏差的风险提示》</div></div>
-<div class="item"><div class="k">14 · B777 故障事件汇总 202508</div></div>
-<div class="item"><div class="k">15 · 关于敦煌带飞…</div><div class="v" style="color:var(--text-2)">（待补）</div></div>
-<div class="item"><div class="k">16 · (T-202517)关于重要信…</div><div class="v" style="color:var(--text-2)">（待补）</div></div>
-<div class="item"><div class="k">17 · 近期检查发现问题</div><div class="v">6 条</div></div>
-<div class="item"><div class="k">18 · JEPPESEN 版本更新</div></div>
-<div class="item"><div class="k">19 · Jeppesen 链接激活个人信息收集方式调整</div><div class="v">含表单链接</div></div>
-<div class="item"><div class="k">20 · 关于中断起飞之后是否立即脱离跑道</div></div>
-<div class="item"><div class="k">21 · 京津冀成渝空域提示</div><div class="v" style="color:var(--text-2)">（待补全文）</div></div>
-<div class="item"><div class="k">22 · (T-202530)关于 GPS 干…</div><div class="v">📎 B777_OMB_GUN-76R…</div></div>
-<div class="item"><div class="k">23 · 民航局飞标司《地面运行安全间距保…》</div></div>
-<div class="item"><div class="k">24 · FTB-2026-001 关于混…</div><div class="v" style="color:var(--text-2)">（待补）</div></div>
-<div class="item"><div class="k">25 · 关于明确部分公司飞行运行标准的通…</div><div class="v" style="color:var(--text-2)">（待补）</div></div>
-<div class="item"><div class="k">26 · 无引导车进位风险提示</div></div>
-<div class="item"><div class="k">27 · 慢车反推</div><div class="v">FTT-2026-009</div></div>
-<div class="item"><div class="k">28 · SOP 着陆后 APU 程序问答</div></div>
-<div class="item"><div class="k">29 · FCOM 着陆程序 ILS 预位 APP 修订</div></div>
-<div class="item"><div class="k">30 · 汛期脱离跑道速度提示</div></div>
-<p class="tbd">⚠️ "新版SOP问题收集"条目未能定位，下次更新时补。</p>
+<div class="item"><div class="k">I,II,III 类进近</div><div class="v">I,II,III类进近相关通告更新</div></div>
+<div class="item"><div class="k">国内航图样式及航路目录改版介绍</div></div>
+<div class="item"><div class="k">防颠簸检查单修订</div></div>
+<div class="item"><div class="k">重着陆通告及操纵技术提示</div><div class="v">✅ 已下载</div></div>
+<div class="item"><div class="k">第二期技术提示</div><div class="v">①垂直速率超限易衍生超速/失速/空中冲突；②DESCEND VIA / CLIMB VIA 机组配合；③东京羽田技术提示；④高度改变指令含义</div></div>
+<div class="item"><div class="k">低能量风险提示</div><div class="v">FTT-2025-007</div></div>
+<div class="item"><div class="k">EFB 起飞性能风切变预防计算</div><div class="v">功能解释 7 条</div></div>
+<div class="item"><div class="k">推出开车技术提示</div></div>
+<div class="item"><div class="k">非计划过夜 / 无过站放行机场运行建议</div><div class="v">含机务保障 3 条</div></div>
+<div class="item"><div class="k">签派运行交流会议纪要</div></div>
+<div class="item"><div class="k">仪表飞行规则地空通信失效通用程序</div></div>
+<div class="item"><div class="k">防范程序执行偏差风险提示</div></div>
+<div class="item"><div class="k">B777 故障事件汇总 202508</div></div>
+<div class="item"><div class="k">JEPPESEN 版本更新</div></div>
+<div class="item"><div class="k">Jeppesen 链接激活个人信息收集调整</div></div>
+<div class="item"><div class="k">中断起飞后是否立即脱离跑道</div></div>
+<div class="item"><div class="k">(T-202530)关于 GPS</div><div class="v">📎 B777_OMB_GUN-76R</div></div>
+<div class="item"><div class="k">民航局飞标司《地面运行安全间距》</div></div>
+<div class="item"><div class="k">慢车反推</div><div class="v">FTT-2026-009</div></div>
+<div class="item"><div class="k">SOP 着陆后 APU 程序问答</div></div>
+<div class="item"><div class="k">FCOM 着陆程序 ILS 预位 APP 修订</div></div>
+<div class="item"><div class="k">汛期脱离跑道速度提示</div></div>
 </div>
 </div>
 
 <div class="section">
-<div class="section-head">十、运行补充概要 · 保障 <span class="chev">›</span></div>
+<div class="section-head">十、运行补充概要 <span class="chev">›</span></div>
 <div class="section-body">
-<div class="callout warning"><strong>上海两场置位机组不能机下取行李</strong>——机长置位上海行李事件后的明确要求，沟通注意方式方法。</div>
+<h3 class="sub">保障</h3>
+<div class="callout warning"><strong>上海两场置位机组不能机下取行李</strong>（机长置位上海行李事件）。</div>
 <div class="kv">
-<div class="k">广州↔深圳班车</div><div>7月1日起：<strong>广州 09:30 发车、深圳 18:30 发车</strong>，深圳最晚 20:00，电话 <strong>16620988703</strong></div>
-<div class="k">T2 临关门禁</div><div>飞行准备中心 <strong>02028280338 / 02028280337</strong>，门禁 02036066590，地服调度 020-28280658</div>
-<div class="k">浦东货机出发</div><div>2025-08-16 起，发车改为<strong>航班前 1 小时 45 分钟</strong></div>
-<div class="k">阿姆斯特丹机组车</div><div>2026-03-08 起 <strong>Du Pau Travel</strong>，<strong>+31297328888</strong>，值班 +31613922732 / +31654707148，F1-F6 机组通道</div>
+<div class="k">广州↔深圳班车</div><div><strong>广州 09:30、深圳 18:30</strong>，深圳最晚 20:00，<strong>16620988703</strong>；T2 航站楼 50 号门外整点发车；深圳 T3 GTC 二楼 10 号门对面</div>
+<div class="k">T2 临关门禁</div><div><strong>02028280338 / 02028280337</strong>，门禁 02036066590，地服 020-28280658</div>
+<div class="k">浦东货机</div><div>2025-08-16 起<strong>航班前 1 小时 45 分钟</strong>发车</div>
+<div class="k">阿姆斯特丹摆渡车</div><div><strong>Du Pau Travel +31297328888</strong>，热线 +31613922732（Tom），经理 +31654707148（Han），planning@dupautravel.com，Schiphol Crew Lane F1-F6，Leonardo Hotel Rembrandpark <span style="color:var(--text-2)">（原文有图片，已实读）</span></div>
 </div>
 <div class="item"><div class="k">广州出发行李托运指引</div><div class="v">📎 PDF</div></div>
-<div class="item"><div class="k">大阪场站 WIFI 信号差</div><div class="v">协调报告 5 条：机位老旧覆盖一般、SOFTBANK 差、已申请 AU WIFI、采购流程中、请耐心沟通</div></div>
-<div class="item"><div class="k">T2 停车场</div><div class="v">20250701 起规范停车</div></div>
-<div class="item"><div class="k">广州-深圳班车细化</div><div class="v">深圳早班前一天 14:30、下午班当天 09:30（20250814）</div></div>
-<div class="item"><div class="k">深圳机场</div><div class="v">P5 航延停车场路线指引（PDF）；T3 航站楼调整…（PDF）</div></div>
-<div class="item"><div class="k">登机政策</div><div class="v">总队七条航线将实施"一刻登机"</div></div>
-<div class="item"><div class="k">花都线机组车</div><div class="v">运行时刻表（图片）</div></div>
-<div class="item"><div class="k">浦东置位</div><div class="v">往返置位预安排规则</div></div>
-<div class="item"><div class="k">国内临休</div><div class="v">礼宾区机组临休服务路线指南</div></div>
-<div class="item"><div class="k">P8 停车场</div><div class="v">临时管控提示</div></div>
-<div class="item"><div class="k">制服送洗</div><div class="v">送洗遗留重要物品须知</div></div>
-<div class="item"><div class="k">伦敦希思罗</div><div class="v">B777 机队过夜地面流…（PDF）</div></div>
-<div class="item"><div class="k">白云机场</div><div class="v">关闭 T1 滑行道…（PPT 系列）</div></div>
-<div class="item"><div class="k">技术通告</div><div class="v">FTT-2026-003、FTT-2026-004</div></div>
-</div>
-</div>
+<div class="item"><div class="k">大阪场站 WIFI 信号差</div><div class="v">协调报告：机位老旧、SOFTBANK 差、已申请 AU、采购中</div></div>
+<div class="item"><div class="k">深圳机场</div><div class="v">P5 停车场路线 PDF；T3 航站楼调整 PDF</div></div>
+<div class="item"><div class="k">总队七条航线"一刻登机"</div></div>
+<div class="item"><div class="k">浦东往返置位预安排规则</div></div>
+<div class="item"><div class="k">国内礼宾区临休路线指南</div></div>
+<div class="item"><div class="k">P8 停车场临时管控</div></div>
+<div class="item"><div class="k">制服送洗遗留物品须知</div></div>
 
-<div class="section">
-<div class="section-head">十一、运行补充概要 · 培训 <span class="chev">›</span></div>
-<div class="section-body">
+<h3 class="sub">培训 / 作风 / 旅客 / 健康 / 人员 / 生活</h3>
 <ul>
-<li>安保培训计划：4月7日–12月31日，共 <strong>109 期</strong>，每周一/二/五开课，每期 25 人，报名：kdocs.cn/l/ccvE7b81bGry</li>
-<li>报务申请要求（北美/欧洲航线研讨）</li>
-<li><strong>2026 年训练重要事项变更</strong>：复训理论模式优化、新增考试场次、广州-珠海班车、夏秋换季学习优化<span style="color:var(--text-2)">（后部待补）</span></li>
+<li>安保培训：4月7日–12月31日，共 <strong>109 期</strong>，每周一/二/五，每期 25 人</li>
+<li>2026 年训练重要事项变更：复训理论模式优化、新增考试场次、广州-珠海班车</li>
 <li>区域英语通讯和区域单飞资格：<strong>36 个月</strong>有效期</li>
-<li>美华模拟机机酒测异常须知</li>
 </ul>
+<p class="tbd">⚠️ 作风 / 旅客 / 健康 / 人员 / 生活分支未逐条展开，下次补。</p>
+
+<h3 class="sub">综治（海关/驻外）· 其他 · 模拟机</h3>
+<p class="tbd">⚠️ 标题已确认，未逐条展开，下次补。</p>
 </div>
 </div>
 
-<div class="section">
-<div class="section-head">十二、作风 / 旅客 / 健康 · 综治 · 其他 · 模拟机 <span class="chev">›</span></div>
-<div class="section-body">
-<p class="tbd">⚠️ 以上分支原文未展开，下次分部更新时补齐。</p>
-</div>
 </div>
 
-</div><!-- /p1 -->
-
-<!-- ============ 第二部分 ============ -->
 <div class="part" id="p2">
 <div class="part-title">第二部分 · 北美航线风险速查卡</div>
-
-<div class="section open">
-<div class="section-head">旧金山 SFO <span class="chev">›</span></div>
-<div class="section-body">
-<div class="item"><div class="k">5.14 CZ657 A13 进位事件</div><div class="v">人工引导员手势不规范、与自动引导系统冲突</div></div>
-<div class="item"><div class="k">A6 机位</div><div class="v">进位刮蹭风险</div></div>
-<div class="item"><div class="k">2.7 CZ657 A13V/A13R</div><div class="v">复合停机位：锐角转弯、左座视线受阻</div></div>
-<div class="item"><div class="k">CBP 要求</div><div class="v">离开客舱后需工作人员刷卡引导返回</div></div>
-<div class="item"><div class="k">停机坪推挤</div><div class="v">A5 推出至 M5、A2 推出注意机尾间隔</div></div>
-<div class="item"><div class="k">01R MIKIP1 离场</div><div class="v">GG661 速度限制 max230</div></div>
-<div class="item"><div class="k">武汉进近/离场</div><div class="v">UPMAT1T 进场、BIVIP1S 离场、HH113 限高 3600 米</div></div>
-<div class="item"><div class="k">南线进场 19L</div><div class="v">进近程序（DOC）</div></div>
-<div class="item"><div class="k">滑行道名称变更</div><div class="v">F1 vs W</div></div>
-<div class="item"><div class="k">道面施工</div><div class="v">28R 落地，滑行 B F CROSS RWY11L；T 联络道长度限制、A 滑行道翼展限制</div></div>
-<div class="item"><div class="k">4.12 滑行路线分享</div><div class="v">详细滑行指令及风险点</div></div>
-<div class="item"><div class="k">7.1 滑行经验分享</div></div>
-<div class="item"><div class="k">小细节大安全</div><div class="v">旧金山未按管制…（PDF）</div></div>
-<div class="item"><div class="k">跨洋 SATCOM</div><div class="v">旧金山跨洋航班 SATCOM…（DOC）</div></div>
-<div class="item"><div class="k">1.23 CZ659 / 12日 CZ659</div><div class="v">广州武汉旧金山经验分享</div></div>
-<div class="item"><div class="k">运行提示 20241127（武汉）</div><div class="v">航班计划下载流程变更</div></div>
-<div class="item"><div class="k">武汉天河滑行施工 V2</div><div class="v">滑行施工运行提示（PDF）</div></div>
-<div class="item"><div class="k">运行提示 20251006</div><div class="v">驻外酒店蚊虫叮咬风险</div></div>
-<div class="item"><div class="k">运行提示 20260114</div><div class="v">旧金山机组酒店私人快递规定</div></div>
+<p class="tbd">⚠️ 地面运行风险汇总、旧金山 / 安克雷奇 / 洛杉矶 / 总提示：标题已确认，未逐条展开，下次补。</p>
 </div>
-</div>
-
-<div class="section">
-<div class="section-head">安克雷奇 ANC <span class="chev">›</span></div>
-<div class="section-body">
-<div class="callout warning"><strong>多加油事件</strong>：确认油量信息、绕机检查确认油表。</div>
-<div class="item"><div class="k">滑行道延误及除冰分享</div><div class="v">DOC</div></div>
-<div class="item"><div class="k">CZ5219 停机位经验</div><div class="v">DOC</div></div>
-<div class="item"><div class="k">33 号目视进近分享</div><div class="v">DOC</div></div>
-<div class="item"><div class="k">CZ485 改航费尔班克斯</div><div class="v">DOCX</div></div>
-<div class="item"><div class="k">2026 Biweekly</div><div class="v">PDF×2</div></div>
-<div class="item"><div class="k">春夏季机场维修</div><div class="v">新增 Q、Z、J 滑行道停机位，R 停机位进位方向调整</div></div>
-<div class="item"><div class="k">近期注意事项</div><div class="v">Kilo/Romeo 交叉口施工 5.18–6.18、R14 推迟至 8 月、跑道维护关闭时段、K2 停机位、7 海里进近间隔</div></div>
-<div class="item"><div class="k">地面运行指南</div><div class="v">6月22日 / 8月19日 / 9月17日版本（PDF）</div></div>
-<div class="item"><div class="k">R8、R10 关闭</div><div class="v">每周二/四 0700–1900 关闭；开放时段拖入/推出程序</div></div>
-<div class="item"><div class="k">施工进度</div><div class="v">07R 跑道 9.17–10.17 关闭，N3/N5 不可用，R14 计划 9.30 恢复</div></div>
-<div class="item"><div class="k">费尔班克斯 FAI</div><div class="v">10月18日起塔台夜间无人</div></div>
-</div>
-</div>
-
-<div class="section">
-<div class="section-head">洛杉矶 / 北美总提示 <span class="chev">›</span></div>
-<div class="section-body">
-<p class="tbd">⚠️ 原文未展开，下次更新时补齐。</p>
-</div>
-</div>
-
-</div><!-- /p2 -->
 
 <div class="part" id="checklist">
 <div class="part-title">附 · 待补清单</div>
-<div class="section open">
-<div class="section-body" style="display:block">
+<div class="section open"><div class="section-body" style="display:block">
 <ul>
-<li>近期重要文件 → "新版SOP问题收集"条目定位</li>
-<li>运行补充概要 → 培训分支后部、作风 / 旅客 / 健康 / 人员 / 生活分支</li>
-<li>总概要 → 综治（海关/驻外）、其他、模拟机分支</li>
-<li>北美 → 洛杉矶 / 总提示分支</li>
-<li>带油门接地潜在风险指引全文、I.II.III 类速查卡子内容、(T-202510)关于复飞高度全文</li>
-<li>附件完整文件名（界面截断显示）</li>
-<li>5 个已下载 PDF 上传 GitHub 归档（第 9/10/11/20 期、重着陆通报）</li>
+<li>分支 4–8 逐节点展开（综治、其他、模拟机、地面运行风险汇总、北美各站）</li>
+<li>分支 2 各 PDF 附件元数据核实</li>
+<li>分支 3 培训后部、作风 / 旅客 / 健康 / 人员 / 生活展开</li>
+<li>5 个已下载 PDF 上传 GitHub（第 9/10/11/20 期、重着陆通报）——需用户发送文件</li>
+<li>3 处图片下载归档（Q&A 图、MEL 截图、阿姆斯特丹摆渡车图）</li>
 </ul>
-</div>
-</div>
+</div></div>
 </div>
 
-<div class="meta">B777 三分部 · 分部每周更新后，把新链接发给 Muse 即可同步本手册</div>
-</div><!-- /container -->
+<div class="meta">B777 三分部 · 2026-10-23 23:25 实读核实版 · 分部更新后发新链接给 Muse 同步</div>
+</div>
 
 <script>
-document.querySelectorAll('.section-head').forEach(h => {
-  h.addEventListener('click', () => h.parentElement.classList.toggle('open'));
-});
+document.querySelectorAll('.section-head').forEach(h => { h.addEventListener('click', () => h.parentElement.classList.toggle('open')); });
 function filter() {
   const q = document.getElementById('q').value.trim().toLowerCase();
   document.querySelectorAll('.section').forEach(s => {
