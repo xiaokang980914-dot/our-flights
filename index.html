@@ -1663,17 +1663,26 @@ function ocrFilterRaw(text){
   return String(text||'').split(/\n/).filter(l=>{ const t=l.trim(); if(!t) return false; if(/(证件|签到|暂无数据|OTHR)/.test(t)) return false; if(/\d{6,}/.test(t.replace(/:/g,''))) return false; return true; }).join('\n');
 }
 /* OCR 解析：按“航班号头”切块，块内按“城市（时间-时间）城市”位置结构解析 */
-function parseOcrFlights(text){
+function parseOcrFlights(text,blueDeps){
   const year=+todayBj().slice(0,4);
   const lines=String(text||'').split(/\n/).map(l=>ocrNormalizeText(l).trim()).filter(Boolean);
   let currentDate=null;
-  const blocks=[]; let cur=null;
+  const blocks=[]; let cur=null; let blueDateIdx=0;
   const dateAtStart=l=>{ const m=l.match(/^(\d{1,2})月(\d{1,2})日/)||l.match(/^(\d{1,2})[.\-](\d{1,2})\b/); if(!m) return null; const mo=+m[1], d=+m[2]; if(mo<1||mo>12||d<1||d>31) return null; return year+'-'+pad2(mo)+'-'+pad2(d); };
   for(const line of lines){
     const d=dateAtStart(line); if(d) currentDate=d;
     const fm=line.match(/C\s*[Z2]\s*[O0-9]{3,4}/i);
-    if(fm&&currentDate){
-      cur={flightRaw:fm[0],date:currentDate,lines:[]};
+    let useDate=currentDate;
+    if(fm&&!useDate&&blueDeps){
+      /* 原图没读出日期（如小截图），用蓝色 pass 的日期按顺序补 */
+      const bd0=blueDeps[blueDateIdx];
+      if(bd0&&bd0.date){
+        const bdm=bd0.date.match(/(\d{1,2})[.．](\d{1,2})/);
+        if(bdm){ useDate=year+'-'+pad2(bdm[1])+'-'+pad2(bdm[2]); blueDateIdx++; }
+      }
+    }
+    if(fm&&useDate){
+      cur={flightRaw:fm[0],date:useDate,lines:[]};
       blocks.push(cur);
       const rest=line.slice(line.indexOf(fm[0])+fm[0].length);
       if(rest.trim()) cur.lines.push(rest);
@@ -1683,7 +1692,7 @@ function parseOcrFlights(text){
     if(cur) cur.lines.push(line);
   }
   const out=[];
-  for(const b of blocks){
+  for(let bi=0;bi<blocks.length;bi++){ const b=blocks[bi];
     const digits=ocrNormDigits(b.flightRaw.replace(/C\s*[Z2]\s*/i,''));
     const flightNo='CZ'+String(parseInt(digits,10));
     if(!flightNo||flightNo==='CZNaN') continue;
@@ -1721,13 +1730,19 @@ function parseOcrFlights(text){
       /* 兜底：整块扫城市（精确优先，长名优先） */
       for(const [name,code] of OCR_ALL_CITIES){ if(body.includes(name)){ if(!depCode){ depCity=name; depCode=code; } else if(code!==depCode&&!arrCode){ arrCity=name; arrCode=code; break; } } }
     }
-    /* 时长交叉校验：排班表里“2h40m”是冗余信息。缺一个时间时用时长算出；两个都有但与时长不符时只标出警告，不擅自改值 */
+    /* v33 时间策略：蓝色 pass 优先（起飞时间以蓝色字为准，"1" 不丢；到达 = 起飞 + 时长）；
+       蓝色不可用时回退原逻辑（缺一补一、+10h 自动修复、警告） */
     let timeWarn='';
     const dm=body.match(/([0-9oO]{1,2})h([0-9oO]{1,2})m/);
-    if(dm){
-      const dur=+ocrNormDigits(dm[1])*60+ +ocrNormDigits(dm[2]);
-      const toMin=t=>{ const p=t.split(':'); return (+p[0])*60+(+p[1]); };
-      const fromMin=x=>{ const v=((x%1440)+1440)%1440; return pad2(Math.floor(v/60))+':'+pad2(v%60); };
+    const dur=dm?(+ocrNormDigits(dm[1])*60+ +ocrNormDigits(dm[2])):0;
+    const toMin=t=>{ const p=t.split(':'); return (+p[0])*60+(+p[1]); };
+    const fromMin=x=>{ const v=((x%1440)+1440)%1440; return pad2(Math.floor(v/60))+':'+pad2(v%60); };
+    const bd=(blueDeps&&blueDeps[bi])||null;
+    const blueOk=bd&&bd.dep&&(!bd.date||bd.date.replace('.','-')===b.date.slice(5));
+    if(blueOk){
+      depTime=bd.dep;
+      if(dur>0) arrTime=fromMin(toMin(depTime)+dur);
+    }else if(dm){
       if(depTime&&!arrTime&&dur>0) arrTime=fromMin(toMin(depTime)+dur);
       else if(arrTime&&!depTime&&dur>0) depTime=fromMin(toMin(arrTime)-dur);
       else if(depTime&&arrTime&&dur>0){
@@ -1829,22 +1844,42 @@ async function saveAllOcr(){
   await loadFlights();
   }finally{ ocrSavingAll=false; }
 }
-/* OCR 预处理：小图放大再识别。排班截图里的蓝色小字（日期 10.28、时间里的 "(1"）在原图尺寸下常被误读（"(14:05"→"04:05"、"10.28"直接丢失）；放大到长边 ~4000px 后可稳定读出。失败时回退原图 */
-async function ocrUpscale(file){
+/* OCR 预处理（v33）：蓝色通道提取。排班截图里日期/起飞时间/到达城市是蓝色的，
+   黑色是航班号/到达时间/时长。蓝色字在原图里太小，"(14:05" 的 "(1" 常被连读成 "0"。
+   只取 B-R 通道并二值化，蓝色字被干净隔离出来，"1" 不再丢；起飞时间以蓝色 pass 为准，
+   到达时间 = 起飞 + 时长（排班黑字 "3h15m" 很稳），不再靠 OCR 猜到达时间。失败时回退原图 */
+async function ocrBlueFilter(file){
   try{
     const bmp=await createImageBitmap(file).catch(()=>null);
     if(!bmp) return file;
     const w0=bmp.width||0, h0=bmp.height||0;
     if(!w0||!h0){ bmp.close(); return file; }
-    const scale=Math.min(3, 4000/Math.max(w0,h0));
-    if(scale<=1.05){ bmp.close(); return file; }
     const cv=document.createElement('canvas');
-    cv.width=Math.round(w0*scale); cv.height=Math.round(h0*scale);
-    cv.getContext('2d').drawImage(bmp,0,0,cv.width,cv.height);
-    bmp.close();
-    const blob=await new Promise(res=>cv.toBlob(res,'image/jpeg',0.92));
+    cv.width=w0; cv.height=h0;
+    const ctx=cv.getContext('2d');
+    ctx.drawImage(bmp,0,0); bmp.close();
+    const img=ctx.getImageData(0,0,w0,h0), d=img.data;
+    for(let i=0;i<d.length;i+=4){
+      const blue=d[i+2]-d[i];            /* B-R：蓝色字高，黑字/白底低 */
+      const v=blue>40?0:255;            /* 二值化并反转为黑字白底 */
+      d[i]=v; d[i+1]=v; d[i+2]=v; d[i+3]=255;
+    }
+    ctx.putImageData(img,0,0);
+    const blob=await new Promise(res=>cv.toBlob(res,'image/jpeg',0.95));
     return blob||file;
   }catch(e){ return file; }
+}
+/* 从蓝色 pass 的 OCR 文本里按顺序提取 (日期, 起飞时间)；日期如 "10.28"，时间如 "10:00" */
+function ocrExtractBlueDeps(blueText){
+  const deps=[]; let curDate='';
+  for(const raw of String(blueText||'').split('\n')){
+    const ln=ocrNormalizeText(raw);
+    const dm=ln.match(/(\d{1,2})[.．](\d{1,2})/);
+    if(dm) curDate=dm[1]+'.'+dm[2];
+    const tm=ln.match(/\(\s*(\d{1,2})\s*[:：]\s*(\d{2})/);
+    if(tm) deps.push({date:curDate,dep:pad2(tm[1])+':'+tm[2]});
+  }
+  return deps;
 }
 async function handleOcrFile(file){
   if(!file) return;
@@ -1860,10 +1895,17 @@ async function handleOcrFile(file){
   msg($('ocrMsg'),'正在识别截图…',true);
   try{
     await loadTesseract();
-    const ocrInput=await ocrUpscale(file);
-    const res=await window.Tesseract.recognize(ocrInput,'chi_sim+eng');
+    const res=await window.Tesseract.recognize(file,'chi_sim+eng');
     const text=(res&&res.data&&res.data.text)||(res&&res.text)||'';
-    ocrCandidates=parseOcrFlights(text);
+    /* 第二 pass：蓝色过滤，起飞时间以它为准（"1" 不丢） */
+    let blueDeps=[];
+    try{
+      const blueBlob=await ocrBlueFilter(file);
+      const resB=await window.Tesseract.recognize(blueBlob,'chi_sim+eng');
+      const textB=(resB&&resB.data&&resB.data.text)||(resB&&resB.text)||'';
+      blueDeps=ocrExtractBlueDeps(textB);
+    }catch(e){ blueDeps=[]; }
+    ocrCandidates=parseOcrFlights(text,blueDeps);
     if(ocrCandidates.length) ocrLastSig=sig;
     const rawEl=$('ocrRawText'), rawBox=$('ocrRawBox'); if(rawEl&&rawBox){ rawEl.textContent=ocrFilterRaw(text); rawBox.classList.remove('hidden'); }
     if(!ocrCandidates.length){ msg($('ocrMsg'),'没识别出航班，请换一张更清晰的截图再试'); renderOcrCandidates(); return; }
@@ -3102,7 +3144,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-23-32-v32';
+const APP_VERSION='2026-10-23-33-v33';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
