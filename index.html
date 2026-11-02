@@ -594,6 +594,14 @@ html.theming .life-fchip,html.theming .life-modal-box{transition:background-colo
     <div class="muted" style="margin-top:6px">两人记录加起来算；共同记录计入双方。</div>
   </div>
 
+  <div class="card" id="coupleOverlapCard">
+    <div class="row" style="align-items:center">
+      <b class="grow">📍 两人交集</b>
+    </div>
+    <div id="coupleOverlap" style="margin-top:8px"></div>
+    <div class="muted" style="margin-top:6px">仅按本站已录航班计算；同城只算明确分属两人的记录，空闲日含共同记录。</div>
+  </div>
+
   <div class="card hidden" id="onThisDayCard">
     <div class="row" style="align-items:center">
       <b class="grow">🕰️ <span id="onThisDayTitle">往年今日</span></b>
@@ -1289,6 +1297,48 @@ function renderCoupleStats(){
     +'<div class="stat"><div class="stat-num" style="font-size:13px;line-height:1.6">'+longTxt+'</div><div class="stat-label">最长一班</div></div>'
     +'<div class="stat"><div class="stat-num" style="font-size:14px;line-height:1.6">'+esc(topTxt)+'</div><div class="stat-label">两人常飞目的地'+(topN>0?' · '+topN+' 次':'')+'</div></div>';
 }
+/* ===== 2026-11-02-35 两人交集：未来同天同城 + 未来30天共同空闲日（纯本地计算，不改数据） ===== */
+function renderCoupleOverlap(){
+  const el=$('coupleOverlap'); if(!el) return;
+  const today=todayBj();
+  const all=(flights||[]).filter(f=>f&&f.flight_date);
+  if(!all.length){ el.innerHTML='<div class="muted">还没有航班记录</div>'; return; }
+  const isP=f=>f.added_by==='pilot', isA=f=>f.added_by==='attendant'||f.added_by==='partner';
+  const arrCity=f=>(resolveCode(f.arr_code)||String(f.arr_code||'').trim()).toUpperCase();
+  // 同城：未来（含今天）两人同一天到达同一城市；只算明确分属的记录，legacy null/邮箱不算，避免一条共同记录自交集
+  const hits=[];
+  for(const pf of all.filter(f=>isP(f)&&f.flight_date>=today&&f.arr_code))
+    for(const af of all.filter(f=>isA(f)&&f.flight_date>=today&&f.arr_code)){
+      const c=arrCity(pf);
+      if(pf.flight_date===af.flight_date&&c&&c===arrCity(af)) hits.push({date:pf.flight_date,code:c,p:pf,a:af});
+    }
+  hits.sort((x,y)=>x.date.localeCompare(y.date));
+  const seenD=new Set();
+  const uniq=hits.filter(h=>{ if(seenD.has(h.date)) return false; seenD.add(h.date); return true; });
+  // 共同空闲日：未来30天（含今天）两人均无航班记录的日子；共同记录计入双方（保守口径，不把有共同记录的日子算空）
+  const pDays=new Set(), aDays=new Set();
+  for(const f of all){ if(sideIsPilot(f)) pDays.add(f.flight_date); if(sideIsAtt(f)) aDays.add(f.flight_date); }
+  const free=[];
+  for(let i=0;i<30;i++){ const d=addDaysISO(today,i); if(!pDays.has(d)&&!aDays.has(d)) free.push(d); }
+  let html='';
+  if(uniq.length){
+    html+='<div style="margin-top:2px"><b>📍 接下来同城 '+uniq.length+' 次</b></div>';
+    html+=uniq.slice(0,3).map(h=>{
+      const pair=[h.p.flight_no,h.a.flight_no].filter(Boolean).join(' / ');
+      return '<div style="margin-top:6px">'+esc(fmtDateHead(h.date))+' · 两人都到 '+esc(h.code)+(pair?'（'+esc(pair)+'）':'')+'</div>';
+    }).join('');
+    if(uniq.length>3) html+='<div class="muted" style="margin-top:6px">还有 '+(uniq.length-3)+' 次同城</div>';
+  } else {
+    html+='<div class="muted">未来还没有两人同天同城的安排</div>';
+  }
+  if(free.length){
+    html+='<div style="margin-top:10px"><b>🗓️ 未来30天共同空闲 '+free.length+' 天</b></div>';
+    html+='<div style="margin-top:6px">'+free.slice(0,5).map(d=>esc(fmtDateHead(d))).join('、')+(free.length>5?' 等':'')+'</div>';
+  } else {
+    html+='<div class="muted" style="margin-top:10px">未来30天没有两人都空闲的日子</div>';
+  }
+  el.innerHTML=html;
+}
 function renderOnThisDay(){
   const card=$('onThisDayCard'), body=$('onThisDayBody'), title=$('onThisDayTitle');
   if(!card||!body) return;
@@ -1319,7 +1369,7 @@ function renderFlights(){
   if(!lastSeenMine){ lastSeenMine=Date.now(); localStorage.setItem(seenKey,String(lastSeenMine)); }
   $('listPilot').innerHTML=renderRoleList(flights.filter(f=>ownerOf(f)==='pilot'),'pilot');
   $('listAttendant').innerHTML=renderRoleList(flights.filter(f=>ownerOf(f)==='attendant'),'attendant');
-  renderNextFlightHero(); renderFlightStats(); renderCoupleStats(); renderOnThisDay();
+  renderNextFlightHero(); renderFlightStats(); renderCoupleStats(); renderCoupleOverlap(); renderOnThisDay();
   // 看过即记：这次渲染完，对方再新增的才算“新”
   localStorage.setItem(seenKey,String(Date.now()));
   document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.edit)));
@@ -3223,7 +3273,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-10-30-34-v34';
+const APP_VERSION='2026-11-02-35-v35';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
