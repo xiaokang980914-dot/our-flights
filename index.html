@@ -583,6 +583,13 @@ html.theming .life-fchip,html.theming .life-modal-box{transition:background-colo
     <div id="todayBody" style="margin-top:8px"></div>
     <div class="muted" style="margin-top:6px">时间均为北京时间；状态按当前时间实时判断，每分钟更新。</div>
   </div>
+  <div class="card" id="tonightCard">
+    <div class="row" style="align-items:center">
+      <b class="grow">🌙 今晚</b>
+    </div>
+    <div id="tonightBody" style="margin-top:8px"></div>
+    <div class="muted" style="margin-top:6px">按本站已录航班推算今晚过夜城市；明早出发的航班按出发地推算，仅供参考。</div>
+  </div>
   <div class="card" id="flightStatsCard">
     <div class="row" style="align-items:center">
       <b class="grow">📊 飞行统计</b>
@@ -1030,7 +1037,7 @@ function tickClock(){
 }
 setInterval(tickClock,1000);
 /* 2026-10-22-29 hero 每 60 秒自动重算（航班起飞/落地时自动切换，无需刷新） */
-setInterval(function(){ try{ if(!$('viewMain').classList.contains('hidden')){ if($('viewFlights')&&!$('viewFlights').classList.contains('hidden')){ renderNextFlightHero(); renderTodayCard(); } pollNewLifeComments(); /* 2026-10-22-30：同节奏轮询评论新提醒 */ } }catch(e){} },60000);
+setInterval(function(){ try{ if(!$('viewMain').classList.contains('hidden')){ if($('viewFlights')&&!$('viewFlights').classList.contains('hidden')){ renderNextFlightHero(); renderTodayCard(); renderTonightCard(); } pollNewLifeComments(); /* 2026-10-22-30：同节奏轮询评论新提醒 */ } }catch(e){} },60000);
 
 /* ===== 世界时钟（本地 localStorage 持久化） ===== */
 const WC_KEY='ourflights.worldClocks';
@@ -1409,6 +1416,51 @@ function renderTodayCard(){
     row.addEventListener('click',function(){ jumpToFlightById(row.getAttribute('data-jump')); });
   });
 }
+/* ===== 2026-11-08-37 今晚过夜城市：按已录航班推算两人今晚在哪（纯本地计算，不改数据） ===== */
+/* 规则：取截至今天的最近一班（有到达城市的），已到→今晚在该城，飞行中→今晚到该城，今晚稍后起飞→今晚飞往该城；
+   今天及之前无航班时，取未来最早一班的出发城市推算（明早从该城出发）；都没有则未知。共同记录计入双方。 */
+function tonightFor(sideIs, list, today, now){
+  const mine=(list||[]).filter(f=>f&&sideIs(f)&&f.flight_date&&f.arr_code);
+  const done=mine.filter(f=>f.flight_date<=today)
+    .sort((a,b)=>String(b.flight_date).localeCompare(String(a.flight_date))||String(b.arr_time||'').localeCompare(String(a.arr_time||'')));
+  if(done.length){
+    const f=done[0];
+    const code=resolveCode(f.arr_code)||String(f.arr_code).trim();
+    const dep=f.dep_time?new Date(f.dep_time):null, arr=f.arr_time?new Date(f.arr_time):null;
+    let text='今晚在 '+code;
+    if(dep&&arr&&!isNaN(dep)&&!isNaN(arr)){
+      if(now<dep) text='今晚飞往 '+code;
+      else if(now<arr) text='飞行中，今晚到 '+code;
+    }
+    return {code:code, text:text, fid:f.id||'', flight_no:f.flight_no||''};
+  }
+  const next=mine.filter(f=>f.flight_date>today&&f.dep_code)
+    .sort((a,b)=>String(a.flight_date).localeCompare(String(b.flight_date))||String(a.dep_time||'').localeCompare(String(b.dep_time||'')));
+  if(next.length){
+    const f=next[0];
+    const code=resolveCode(f.dep_code)||String(f.dep_code).trim();
+    return {code:code, text:'明早 '+code+' 出发，今晚应在 '+code, fid:f.id||'', flight_no:f.flight_no||'', inferred:true};
+  }
+  return null;
+}
+function renderTonightCard(){
+  const el=$('tonightBody'); if(!el) return;
+  const today=todayBj(), now=new Date();
+  const p=tonightFor(sideIsPilot, flights, today, now);
+  const a=tonightFor(sideIsAtt, flights, today, now);
+  if(!p&&!a){ el.innerHTML='<div class="muted">还没有航班记录，今晚位置未知。</div>'; return; }
+  const line=function(emo,t){
+    if(!t) return '<div style="margin-top:6px">'+emo+' <span class="muted">今晚位置未知</span></div>';
+    const jump=t.fid?' data-jump="'+esc(t.fid)+'" title="点击定位到这张航班卡" style="margin-top:6px;cursor:pointer"':' style="margin-top:6px"';
+    return '<div'+jump+'>'+emo+' '+esc(t.text)+(t.flight_no?' <span class="muted">（'+esc(t.flight_no)+'）</span>':'')+'</div>';
+  };
+  let html=line('👨🏿‍✈️',p)+line('👩🏻‍🦱',a);
+  if(p&&a&&p.code&&p.code.toUpperCase()===a.code.toUpperCase()) html+='<div style="margin-top:8px"><b>🤝 今晚同城，都在 '+esc(p.code)+'</b></div>';
+  el.innerHTML=html;
+  el.querySelectorAll('[data-jump]').forEach(function(row){
+    row.addEventListener('click',function(){ jumpToFlightById(row.getAttribute('data-jump')); });
+  });
+}
 function renderFlights(){
   $('meRole').textContent=ROLE_LABEL[myRole]||'-';
   // “新”角标：只标对方在你上次查看之后新增的航班；第一次打开不标（先把基准记下来）
@@ -1417,7 +1469,7 @@ function renderFlights(){
   if(!lastSeenMine){ lastSeenMine=Date.now(); localStorage.setItem(seenKey,String(lastSeenMine)); }
   $('listPilot').innerHTML=renderRoleList(flights.filter(f=>ownerOf(f)==='pilot'),'pilot');
   $('listAttendant').innerHTML=renderRoleList(flights.filter(f=>ownerOf(f)==='attendant'),'attendant');
-  renderNextFlightHero(); renderTodayCard(); renderFlightStats(); renderCoupleStats(); renderCoupleOverlap(); renderOnThisDay();
+  renderNextFlightHero(); renderTodayCard(); renderTonightCard(); renderFlightStats(); renderCoupleStats(); renderCoupleOverlap(); renderOnThisDay();
   // 看过即记：这次渲染完，对方再新增的才算“新”
   localStorage.setItem(seenKey,String(Date.now()));
   document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.edit)));
@@ -3321,7 +3373,7 @@ async function refreshWeather(force){
   }
   window.addEventListener('resize',fitTicker);
 /* ===== 版本号 + 一键检查新版（只换页面，不动登录状态） ===== */
-const APP_VERSION='2026-11-05-36-v36';
+const APP_VERSION='2026-11-08-37-v37';
 (function(){ const v=$('appVersion'); if(v) v.textContent=APP_VERSION; })();
 function checkForUpdate(){
   const v=$('appVersion'); if(v) v.textContent='正在获取新版…';
